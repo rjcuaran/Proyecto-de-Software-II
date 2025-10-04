@@ -4,6 +4,8 @@ require('dotenv').config();
 
 const { initializeDatabase } = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
+const recetaRoutes = require('./routes/recetaRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,16 +17,33 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rutas
 app.use('/api/auth', authRoutes);
+app.use('/api/recetas', recetaRoutes);
+app.use('/api/usuario', userRoutes);
 
-// Ruta de prueba
+// Ruta de prueba mejorada
 app.get('/', (req, res) => {
   res.json({
-    message: '🚀 Bienvenido al Organizador de Recetas API',
-    version: '1.0.0',
+    message: '🚀 Bienvenido al Organizador de Recetas API - CRUD COMPLETO',
+    version: '2.0.0',
     endpoints: {
-      registro: 'POST /api/auth/register',
-      usuarios: 'GET /api/auth/users (desarrollo)'
-    }
+      auth: {
+        registro: 'POST /api/auth/register',
+        usuarios: 'GET /api/auth/users (desarrollo)'
+      },
+      recetas: {
+        listar: 'GET /api/recetas',
+        crear: 'POST /api/recetas',
+        obtener: 'GET /api/recetas/:id',
+        actualizar: 'PUT /api/recetas/:id',
+        eliminar: 'DELETE /api/recetas/:id',
+        buscar: 'GET /api/recetas/search?q=termino&categoria=postres'
+      },
+      usuario: {
+        perfil: 'GET /api/usuario/profile',
+        actualizar: 'PUT /api/usuario/profile'
+      }
+    },
+    nota: 'Todas las rutas de recetas y usuario requieren autenticación JWT'
   });
 });
 
@@ -36,16 +55,28 @@ app.use('*', (req, res) => {
   });
 });
 
+// Manejo global de errores
+app.use((error, req, res, next) => {
+  console.error('Error global:', error);
+  res.status(500).json({
+    success: false,
+    message: 'Error interno del servidor'
+  });
+});
+
 // Inicializar servidor
 async function startServer() {
   try {
-    // Inicializar base de datos
     await initializeDatabase();
     
-    // Iniciar servidor
     app.listen(PORT, () => {
       console.log(`🎯 Servidor ejecutándose en http://localhost:${PORT}`);
       console.log(`📊 Base de datos: ${process.env.DB_NAME || 'organizador_recetas'}`);
+      console.log(`🚀 CRUD COMPLETO implementado:`);
+      console.log(`   ✅ Autenticación`);
+      console.log(`   ✅ Gestión de Recetas (CRUD)`);
+      console.log(`   ✅ Gestión de Usuarios`);
+      console.log(`   ✅ Búsqueda y Filtros`);
     });
   } catch (error) {
     console.error('❌ No se pudo iniciar el servidor:', error);
