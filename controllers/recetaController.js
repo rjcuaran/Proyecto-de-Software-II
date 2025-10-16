@@ -272,19 +272,39 @@ const recetaController = {
     }
   },
 
-  // Método auxiliar para obtener receta completa por ID
+  // Método auxiliar para obtener receta completa por ID (ACTUALIZADO)
   async getRecetaById(id, id_usuario = null) {
     let query = `
-      SELECT r.*, u.nombre as autor
+      SELECT r.*, 
+             u.nombre as autor,
+             COUNT(DISTINCT i.id_ingrediente) as total_ingredientes,
+             COUNT(DISTINCT f.id_favorito) as total_favoritos
+    `;
+
+    // Agregar información de si es favorita del usuario actual
+    if (id_usuario) {
+      query += `,
+             EXISTS(
+               SELECT 1 FROM Favorito f2 
+               WHERE f2.id_receta = r.id_receta AND f2.id_usuario = ?
+             ) as es_favorita
+      `;
+    }
+
+    query += `
       FROM Receta r
       JOIN Usuario u ON r.id_usuario = u.id_usuario
+      LEFT JOIN Ingrediente i ON r.id_receta = i.id_receta
+      LEFT JOIN Favorito f ON r.id_receta = f.id_receta
       WHERE r.id_receta = ?
+      GROUP BY r.id_receta
     `;
-    let params = [id];
 
+    let params = [];
     if (id_usuario) {
-      query += ` AND r.id_usuario = ?`;
-      params.push(id_usuario);
+      params = [id_usuario, id];
+    } else {
+      params = [id];
     }
 
     const [recetas] = await pool.execute(query, params);
@@ -305,6 +325,7 @@ const recetaController = {
 
     return receta;
   }
-};
+
+}; // ← SOLO UN CIERRE DEL OBJETO AQUÍ
 
 module.exports = recetaController;

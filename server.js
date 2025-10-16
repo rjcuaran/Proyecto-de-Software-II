@@ -6,6 +6,7 @@ const { initializeDatabase } = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const recetaRoutes = require('./routes/recetaRoutes');
 const userRoutes = require('./routes/userRoutes');
+const favoritosRoutes = require('./routes/favoritosRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rutas
 app.use('/api/auth', authRoutes);
+app.use('/api/favoritos', favoritosRoutes);
 app.use('/api/recetas', recetaRoutes);
 app.use('/api/usuario', userRoutes);
 
