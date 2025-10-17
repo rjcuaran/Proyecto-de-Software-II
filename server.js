@@ -9,7 +9,7 @@ const userRoutes = require('./routes/userRoutes');
 const favoritosRoutes = require('./routes/favoritosRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middlewares
 app.use(cors());
