@@ -174,6 +174,38 @@ const userController = {
     }
   },
 
+
+
+
+ // Obtener perfil básico del usuario
+  async getProfile(req, res) {
+    try {
+      const user = req.user;
+      
+      res.json({
+        success: true,
+        data: {
+          id_usuario: user.id_usuario,
+          nombre: user.nombre,
+          correo: user.correo,
+          fecha_registro: user.fecha_registro
+        }
+      });
+
+    } catch (error) {
+      console.error('Error obteniendo perfil:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor al obtener perfil'
+      });
+    }
+  },
+
+
+
+
+
+
   // Nuevo método: Obtener estadísticas detalladas
   async getEstadisticas(req, res) {
     try {
