@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const recetaController = require('../controllers/recetaController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/authMiddleware');
 const { body, query, param } = require('express-validator');
 const { handleValidationErrors } = require('../middleware/validation');
 

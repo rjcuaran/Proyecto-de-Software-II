@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const userController = require('../controllers/userController'); // ← AGREGAR esta línea
 const { validateUserRegistration, handleValidationErrors } = require('../middleware/validation');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/authMiddleware');
 const { body } = require('express-validator');
 
 // Validaciones para login
@@ -27,8 +28,8 @@ router.post('/login',
   authController.login
 );
 
-// Rutas protegidas
-router.get('/profile', authenticateToken, authController.getProfile);
+// Rutas protegidas - CORREGIDAS
+router.get('/profile', authenticateToken, userController.getProfile); // ← userController, no authController
 router.get('/users', authController.getUsers); // Mantener pública para desarrollo
 
 module.exports = router;

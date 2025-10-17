@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const favoritosController = require('../controllers/favoritosController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/authMiddleware');
 const { param } = require('express-validator');
 const { handleValidationErrors } = require('../middleware/validation');
 
