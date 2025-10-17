@@ -1,15 +1,17 @@
 const { pool } = require('../config/database');
 
 const favoritosController = {
-    // Agregar receta a favoritos
+    // Agregar receta a favoritos - VERSIÓN CORREGIDA
     async addFavorito(req, res) {
         try {
             const { idReceta } = req.params;
             const id_usuario = req.user.id_usuario;
 
+            console.log('📌 Agregando favorito - Usuario:', id_usuario, 'Receta:', idReceta);
+
             // Verificar que la receta existe
             const [recetas] = await pool.execute(
-                'SELECT id_receta FROM Receta WHERE id_receta = ?',
+                'SELECT id_receta, nombre FROM Receta WHERE id_receta = ?',
                 [idReceta]
             );
 
@@ -34,34 +36,40 @@ const favoritosController = {
             }
 
             // Agregar a favoritos
-            await pool.execute(
+            const [result] = await pool.execute(
                 'INSERT INTO Favorito (id_usuario, id_receta) VALUES (?, ?)',
                 [id_usuario, idReceta]
             );
 
-            // Obtener información actualizada de la receta
-            const recetaActualizada = await recetaController.getRecetaById(idReceta, id_usuario);
+            console.log('✅ Favorito agregado exitosamente. ID:', result.insertId);
 
             res.status(201).json({
                 success: true,
-                message: 'Receta agregada a favoritos',
-                data: recetaActualizada
+                message: 'Receta agregada a favoritos exitosamente',
+                data: {
+                    id_favorito: result.insertId,
+                    id_receta: parseInt(idReceta),
+                    id_usuario: id_usuario,
+                    nombre: recetas[0].nombre
+                }
             });
 
         } catch (error) {
-            console.error('Error agregando a favoritos:', error);
+            console.error('❌ Error agregando a favoritos:', error);
             res.status(500).json({
                 success: false,
-                message: 'Error interno del servidor al agregar favorito'
+                message: 'Error interno del servidor'
             });
         }
     },
 
-    // Eliminar receta de favoritos
+    // Eliminar receta de favoritos - VERSIÓN CORREGIDA
     async removeFavorito(req, res) {
         try {
             const { idReceta } = req.params;
             const id_usuario = req.user.id_usuario;
+
+            console.log('📌 Eliminando favorito - Usuario:', id_usuario, 'Receta:', idReceta);
 
             const [result] = await pool.execute(
                 'DELETE FROM Favorito WHERE id_usuario = ? AND id_receta = ?',
@@ -75,44 +83,50 @@ const favoritosController = {
                 });
             }
 
-            // Obtener información actualizada de la receta
-            const recetaActualizada = await recetaController.getRecetaById(idReceta, id_usuario);
+            console.log('✅ Favorito eliminado exitosamente');
 
             res.json({
                 success: true,
-                message: 'Receta eliminada de favoritos',
-                data: recetaActualizada
+                message: 'Receta eliminada de favoritos exitosamente'
             });
 
         } catch (error) {
-            console.error('Error eliminando de favoritos:', error);
+            console.error('❌ Error eliminando de favoritos:', error);
             res.status(500).json({
                 success: false,
-                message: 'Error interno del servidor al eliminar favorito'
+                message: 'Error interno del servidor'
             });
         }
     },
 
-    // Obtener todas las recetas favoritas del usuario
+    // Obtener todas las recetas favoritas - VERSIÓN CORREGIDA (sin GROUP BY problemático)
     async getFavoritos(req, res) {
         try {
             const id_usuario = req.user.id_usuario;
 
+            console.log('📌 Obteniendo favoritos para usuario:', id_usuario);
+
             const [recetas] = await pool.execute(
-                `SELECT r.*, 
-                u.nombre as autor,
-                COUNT(DISTINCT i.id_ingrediente) as total_ingredientes,
-                COUNT(DISTINCT f2.id_favorito) as total_favoritos
-         FROM Favorito f
-         JOIN Receta r ON f.id_receta = r.id_receta
-         JOIN Usuario u ON r.id_usuario = u.id_usuario
-         LEFT JOIN Ingrediente i ON r.id_receta = i.id_receta
-         LEFT JOIN Favorito f2 ON r.id_receta = f2.id_receta
-         WHERE f.id_usuario = ?
-         GROUP BY r.id_receta
-         ORDER BY f.fecha_agregado DESC`,
+                `SELECT 
+                    r.id_receta, 
+                    r.nombre, 
+                    r.categoria, 
+                    r.descripcion,
+                    r.preparacion,
+                    r.fecha_creacion,
+                    u.nombre as autor,
+                    f.fecha_agregado,
+                    (SELECT COUNT(*) FROM Ingrediente i WHERE i.id_receta = r.id_receta) as total_ingredientes,
+                    (SELECT COUNT(*) FROM Favorito f2 WHERE f2.id_receta = r.id_receta) as total_favoritos
+                FROM Favorito f
+                JOIN Receta r ON f.id_receta = r.id_receta
+                JOIN Usuario u ON r.id_usuario = u.id_usuario
+                WHERE f.id_usuario = ?
+                ORDER BY f.fecha_agregado DESC`,
                 [id_usuario]
             );
+
+            console.log('✅ Favoritos obtenidos:', recetas.length, 'recetas');
 
             res.json({
                 success: true,
@@ -121,7 +135,7 @@ const favoritosController = {
             });
 
         } catch (error) {
-            console.error('Error obteniendo favoritos:', error);
+            console.error('❌ Error obteniendo favoritos:', error);
             res.status(500).json({
                 success: false,
                 message: 'Error interno del servidor'
@@ -135,12 +149,16 @@ const favoritosController = {
             const { idReceta } = req.params;
             const id_usuario = req.user.id_usuario;
 
+            console.log('📌 Verificando favorito - Usuario:', id_usuario, 'Receta:', idReceta);
+
             const [favorito] = await pool.execute(
                 'SELECT id_favorito FROM Favorito WHERE id_usuario = ? AND id_receta = ?',
                 [id_usuario, idReceta]
             );
 
             const esFavorita = favorito.length > 0;
+
+            console.log('✅ Verificación completada. Es favorita:', esFavorita);
 
             res.json({
                 success: true,
@@ -151,49 +169,12 @@ const favoritosController = {
             });
 
         } catch (error) {
-            console.error('Error verificando favorito:', error);
+            console.error('❌ Error verificando favorito:', error);
             res.status(500).json({
                 success: false,
                 message: 'Error interno del servidor'
             });
         }
-    },
-
-    // Método auxiliar para obtener receta con información de favorito
-    async getRecetaConFavorito(idReceta, idUsuario) {
-        const [recetas] = await pool.execute(
-            `SELECT r.*, 
-              u.nombre as autor,
-              COUNT(DISTINCT i.id_ingrediente) as total_ingredientes,
-              COUNT(DISTINCT f.id_favorito) as total_favoritos,
-              EXISTS(
-                SELECT 1 FROM Favorito f2 
-                WHERE f2.id_receta = r.id_receta AND f2.id_usuario = ?
-              ) as es_favorita
-       FROM Receta r
-       JOIN Usuario u ON r.id_usuario = u.id_usuario
-       LEFT JOIN Ingrediente i ON r.id_receta = i.id_receta
-       LEFT JOIN Favorito f ON r.id_receta = f.id_receta
-       WHERE r.id_receta = ?
-       GROUP BY r.id_receta`,
-            [idUsuario, idReceta]
-        );
-
-        if (recetas.length === 0) {
-            return null;
-        }
-
-        const receta = recetas[0];
-
-        // Obtener ingredientes
-        const [ingredientes] = await pool.execute(
-            'SELECT * FROM Ingrediente WHERE id_receta = ? ORDER BY id_ingrediente',
-            [idReceta]
-        );
-
-        receta.ingredientes = ingredientes;
-
-        return receta;
     }
 };
 
