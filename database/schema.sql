@@ -1,74 +1,68 @@
--- Crear base de datos
 CREATE DATABASE IF NOT EXISTS organizador_recetas;
 USE organizador_recetas;
 
 -- Tabla de Usuarios
-CREATE TABLE IF NOT EXISTS Usuario (
-    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS Usuarios (
+    idUsuario INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    correo VARCHAR(150) UNIQUE NOT NULL,
-    contraseña VARCHAR(255) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabla de Categorías
-CREATE TABLE IF NOT EXISTS Categoria (
-    id_categoria INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
+-- Tabla de Categorías predefinidas
+CREATE TABLE IF NOT EXISTS Categorias (
+    idCategoria INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE,
     descripcion TEXT,
     icono VARCHAR(50)
 );
 
 -- Tabla de Recetas
-CREATE TABLE IF NOT EXISTS Receta (
-    id_receta INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(200) NOT NULL,
-    id_categoria INT,
+CREATE TABLE IF NOT EXISTS Recetas (
+    idReceta INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(200) NOT NULL,
     descripcion TEXT,
-    preparacion TEXT,
     tiempo_preparacion INT, -- en minutos
     porciones INT,
+    instrucciones TEXT,
+    idUsuario INT,
+    idCategoria INT,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    id_usuario INT NOT NULL,
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_categoria) REFERENCES Categoria(id_categoria)
+    imagen VARCHAR(255),
+    FOREIGN KEY (idUsuario) REFERENCES Usuarios(idUsuario) ON DELETE CASCADE,
+    FOREIGN KEY (idCategoria) REFERENCES Categorias(idCategoria) ON DELETE SET NULL
 );
 
 -- Tabla de Ingredientes
-CREATE TABLE IF NOT EXISTS Ingrediente (
-    id_ingrediente INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(150) NOT NULL,
-    cantidad DECIMAL(8,2),
-    unidad_medida VARCHAR(50),
-    id_receta INT NOT NULL,
-    FOREIGN KEY (id_receta) REFERENCES Receta(id_receta) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS Ingredientes (
+    idIngrediente INT AUTO_INCREMENT PRIMARY KEY,
+    idReceta INT,
+    nombre VARCHAR(100) NOT NULL,
+    cantidad DECIMAL(10,2),
+    unidad VARCHAR(50),
+    FOREIGN KEY (idReceta) REFERENCES Recetas(idReceta) ON DELETE CASCADE
 );
 
 -- Tabla de Favoritos
-CREATE TABLE IF NOT EXISTS Favorito (
-    id_favorito INT AUTO_INCREMENT PRIMARY KEY,
-    id_usuario INT NOT NULL,
-    id_receta INT NOT NULL,
+CREATE TABLE IF NOT EXISTS Favoritos (
+    idFavorito INT AUTO_INCREMENT PRIMARY KEY,
+    idUsuario INT,
+    idReceta INT,
     fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_receta) REFERENCES Receta(id_receta) ON DELETE CASCADE,
-    UNIQUE KEY unique_favorito (id_usuario, id_receta)
+    FOREIGN KEY (idUsuario) REFERENCES Usuarios(idUsuario) ON DELETE CASCADE,
+    FOREIGN KEY (idReceta) REFERENCES Recetas(idReceta) ON DELETE CASCADE,
+    UNIQUE KEY unique_favorito (idUsuario, idReceta)
 );
 
 -- Insertar categorías predefinidas
-INSERT INTO Categoria (nombre, descripcion, icono) VALUES 
-('Desayunos', 'Recetas para empezar el día con energía', '🍳'),
+INSERT IGNORE INTO Categorias (nombre, descripcion, icono) VALUES
+('Desayunos', 'Recetas para empezar el día', '🥞'),
+('Almuerzos', 'Platos principales para el mediodía', '🍲'),
+('Cenas', 'Recetas para la última comida del día', '🍽️'),
+('Postres', 'Dulces delicias para terminar', '🍰'),
 ('Ensaladas', 'Platos frescos y saludables', '🥗'),
-('Sopas', 'Reconfortantes y nutritivas', '🍲'),
-('Platos Principales', 'Comidas completas y sustanciosas', '🍽️'),
-('Pastas', 'Deliciosos platos de pasta', '🍝'),
-('Postres', 'Dulces tentaciones', '🍰'),
-('Bebidas', 'Refrescantes y reconfortantes', '🥤'),
-('Aperitivos', 'Snacks y entradas', '🍤');
-
--- Índices para mejorar rendimiento
-CREATE INDEX idx_receta_nombre ON Receta(nombre);
-CREATE INDEX idx_receta_categoria ON Receta(id_categoria);
-CREATE INDEX idx_receta_usuario ON Receta(id_usuario);
-CREATE INDEX idx_ingrediente_nombre ON Ingrediente(nombre);
-CREATE INDEX idx_usuario_correo ON Usuario(correo);
+('Sopas', 'Reconfortantes y calientes', '🍜'),
+('Bebidas', 'Refrescantes y nutritivas', '🥤'),
+('Vegetariano', 'Recetas sin carne', '🥦'),
+('Rápidas', 'Preparación en menos de 30 min', '⚡');
