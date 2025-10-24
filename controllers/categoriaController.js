@@ -1,7 +1,6 @@
 const Categoria = require('../models/Categoria');
 
 const categoriaController = {
-  // Obtener todas las categorías
   obtenerTodas: (req, res) => {
     Categoria.obtenerTodas((error, results) => {
       if (error) {
@@ -19,9 +18,8 @@ const categoriaController = {
     });
   },
 
-  // Obtener recetas por categoría
   obtenerRecetasPorCategoria: (req, res) => {
-    const { idCategoria } = req.params;
+    const idCategoria = req.params.idCategoria;
     const idUsuario = req.user.id;
 
     Categoria.obtenerRecetasPorCategoria(idCategoria, idUsuario, (error, results) => {
@@ -40,7 +38,6 @@ const categoriaController = {
     });
   },
 
-  // Obtener estadísticas de categorías del usuario
   obtenerEstadisticasUsuario: (req, res) => {
     const idUsuario = req.user.id;
 
@@ -60,9 +57,8 @@ const categoriaController = {
     });
   },
 
-  // Buscar categorías por nombre
   buscarPorNombre: (req, res) => {
-    const { termino } = req.params;
+    const termino = req.params.termino;
 
     Categoria.buscarPorNombre(termino, (error, results) => {
       if (error) {

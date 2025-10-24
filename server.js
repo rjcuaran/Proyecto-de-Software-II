@@ -2,90 +2,36 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const { initializeDatabase } = require('./config/database');
-const authRoutes = require('./routes/authRoutes');
-const recetaRoutes = require('./routes/recetaRoutes');
-const userRoutes = require('./routes/userRoutes');
-const favoritosRoutes = require('./routes/favoritosRoutes');
-
 const app = express();
-const PORT = process.env.PORT || 3001;
 
-// Middlewares
+// Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Rutas
-app.use('/api/auth', authRoutes);
-app.use('/api/favoritos', favoritosRoutes);
-app.use('/api/recetas', recetaRoutes);
-app.use('/api/usuario', userRoutes);
-app.use('/api/categorias', require('./routes/categoriaRoutes'));
+// Rutas (comenta categorías temporalmente)
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/recetas', require('./routes/recetaRoutes'));
+app.use('/api/favoritos', require('./routes/favoritosRoutes'));
+app.use('/api/usuario', require('./routes/userRoutes')); // ← Para perfil de usuario
+// app.use('/api/categorias', require('./routes/categoriaRoutes')); // ⏸️ Temporalmente comentado
 
-
-// Ruta de prueba mejorada
-app.get('/', (req, res) => {
-  res.json({
-    message: '🚀 Bienvenido al Organizador de Recetas API - CRUD COMPLETO',
-    version: '2.0.0',
+// Ruta de prueba
+app.get('/api', (req, res) => {
+  res.json({ 
+    mensaje: 'API del Organizador de Recetas funcionando',
     endpoints: {
-      auth: {
-        registro: 'POST /api/auth/register',
-        usuarios: 'GET /api/auth/users (desarrollo)'
-      },
-      recetas: {
-        listar: 'GET /api/recetas',
-        crear: 'POST /api/recetas',
-        obtener: 'GET /api/recetas/:id',
-        actualizar: 'PUT /api/recetas/:id',
-        eliminar: 'DELETE /api/recetas/:id',
-        buscar: 'GET /api/recetas/search?q=termino&categoria=postres'
-      },
-      usuario: {
-        perfil: 'GET /api/usuario/profile',
-        actualizar: 'PUT /api/usuario/profile'
-      }
-    },
-    nota: 'Todas las rutas de recetas y usuario requieren autenticación JWT'
+      auth: '/api/auth',
+      recetas: '/api/recetas', 
+      usuario: '/api/usuario',
+      favoritos: '/api/favoritos'
+      // categorias: '/api/categorias' // ⏸️ También comentado aquí
+    }
   });
 });
 
-// Manejo de rutas no encontradas
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Ruta no encontrada'
-  });
+// Iniciar servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log('✅ Conectado a MySQL - Organizador de Recetas');
 });
-
-// Manejo global de errores
-app.use((error, req, res, next) => {
-  console.error('Error global:', error);
-  res.status(500).json({
-    success: false,
-    message: 'Error interno del servidor'
-  });
-});
-
-// Inicializar servidor
-async function startServer() {
-  try {
-    await initializeDatabase();
-    
-    app.listen(PORT, () => {
-      console.log(`🎯 Servidor ejecutándose en http://localhost:${PORT}`);
-      console.log(`📊 Base de datos: ${process.env.DB_NAME || 'organizador_recetas'}`);
-      console.log(`🚀 CRUD COMPLETO implementado:`);
-      console.log(`   ✅ Autenticación`);
-      console.log(`   ✅ Gestión de Recetas (CRUD)`);
-      console.log(`   ✅ Gestión de Usuarios`);
-      console.log(`   ✅ Búsqueda y Filtros`);
-    });
-  } catch (error) {
-    console.error('❌ No se pudo iniciar el servidor:', error);
-    process.exit(1);
-  }
-}
-
-startServer();

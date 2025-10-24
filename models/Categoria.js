@@ -1,55 +1,44 @@
 const db = require('../config/database');
 
 class Categoria {
-  // Obtener todas las categorías predefinidas
   static obtenerTodas(callback) {
-    const query = 'SELECT * FROM Categorias ORDER BY nombre';
+    const query = 'SELECT * FROM categoria ORDER BY nombre';
     db.execute(query, callback);
   }
 
-  // Obtener categoría por ID
-  static obtenerPorId(idCategoria, callback) {
-    const query = 'SELECT * FROM Categorias WHERE idCategoria = ?';
-    db.execute(query, [idCategoria], callback);
+  static obtenerPorId(id_categoria, callback) {
+    const query = 'SELECT * FROM categoria WHERE id_categoria = ?';
+    db.execute(query, [id_categoria], callback);
   }
 
-  // Obtener recetas por categoría
-  static obtenerRecetasPorCategoria(idCategoria, idUsuario, callback) {
+  static obtenerRecetasPorCategoria(id_categoria, id_usuario, callback) {
     const query = `
       SELECT r.*, c.nombre as categoria_nombre
-      FROM Recetas r
-      INNER JOIN Categorias c ON r.idCategoria = c.idCategoria
-      WHERE r.idCategoria = ? AND r.idUsuario = ?
+      FROM receta r
+      LEFT JOIN categoria c ON r.id_categoria = c.id_categoria
+      WHERE r.id_categoria = ? AND r.id_usuario = ?
       ORDER BY r.fecha_creacion DESC
     `;
-    db.execute(query, [idCategoria, idUsuario], callback);
+    db.execute(query, [id_categoria, id_usuario], callback);
   }
 
-  // Actualizar categoría de una receta
-  static actualizarCategoriaReceta(idReceta, idCategoria, callback) {
-    const query = 'UPDATE Recetas SET idCategoria = ? WHERE idReceta = ?';
-    db.execute(query, [idCategoria, idReceta], callback);
-  }
-
-  // Obtener estadísticas de categorías por usuario
-  static obtenerEstadisticasUsuario(idUsuario, callback) {
+  static obtenerEstadisticasUsuario(id_usuario, callback) {
     const query = `
       SELECT 
-        c.idCategoria,
+        c.id_categoria,
         c.nombre,
         c.icono,
-        COUNT(r.idReceta) as total_recetas
-      FROM Categorias c
-      LEFT JOIN Recetas r ON c.idCategoria = r.idCategoria AND r.idUsuario = ?
-      GROUP BY c.idCategoria, c.nombre, c.icono
+        COUNT(r.id_receta) as total_recetas
+      FROM categoria c
+      LEFT JOIN receta r ON c.id_categoria = r.id_categoria AND r.id_usuario = ?
+      GROUP BY c.id_categoria, c.nombre, c.icono
       ORDER BY total_recetas DESC
     `;
-    db.execute(query, [idUsuario], callback);
+    db.execute(query, [id_usuario], callback);
   }
 
-  // Buscar categorías por nombre
   static buscarPorNombre(termino, callback) {
-    const query = 'SELECT * FROM Categorias WHERE nombre LIKE ? ORDER BY nombre';
+    const query = 'SELECT * FROM categoria WHERE nombre LIKE ? ORDER BY nombre';
     const likeTermino = `%${termino}%`;
     db.execute(query, [likeTermino], callback);
   }

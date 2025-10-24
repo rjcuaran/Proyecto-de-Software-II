@@ -1,52 +1,28 @@
-const { pool } = require('../config/database');
-const bcrypt = require('bcryptjs');
+const db = require('../config/database');
 
 class User {
-  // Crear nuevo usuario
-  static async create(userData) {
-    const { nombre, correo, contraseña } = userData;
+  static crear(usuarioData, callback) {
+    const { nombre, correo, contraseña } = usuarioData;
     
-    // Encriptar contraseña
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(contraseña, saltRounds);
-
-    const [result] = await pool.execute(
-      'INSERT INTO Usuario (nombre, correo, contraseña) VALUES (?, ?, ?)',
-      [nombre, correo, hashedPassword]
-    );
-
-    return result.insertId;
+    const query = 'INSERT INTO usuario (nombre, correo, contraseña) VALUES (?, ?, ?)';
+    db.execute(query, [nombre, correo, contraseña], callback);
   }
 
-  // Buscar usuario por email
-  static async findByEmail(correo) {
-    const [rows] = await pool.execute(
-      'SELECT * FROM Usuario WHERE correo = ?',
-      [correo]
-    );
-    return rows[0];
+  static obtenerPorEmail(correo, callback) {
+    const query = 'SELECT * FROM usuario WHERE correo = ?';
+    db.execute(query, [correo], callback);
   }
 
-  // Buscar usuario por ID
-  static async findById(id) {
-    const [rows] = await pool.execute(
-      'SELECT id_usuario, nombre, correo, fecha_registro FROM Usuario WHERE id_usuario = ?',
-      [id]
-    );
-    return rows[0];
+  static obtenerPorId(id_usuario, callback) {
+    const query = 'SELECT id_usuario, nombre, correo, fecha_registro FROM usuario WHERE id_usuario = ?';
+    db.execute(query, [id_usuario], callback);
   }
 
-  // Verificar contraseña
-  static async verifyPassword(plainPassword, hashedPassword) {
-    return await bcrypt.compare(plainPassword, hashedPassword);
-  }
-
-  // Obtener todos los usuarios (para desarrollo)
-  static async getAll() {
-    const [rows] = await pool.execute(
-      'SELECT id_usuario, nombre, correo, fecha_registro FROM Usuario'
-    );
-    return rows;
+  static actualizarPerfil(id_usuario, usuarioData, callback) {
+    const { nombre, correo } = usuarioData;
+    
+    const query = 'UPDATE usuario SET nombre = ?, correo = ? WHERE id_usuario = ?';
+    db.execute(query, [nombre, correo, id_usuario], callback);
   }
 }
 

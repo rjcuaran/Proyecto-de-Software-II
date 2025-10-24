@@ -1,35 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const userController = require('../controllers/userController'); // ← AGREGAR esta línea
-const { validateUserRegistration, handleValidationErrors } = require('../middleware/validation');
-const { authenticateToken } = require('../middleware/authMiddleware');
-const { body } = require('express-validator');
+const authMiddleware = require('../middleware/authMiddleware');
 
-// Validaciones para login
-const validateLogin = [
-  body('correo')
-    .isEmail().withMessage('Debe ser un email válido')
-    .normalizeEmail(),
-  body('contraseña')
-    .notEmpty().withMessage('La contraseña es requerida')
-];
+// Ruta de registro (pública)
+router.post('/register', authController.registrar);
 
-// Rutas públicas
-router.post('/register', 
-  validateUserRegistration, 
-  handleValidationErrors, 
-  authController.register
-);
+// Ruta de login (pública)  
+router.post('/login', authController.login);
 
-router.post('/login',
-  validateLogin,
-  handleValidationErrors,
-  authController.login
-);
-
-// Rutas protegidas - CORREGIDAS
-router.get('/profile', authenticateToken, userController.getProfile); // ← userController, no authController
-router.get('/users', authController.getUsers); // Mantener pública para desarrollo
+// Ruta para verificar token (protegida)
+router.get('/verify', authMiddleware.verificarToken, (req, res) => {
+    res.json({
+        success: true,
+        mensaje: 'Token válido',
+        user: req.user
+    });
+});
 
 module.exports = router;

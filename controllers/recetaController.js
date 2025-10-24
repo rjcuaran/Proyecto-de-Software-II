@@ -1,331 +1,284 @@
-const { pool } = require('../config/database');
+const Receta = require('../models/Receta');
+const Ingrediente = require('../models/Ingrediente');
 
 const recetaController = {
-  // CREATE - Crear nueva receta
-  async create(req, res) {
-    try {
-      const { nombre, categoria, descripcion, preparacion, ingredientes } = req.body;
-      const id_usuario = req.user.id_usuario;
+    // Obtener todas las recetas del usuario
+    obtenerRecetas: function(req, res) {
+        const userId = req.user.id;
+        
+        Receta.obtenerPorUsuario(userId, (error, results) => {
+            if (error) {
+                console.error('Error obteniendo recetas:', error);
+                return res.status(500).json({
+                    success: false,
+                    mensaje: 'Error interno del servidor'
+                });
+            }
+            
+            res.json({
+                success: true,
+                recetas: results
+            });
+        });
+    },
 
-      const connection = await pool.getConnection();
-      await connection.beginTransaction();
+    // Obtener receta por ID
+    obtenerRecetaPorId: function(req, res) {
+        const recetaId = req.params.id;
+        const userId = req.user.id;
 
-      try {
-        // 1. Insertar receta
-        const [recetaResult] = await connection.execute(
-          `INSERT INTO Receta (nombre, categoria, descripcion, preparacion, id_usuario) 
-           VALUES (?, ?, ?, ?, ?)`,
-          [nombre, categoria, descripcion, preparacion, id_usuario]
-        );
+        Receta.obtenerPorId(recetaId, (error, results) => {
+            if (error) {
+                console.error('Error obteniendo receta:', error);
+                return res.status(500).json({
+                    success: false,
+                    mensaje: 'Error interno del servidor'
+                });
+            }
 
-        const recetaId = recetaResult.insertId;
+            if (results.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    mensaje: 'Receta no encontrada'
+                });
+            }
 
-        // 2. Insertar ingredientes
-        if (ingredientes && ingredientes.length > 0) {
-          for (const ingrediente of ingredientes) {
-            await connection.execute(
-              `INSERT INTO Ingrediente (nombre, cantidad, unidad_medida, id_receta) 
-               VALUES (?, ?, ?, ?)`,
-              [ingrediente.nombre, ingrediente.cantidad, ingrediente.unidad_medida, recetaId]
-            );
-          }
+            const receta = results[0];
+
+            // Verificar que la receta pertenece al usuario
+            if (receta.id_usuario !== userId) {
+                return res.status(403).json({
+                    success: false,
+                    mensaje: 'No tienes permiso para ver esta receta'
+                });
+            }
+
+            // Obtener ingredientes de la receta
+            Ingrediente.obtenerPorReceta(recetaId, (error, ingredientes) => {
+                if (error) {
+                    console.error('Error obteniendo ingredientes:', error);
+                    return res.status(500).json({
+                        success: false,
+                        mensaje: 'Error interno del servidor'
+                    });
+                }
+
+                res.json({
+                    success: true,
+                    receta: {
+                        ...receta,
+                        ingredientes: ingredientes
+                    }
+                });
+            });
+        });
+    },
+
+    // Buscar recetas
+    buscarRecetas: function(req, res) {
+        const termino = req.query.q;
+        const userId = req.user.id;
+
+        if (!termino) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'Término de búsqueda requerido'
+            });
         }
 
-        await connection.commit();
-        connection.release();
+        Receta.buscar(termino, userId, (error, results) => {
+            if (error) {
+                console.error('Error buscando recetas:', error);
+                return res.status(500).json({
+                    success: false,
+                    mensaje: 'Error interno del servidor'
+                });
+            }
 
-        // 3. Obtener receta completa creada
-        const recetaCompleta = await recetaController.getRecetaById(recetaId);
-
-        res.status(201).json({
-          success: true,
-          message: 'Receta creada exitosamente',
-          data: recetaCompleta
+            res.json({
+                success: true,
+                recetas: results
+            });
         });
+    },
 
-      } catch (error) {
-        await connection.rollback();
-        connection.release();
-        throw error;
-      }
+    // Crear nueva receta
+    crearReceta: function(req, res) {
+        const userId = req.user.id;
+        const { nombre, categoria, descripcion, preparacion, ingredientes } = req.body;
 
-    } catch (error) {
-      console.error('Error creando receta:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor al crear receta'
-      });
-    }
-  },
-
-  // READ - Obtener todas las recetas del usuario
-  async getAll(req, res) {
-    try {
-      const id_usuario = req.user.id_usuario;
-
-      const [recetas] = await pool.execute(
-        `SELECT r.*, 
-                COUNT(DISTINCT i.id_ingrediente) as total_ingredientes,
-                COUNT(DISTINCT f.id_favorito) as es_favorita
-         FROM Receta r
-         LEFT JOIN Ingrediente i ON r.id_receta = i.id_receta
-         LEFT JOIN Favorito f ON r.id_receta = f.id_receta AND f.id_usuario = ?
-         WHERE r.id_usuario = ?
-         GROUP BY r.id_receta
-         ORDER BY r.fecha_creacion DESC`,
-        [id_usuario, id_usuario]
-      );
-
-      res.json({
-        success: true,
-        data: recetas,
-        total: recetas.length
-      });
-
-    } catch (error) {
-      console.error('Error obteniendo recetas:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor'
-      });
-    }
-  },
-
-  // READ - Obtener receta específica por ID
-  async getById(req, res) {
-    try {
-      const { id } = req.params;
-      const id_usuario = req.user.id_usuario;
-
-      const receta = await recetaController.getRecetaById(id, id_usuario);
-
-      if (!receta) {
-        return res.status(404).json({
-          success: false,
-          message: 'Receta no encontrada'
-        });
-      }
-
-      res.json({
-        success: true,
-        data: receta
-      });
-
-    } catch (error) {
-      console.error('Error obteniendo receta:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor'
-      });
-    }
-  },
-
-  // UPDATE - Actualizar receta
-  async update(req, res) {
-    try {
-      const { id } = req.params;
-      const { nombre, categoria, descripcion, preparacion, ingredientes } = req.body;
-      const id_usuario = req.user.id_usuario;
-
-      // Verificar que la receta existe y pertenece al usuario
-      const [recetas] = await pool.execute(
-        'SELECT id_receta FROM Receta WHERE id_receta = ? AND id_usuario = ?',
-        [id, id_usuario]
-      );
-
-      if (recetas.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Receta no encontrada'
-        });
-      }
-
-      const connection = await pool.getConnection();
-      await connection.beginTransaction();
-
-      try {
-        // 1. Actualizar receta
-        await connection.execute(
-          `UPDATE Receta 
-           SET nombre = ?, categoria = ?, descripcion = ?, preparacion = ?
-           WHERE id_receta = ?`,
-          [nombre, categoria, descripcion, preparacion, id]
-        );
-
-        // 2. Eliminar ingredientes antiguos
-        await connection.execute(
-          'DELETE FROM Ingrediente WHERE id_receta = ?',
-          [id]
-        );
-
-        // 3. Insertar nuevos ingredientes
-        if (ingredientes && ingredientes.length > 0) {
-          for (const ingrediente of ingredientes) {
-            await connection.execute(
-              `INSERT INTO Ingrediente (nombre, cantidad, unidad_medida, id_receta) 
-               VALUES (?, ?, ?, ?)`,
-              [ingrediente.nombre, ingrediente.cantidad, ingrediente.unidad_medida, id]
-            );
-          }
+        // Validaciones básicas
+        if (!nombre) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'El nombre de la receta es requerido'
+            });
         }
 
-        await connection.commit();
-        connection.release();
+        const recetaData = {
+            nombre,
+            categoria,
+            descripcion,
+            preparacion,
+            id_usuario: userId
+        };
 
-        // 4. Obtener receta actualizada
-        const recetaActualizada = await recetaController.getRecetaById(id);
+        Receta.crear(recetaData, (error, results) => {
+            if (error) {
+                console.error('Error creando receta:', error);
+                return res.status(500).json({
+                    success: false,
+                    mensaje: 'Error interno del servidor'
+                });
+            }
 
-        res.json({
-          success: true,
-          message: 'Receta actualizada exitosamente',
-          data: recetaActualizada
+            const recetaId = results.id_receta;
+
+            // Agregar ingredientes si existen
+            if (ingredientes && ingredientes.length > 0) {
+                Ingrediente.agregarAReceta(recetaId, ingredientes, (error) => {
+                    if (error) {
+                        console.error('Error agregando ingredientes:', error);
+                        // Pero la receta ya se creó, así que respondemos éxito
+                    }
+
+                    res.status(201).json({
+                        success: true,
+                        mensaje: 'Receta creada exitosamente',
+                        receta: {
+                            id_receta: recetaId,
+                            ...recetaData
+                        }
+                    });
+                });
+            } else {
+                res.status(201).json({
+                    success: true,
+                    mensaje: 'Receta creada exitosamente',
+                    receta: {
+                        id_receta: recetaId,
+                        ...recetaData
+                    }
+                });
+            }
         });
+    },
 
-      } catch (error) {
-        await connection.rollback();
-        connection.release();
-        throw error;
-      }
+    // Actualizar receta
+    actualizarReceta: function(req, res) {
+        const recetaId = req.params.id;
+        const userId = req.user.id;
+        const { nombre, categoria, descripcion, preparacion, ingredientes } = req.body;
 
-    } catch (error) {
-      console.error('Error actualizando receta:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor al actualizar receta'
-      });
-    }
-  },
+        // Primero verificar que la receta existe y pertenece al usuario
+        Receta.obtenerPorId(recetaId, (error, results) => {
+            if (error) {
+                console.error('Error obteniendo receta:', error);
+                return res.status(500).json({
+                    success: false,
+                    mensaje: 'Error interno del servidor'
+                });
+            }
 
-  // DELETE - Eliminar receta
-  async delete(req, res) {
-    try {
-      const { id } = req.params;
-      const id_usuario = req.user.id_usuario;
+            if (results.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    mensaje: 'Receta no encontrada'
+                });
+            }
 
-      const [result] = await pool.execute(
-        'DELETE FROM Receta WHERE id_receta = ? AND id_usuario = ?',
-        [id, id_usuario]
-      );
+            if (results[0].id_usuario !== userId) {
+                return res.status(403).json({
+                    success: false,
+                    mensaje: 'No tienes permiso para editar esta receta'
+                });
+            }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Receta no encontrada'
+            const recetaData = {
+                nombre,
+                categoria,
+                descripcion,
+                preparacion
+            };
+
+            // Actualizar receta
+            Receta.actualizar(recetaId, recetaData, (error) => {
+                if (error) {
+                    console.error('Error actualizando receta:', error);
+                    return res.status(500).json({
+                        success: false,
+                        mensaje: 'Error interno del servidor'
+                    });
+                }
+
+                // Actualizar ingredientes si se proporcionaron
+                if (ingredientes) {
+                    Ingrediente.actualizarPorReceta(recetaId, ingredientes, (error) => {
+                        if (error) {
+                            console.error('Error actualizando ingredientes:', error);
+                        }
+
+                        res.json({
+                            success: true,
+                            mensaje: 'Receta actualizada exitosamente'
+                        });
+                    });
+                } else {
+                    res.json({
+                        success: true,
+                        mensaje: 'Receta actualizada exitosamente'
+                    });
+                }
+            });
         });
-      }
+    },
 
-      res.json({
-        success: true,
-        message: 'Receta eliminada exitosamente'
-      });
+    // Eliminar receta
+    eliminarReceta: function(req, res) {
+        const recetaId = req.params.id;
+        const userId = req.user.id;
 
-    } catch (error) {
-      console.error('Error eliminando receta:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor al eliminar receta'
-      });
+        // Primero verificar que la receta existe y pertenece al usuario
+        Receta.obtenerPorId(recetaId, (error, results) => {
+            if (error) {
+                console.error('Error obteniendo receta:', error);
+                return res.status(500).json({
+                    success: false,
+                    mensaje: 'Error interno del servidor'
+                });
+            }
+
+            if (results.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    mensaje: 'Receta no encontrada'
+                });
+            }
+
+            if (results[0].id_usuario !== userId) {
+                return res.status(403).json({
+                    success: false,
+                    mensaje: 'No tienes permiso para eliminar esta receta'
+                });
+            }
+
+            // Eliminar receta (los ingredientes se eliminarán en cascada)
+            Receta.eliminar(recetaId, (error) => {
+                if (error) {
+                    console.error('Error eliminando receta:', error);
+                    return res.status(500).json({
+                        success: false,
+                        mensaje: 'Error interno del servidor'
+                    });
+                }
+
+                res.json({
+                    success: true,
+                    mensaje: 'Receta eliminada exitosamente'
+                });
+            });
+        });
     }
-  },
-
-  // BÚSQUEDA - Buscar recetas
-  async search(req, res) {
-    try {
-      const { q, categoria } = req.query;
-      const id_usuario = req.user.id_usuario;
-
-      let query = `
-        SELECT r.*, COUNT(DISTINCT i.id_ingrediente) as total_ingredientes
-        FROM Receta r
-        LEFT JOIN Ingrediente i ON r.id_receta = i.id_receta
-        WHERE r.id_usuario = ?
-      `;
-      let params = [id_usuario];
-
-      if (q) {
-        query += ` AND (r.nombre LIKE ? OR r.descripcion LIKE ? OR r.preparacion LIKE ?)`;
-        const searchTerm = `%${q}%`;
-        params.push(searchTerm, searchTerm, searchTerm);
-      }
-
-      if (categoria) {
-        query += ` AND r.categoria = ?`;
-        params.push(categoria);
-      }
-
-      query += ` GROUP BY r.id_receta ORDER BY r.fecha_creacion DESC`;
-
-      const [recetas] = await pool.execute(query, params);
-
-      res.json({
-        success: true,
-        data: recetas,
-        total: recetas.length
-      });
-
-    } catch (error) {
-      console.error('Error buscando recetas:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor'
-      });
-    }
-  },
-
-  // Método auxiliar para obtener receta completa por ID (ACTUALIZADO)
-  async getRecetaById(id, id_usuario = null) {
-    let query = `
-      SELECT r.*, 
-             u.nombre as autor,
-             COUNT(DISTINCT i.id_ingrediente) as total_ingredientes,
-             COUNT(DISTINCT f.id_favorito) as total_favoritos
-    `;
-
-    // Agregar información de si es favorita del usuario actual
-    if (id_usuario) {
-      query += `,
-             EXISTS(
-               SELECT 1 FROM Favorito f2 
-               WHERE f2.id_receta = r.id_receta AND f2.id_usuario = ?
-             ) as es_favorita
-      `;
-    }
-
-    query += `
-      FROM Receta r
-      JOIN Usuario u ON r.id_usuario = u.id_usuario
-      LEFT JOIN Ingrediente i ON r.id_receta = i.id_receta
-      LEFT JOIN Favorito f ON r.id_receta = f.id_receta
-      WHERE r.id_receta = ?
-      GROUP BY r.id_receta
-    `;
-
-    let params = [];
-    if (id_usuario) {
-      params = [id_usuario, id];
-    } else {
-      params = [id];
-    }
-
-    const [recetas] = await pool.execute(query, params);
-
-    if (recetas.length === 0) {
-      return null;
-    }
-
-    const receta = recetas[0];
-
-    // Obtener ingredientes
-    const [ingredientes] = await pool.execute(
-      'SELECT * FROM Ingrediente WHERE id_receta = ? ORDER BY id_ingrediente',
-      [id]
-    );
-
-    receta.ingredientes = ingredientes;
-
-    return receta;
-  }
-
-}; // ← SOLO UN CIERRE DEL OBJETO AQUÍ
+};
 
 module.exports = recetaController;

@@ -1,40 +1,40 @@
 const jwt = require('jsonwebtoken');
-const { pool } = require('../config/database');
 
-const authenticateToken = async (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+const authMiddleware = {
+    verificarToken: function(req, res, next) {
+        const authHeader = req.header('Authorization');
+        
+        if (!authHeader) {
+            return res.status(401).json({
+                success: false,
+                mensaje: 'Acceso denegado. Token no proporcionado.'
+            });
+        }
 
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: 'Token de acceso requerido'
-    });
-  }
+        // Extraer el token (puede venir como "Bearer token" o solo "token")
+        const token = authHeader.startsWith('Bearer ') 
+            ? authHeader.substring(7) 
+            : authHeader;
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    const [users] = await pool.execute(
-      'SELECT id_usuario, nombre, correo FROM Usuario WHERE id_usuario = ?',
-      [decoded.userId]
-    );
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                mensaje: 'Acceso denegado. Token no proporcionado.'
+            });
+        }
 
-    if (users.length === 0) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuario no encontrado'
-      });
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = decoded;
+            next();
+        } catch (error) {
+            console.error('Error verificando token:', error);
+            return res.status(401).json({
+                success: false,
+                mensaje: 'Token invalido o expirado.'
+            });
+        }
     }
-
-    req.user = users[0];
-    next();
-  } catch (error) {
-    return res.status(403).json({
-      success: false,
-      message: 'Token inválido o expirado'
-    });
-  }
 };
 
-module.exports = { authenticateToken };
+module.exports = authMiddleware;
