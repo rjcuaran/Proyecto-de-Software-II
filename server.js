@@ -21,6 +21,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/favoritos', favoritosRoutes);
 app.use('/api/recetas', recetaRoutes);
 app.use('/api/usuario', userRoutes);
+app.use('/api/categorias', require('./routes/categoriaRoutes'));
+
 
 // Ruta de prueba mejorada
 app.get('/', (req, res) => {
