@@ -1,31 +1,61 @@
 const db = require('../config/database');
 
-class Ingrediente {
-  static agregarAReceta(id_receta, ingredientes, callback) {
-    if (ingredientes.length === 0) return callback(null, { message: 'No hay ingredientes' });
+class Receta {
+  static crear(recetaData, callback) {
+    const { nombre, categoria, descripcion, preparacion, id_usuario } = recetaData;
     
-    const values = ingredientes.map(ing => [id_receta, ing.nombre, ing.cantidad, ing.unidad_medida]);
-    const query = 'INSERT INTO ingrediente (id_receta, nombre, cantidad, unidad_medida) VALUES ?';
+    const query = `
+      INSERT INTO receta (nombre, categoria, descripcion, preparacion, id_usuario, fecha_creacion)
+      VALUES (?, ?, ?, ?, ?, NOW())
+    `;
     
-    db.query(query, [values], callback);
+    db.execute(query, [nombre, categoria, descripcion, preparacion, id_usuario], (err, results) => {
+      if (err) return callback(err);
+      callback(null, { id_receta: results.insertId });
+    });
   }
 
-  static obtenerPorReceta(id_receta, callback) {
-    const query = 'SELECT * FROM ingrediente WHERE id_receta = ? ORDER BY id_ingrediente';
+  static obtenerPorUsuario(id_usuario, callback) {
+    const query = `
+      SELECT r.*, 
+             (SELECT COUNT(*) FROM favorito f WHERE f.id_receta = r.id_receta AND f.id_usuario = ?) as es_favorito
+      FROM receta r 
+      WHERE r.id_usuario = ?
+      ORDER BY r.fecha_creacion DESC
+    `;
+    db.execute(query, [id_usuario, id_usuario], callback);
+  }
+
+  static obtenerPorId(id_receta, callback) {
+    const query = 'SELECT * FROM receta WHERE id_receta = ?';
     db.execute(query, [id_receta], callback);
   }
 
-  static actualizarPorReceta(id_receta, ingredientes, callback) {
-    const deleteQuery = 'DELETE FROM ingrediente WHERE id_receta = ?';
+  static actualizar(id_receta, recetaData, callback) {
+    const { nombre, categoria, descripcion, preparacion } = recetaData;
     
-    db.execute(deleteQuery, [id_receta], (err) => {
-      if (err) return callback(err);
-      
-      if (ingredientes.length === 0) return callback(null, { message: 'Ingredientes actualizados' });
-      
-      this.agregarAReceta(id_receta, ingredientes, callback);
-    });
+    const query = `
+      UPDATE receta 
+      SET nombre = ?, categoria = ?, descripcion = ?, preparacion = ?
+      WHERE id_receta = ?
+    `;
+    
+    db.execute(query, [nombre, categoria, descripcion, preparacion, id_receta], callback);
+  }
+
+  static eliminar(id_receta, callback) {
+    const query = 'DELETE FROM receta WHERE id_receta = ?';
+    db.execute(query, [id_receta], callback);
+  }
+
+  static buscar(termino, id_usuario, callback) {
+    const query = `
+      SELECT * FROM receta 
+      WHERE id_usuario = ? AND (nombre LIKE ? OR descripcion LIKE ? OR categoria LIKE ?)
+    `;
+    const likeTermino = `%${termino}%`;
+    db.execute(query, [id_usuario, likeTermino, likeTermino, likeTermino], callback);
   }
 }
 
-module.exports = Ingrediente;
+module.exports = Receta;
