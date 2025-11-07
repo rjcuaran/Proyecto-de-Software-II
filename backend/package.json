@@ -2,6 +2,7 @@
   "name": "organizador-recetas-backend",
   "version": "1.0.0",
   "description": "API REST para el organizador de recetas",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
