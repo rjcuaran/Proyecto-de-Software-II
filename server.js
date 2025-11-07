@@ -13,6 +13,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/recetas', require('./routes/recetaRoutes'));
 app.use('/api/favoritos', require('./routes/favoritosRoutes'));
 app.use('/api/usuario', require('./routes/userRoutes')); // ← Para perfil de usuario
+app.use("/api/shopping-list", shoppingListRoutes);
 // app.use('/api/categorias', require('./routes/categoriaRoutes')); // ⏸️ Temporalmente comentado
 
 // Ruta de prueba

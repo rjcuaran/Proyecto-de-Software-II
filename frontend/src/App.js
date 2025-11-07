@@ -18,6 +18,7 @@ import RecetaCreate from './pages/Recetas/RecetaCreate';
 import RecetaEdit from './pages/Recetas/RecetaEdit';
 import FavoritosList from './pages/Favoritos/FavoritosList';
 import Profile from './pages/Usuario/Profile';
+import ShoppingList from './pages/Recetas/ShoppingList'; // ✅ nueva importación
 
 function App() {
   return (
@@ -29,7 +30,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            
+
             {/* Private Routes */}
             <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/recetas" element={<PrivateRoute><RecetasList /></PrivateRoute>} />
@@ -38,7 +39,10 @@ function App() {
             <Route path="/recetas/:id/editar" element={<PrivateRoute><RecetaEdit /></PrivateRoute>} />
             <Route path="/favoritos" element={<PrivateRoute><FavoritosList /></PrivateRoute>} />
             <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
-            
+
+            {/* ✅ Nueva ruta para la lista de compras */}
+            <Route path="/shopping-list" element={<PrivateRoute><ShoppingList /></PrivateRoute>} />
+
             {/* Redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
