@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import IngredienteForm from "../../components/recetas/IngredienteForm";
+import IngredienteForm from "../../components/ingredientes/IngredienteForm";
 import { Card, Button, Form, Alert } from "react-bootstrap";
 
 export default function CrearRecetaPage() {

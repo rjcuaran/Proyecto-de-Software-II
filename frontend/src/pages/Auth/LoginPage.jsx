@@ -1,62 +1,54 @@
 import React, { useState } from "react";
-import { Card, Form, Button, Alert } from "react-bootstrap";
-import { loginUser } from "../../services/auth";
 import { useNavigate } from "react-router-dom";
+import authService from "../../services/auth";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    const res = await loginUser(email, password);
+  const onChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-    if (res.error) {
-      setError(res.error);
-    } else {
-      navigate("/recetas");
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await authService.loginUser(form.email, form.password);
+
+      localStorage.setItem("token", res.token);
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      setError("Credenciales incorrectas");
     }
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: "480px" }}>
-      <Card className="p-4 shadow">
-        <h3 className="text-center mb-3">Iniciar sesión</h3>
+    <div className="container mt-5" style={{ maxWidth: "430px" }}>
+      <h3 className="text-center mb-4">Iniciar Sesión</h3>
 
-        {error && <Alert variant="danger">{error}</Alert>}
+      {error && <div className="alert alert-danger">{error}</div>}
 
-        <Form onSubmit={handleLogin}>
-          <Form.Group className="mb-3">
-            <Form.Label>Correo electrónico</Form.Label>
-            <Form.Control
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Contraseña</Form.Label>
-            <Form.Control
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </Form.Group>
-
-          <Button variant="primary" type="submit" className="w-100">
-            Entrar
-          </Button>
-        </Form>
-
-        <p className="text-center mt-3">
-          ¿No tienes cuenta? <a href="/register">Crear cuenta</a>
-        </p>
-      </Card>
+      <form onSubmit={onSubmit}>
+        <input
+          type="email"
+          name="email"
+          className="form-control mb-3"
+          placeholder="Correo"
+          onChange={onChange}
+        />
+        <input
+          type="password"
+          name="password"
+          className="form-control mb-3"
+          placeholder="Contraseña"
+          onChange={onChange}
+        />
+        <button className="btn btn-primary w-100">Ingresar</button>
+      </form>
     </div>
   );
 }
