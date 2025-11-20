@@ -1,6 +1,6 @@
 // backend/config/database.js
-import mysql from "mysql2";
-import dotenv from "dotenv";
+const mysql = require("mysql2");
+const dotenv = require("dotenv");
 
 dotenv.config();
 
@@ -19,4 +19,4 @@ db.connect((err) => {
   console.log("✅ Conectado a MySQL - Organizador de Recetas");
 });
 
-export default db;
+module.exports = db;

@@ -1,3 +1,4 @@
+// backend/models/Receta.js
 const db = require('../config/database');
 
 class Receta {
@@ -9,7 +10,7 @@ class Receta {
       VALUES (?, ?, ?, ?, ?, NOW())
     `;
     
-    db.execute(query, [nombre, categoria, descripcion, preparacion, id_usuario], (err, results) => {
+    db.query(query, [nombre, categoria, descripcion, preparacion, id_usuario], (err, results) => {
       if (err) return callback(err);
       callback(null, { id_receta: results.insertId });
     });
@@ -23,12 +24,12 @@ class Receta {
       WHERE r.id_usuario = ?
       ORDER BY r.fecha_creacion DESC
     `;
-    db.execute(query, [id_usuario, id_usuario], callback);
+    db.query(query, [id_usuario, id_usuario], callback);
   }
 
   static obtenerPorId(id_receta, callback) {
     const query = 'SELECT * FROM receta WHERE id_receta = ?';
-    db.execute(query, [id_receta], callback);
+    db.query(query, [id_receta], callback);
   }
 
   static actualizar(id_receta, recetaData, callback) {
@@ -40,12 +41,12 @@ class Receta {
       WHERE id_receta = ?
     `;
     
-    db.execute(query, [nombre, categoria, descripcion, preparacion, id_receta], callback);
+    db.query(query, [nombre, categoria, descripcion, preparacion, id_receta], callback);
   }
 
   static eliminar(id_receta, callback) {
     const query = 'DELETE FROM receta WHERE id_receta = ?';
-    db.execute(query, [id_receta], callback);
+    db.query(query, [id_receta], callback);
   }
 
   static buscar(termino, id_usuario, callback) {
@@ -54,7 +55,7 @@ class Receta {
       WHERE id_usuario = ? AND (nombre LIKE ? OR descripcion LIKE ? OR categoria LIKE ?)
     `;
     const likeTermino = `%${termino}%`;
-    db.execute(query, [id_usuario, likeTermino, likeTermino, likeTermino], callback);
+    db.query(query, [id_usuario, likeTermino, likeTermino, likeTermino], callback);
   }
 }
 

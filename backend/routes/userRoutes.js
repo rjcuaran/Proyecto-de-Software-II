@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const authMiddleware = require('../middleware/authMiddleware');
+const verificarToken = require('../middleware/authMiddleware'); // ✅ Importamos directamente la función
 
-// ✅ Corregido
-router.use(authMiddleware);
+// ✅ Middleware de autenticación
+router.use(verificarToken);
 
 // Obtener perfil del usuario
 router.get('/profile', userController.getProfile);

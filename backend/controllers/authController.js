@@ -43,12 +43,19 @@ const authController = {
                         });
                     }
 
+                    console.log("🧩 Datos a insertar:", { nombre, correo: email, contraseña: hashedPassword });
+
                     // Crear usuario
                     User.crear({
                         nombre,
                         correo: email,
                         contraseña: hashedPassword
                     }, (error, results) => {
+
+
+console.log("🧩 Resultado de inserción:", { error, results });
+
+
                         if (error) {
                             console.error('Error creando usuario:', error);
                             return res.status(500).json({
