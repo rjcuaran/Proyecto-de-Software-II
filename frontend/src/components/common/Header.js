@@ -1,53 +1,146 @@
-import React from 'react';
-import { Navbar, Nav, Container, Button } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../../services/auth';
+// src/components/common/Header.js
+import React from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Navbar, Nav, Container, Dropdown, Image } from "react-bootstrap";
 
-const Header = () => {
+export default function Header() {
   const navigate = useNavigate();
-  const user = authService.getCurrentUser();
+  const usuario = localStorage.getItem("user")
+    ? JSON.parse(localStorage.getItem("user"))
+    : null;
 
-  const handleLogout = () => {
-    authService.logout();
-    navigate('/login');
+  const cerrarSesion = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   return (
-    <Navbar bg="primary" variant="dark" expand="lg" className="shadow">
+    <Navbar
+      bg="dark"
+      variant="dark"
+      expand="lg"
+      sticky="top"
+      className="shadow-sm py-2"
+      style={{ background: "#1f1f1f" }}
+    >
       <Container>
-        <Navbar.Brand as={Link} to="/">
-          🍳 Organizador de Recetas
+
+        {/* LOGO */}
+        <Navbar.Brand
+          as={Link}
+          to="/"
+          className="fw-bold d-flex align-items-center gap-2"
+          style={{ fontSize: "1.35rem" }}
+        >
+          <img
+            src="/logo192.png"
+            alt="Logo"
+            width="32"
+            height="32"
+            className="rounded"
+          />
+          Organizador de Recetas
         </Navbar.Brand>
-        
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          {user ? (
-            <>
-              <Nav className="me-auto">
-                <Nav.Link as={Link} to="/">Inicio</Nav.Link>
-                <Nav.Link as={Link} to="/recetas">Mis Recetas</Nav.Link>
-                <Nav.Link as={Link} to="/recetas/nueva">Nueva Receta</Nav.Link>
-                <Nav.Link as={Link} to="/favoritos">Favoritos</Nav.Link>
-              </Nav>
-              <Nav>
-                <Nav.Link as={Link} to="/perfil">
-                  👤 {user.nombre}
-                </Nav.Link>
-                <Button variant="outline-light" size="sm" onClick={handleLogout}>
-                  Cerrar Sesión
-                </Button>
-              </Nav>
-            </>
-          ) : (
-            <Nav className="ms-auto">
-              <Nav.Link as={Link} to="/login">Iniciar Sesión</Nav.Link>
-              <Nav.Link as={Link} to="/register">Registrarse</Nav.Link>
+
+        {/* Toggle */}
+        <Navbar.Toggle aria-controls="menu-principal" />
+
+        <Navbar.Collapse id="menu-principal">
+
+          {/* MENÚ IZQUIERDO */}
+          {usuario && (
+            <Nav className="me-auto">
+
+              <NavLink
+                to="/"
+                className="nav-link px-3"
+              >
+                🏠 Inicio
+              </NavLink>
+
+              <NavLink
+                to="/recetas"
+                className="nav-link px-3"
+              >
+                📖 Mis Recetas
+              </NavLink>
+
+              <NavLink
+                to="/recetas/nueva"
+                className="nav-link px-3"
+              >
+                ✨ Crear Receta
+              </NavLink>
+
+              <NavLink
+                to="/favoritos"
+                className="nav-link px-3"
+              >
+                ⭐ Favoritos
+              </NavLink>
+
+              <NavLink
+                to="/shopping-list"
+                className="nav-link px-3"
+              >
+                🛒 Lista de Compras
+              </NavLink>
+
+  {/* 👇 Ícono temporal para pruebas */}
+  <i className="bi bi-star-fill text-warning fs-3"></i>
+
             </Nav>
           )}
+
+          {/* MENÚ DERECHO */}
+          <Nav>
+            {!usuario ? (
+              <>
+                <NavLink to="/login" className="nav-link px-3">
+                  Iniciar Sesión
+                </NavLink>
+                <NavLink to="/register" className="nav-link px-3">
+                  Registrarse
+                </NavLink>
+              </>
+            ) : (
+              <Dropdown align="end">
+                <Dropdown.Toggle
+                  variant="outline-light"
+                  id="dropdown-user"
+                  className="d-flex align-items-center gap-2"
+                  style={{
+                    borderRadius: "50px",
+                    padding: "6px 12px",
+                    background: "rgba(255,255,255,0.1)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                  }}
+                >
+                  <Image
+                    src={`https://ui-avatars.com/api/?name=${usuario.nombre}&background=random`}
+                    roundedCircle
+                    width="32"
+                    height="32"
+                  />
+                  <span>{usuario.nombre}</span>
+                </Dropdown.Toggle>
+
+                <Dropdown.Menu className="shadow rounded-3">
+                  <Dropdown.Item as={Link} to="/perfil">
+                    👤 Mi Perfil
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item onClick={cerrarSesion} className="text-danger">
+                    🚪 Cerrar Sesión
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            )}
+          </Nav>
+
         </Navbar.Collapse>
       </Container>
     </Navbar>
   );
-};
-
-export default Header;
+}
