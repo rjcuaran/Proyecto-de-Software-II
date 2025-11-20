@@ -10,7 +10,7 @@ router.post('/register', authController.registrar);
 router.post('/login', authController.login);
 
 // Ruta para verificar token (protegida)
-router.get('/verify', authMiddleware.verificarToken, (req, res) => {
+router.get('/verify', authMiddleware, (req, res) => {
     res.json({
         success: true,
         mensaje: 'Token válido',

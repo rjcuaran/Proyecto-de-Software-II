@@ -1,19 +1,22 @@
-const mysql = require('mysql2');
-require('dotenv').config();
+// backend/config/database.js
+import mysql from "mysql2";
+import dotenv from "dotenv";
 
-const connection = mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'organizador_recetas'
+dotenv.config();
+
+const db = mysql.createConnection({
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "organizador_recetas",
 });
 
-connection.connect((err) => {
+db.connect((err) => {
   if (err) {
-    console.error('Error conectando a MySQL:', err);
+    console.error("❌ Error conectando a MySQL:", err);
     return;
   }
-  console.log('✅ Conectado a MySQL - Organizador de Recetas');
+  console.log("✅ Conectado a MySQL - Organizador de Recetas");
 });
 
-module.exports = connection;
+export default db;

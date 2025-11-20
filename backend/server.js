@@ -1,17 +1,16 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const path = require("path");
 
 // Rutas
-import userRoutes from "./routes/userRoutes.js";
-import recetaRoutes from "./routes/recetaRoutes.js";
-import favoritosRoutes from "./routes/favoritosRoutes.js";
-import shoppingListRoutes from "./routes/shoppingListRoutes.js"; // ✅ Asegúrate de incluir esta línea
+const userRoutes = require("./routes/userRoutes");
+const recetaRoutes = require("./routes/recetaRoutes");
+const favoritosRoutes = require("./routes/favoritosRoutes");
+const shoppingListRoutes = require("./routes/shoppingListRoutes");
 
 // DB
-import pool from "./config/db.js";
+const db = require("./config/database");
 
 dotenv.config();
 
@@ -23,12 +22,12 @@ app.use(express.json());
 app.use("/api/usuarios", userRoutes);
 app.use("/api/recetas", recetaRoutes);
 app.use("/api/favoritos", favoritosRoutes);
-app.use("/api/shopping-list", shoppingListRoutes); // ✅ Aquí se activa la ruta
+app.use("/api/shopping-list", shoppingListRoutes);
 
 // Puerto
 const PORT = process.env.PORT || 5000;
 
 // Servidor
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+  console.log(`✅ Servidor corriendo en el puerto ${PORT}`);
 });

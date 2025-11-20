@@ -3,8 +3,8 @@ const router = express.Router();
 const recetaController = require('../controllers/recetaController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Todas las rutas requieren autenticación
-router.use(authMiddleware.verificarToken);
+// ✅ Corregido
+router.use(authMiddleware);
 
 // Rutas de recetas
 router.get('/', recetaController.obtenerRecetas);

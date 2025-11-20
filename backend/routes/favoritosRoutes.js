@@ -3,8 +3,8 @@ const router = express.Router();
 const favoritosController = require('../controllers/favoritosController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Todas las rutas requieren autenticación
-router.use(authMiddleware.verificarToken);
+// ✅ Corregido
+router.use(authMiddleware);
 
 // Agregar receta a favoritos
 router.post('/:idReceta', favoritosController.agregarFavorito);

@@ -1,7 +1,7 @@
 // controllers/shoppingListController.js
-import { db } from "../config/database.js"; // o require si no usas ESModules
+const db = require('../config/database');
 
-export const generarListaCompra = async (req, res) => {
+const generarListaCompra = async (req, res) => {
   try {
     const { recetas } = req.body;
 
@@ -41,3 +41,5 @@ export const generarListaCompra = async (req, res) => {
     });
   }
 };
+
+module.exports = { generarListaCompra };

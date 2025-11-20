@@ -1,11 +1,9 @@
-// routes/shoppingListRoutes.js
-import express from "express";
-import { generarListaCompra } from "../controllers/shoppingListController.js";
-import { authMiddleware } from "../middleware/authMiddleware.js";
-
+const express = require('express');
 const router = express.Router();
+const { generarListaCompra } = require('../controllers/shoppingListController');
+const authMiddleware = require('../middleware/authMiddleware');
 
-// Requiere usuario autenticado para generar lista
-router.post("/", authMiddleware, generarListaCompra);
+// ✅ Requiere usuario autenticado para generar lista
+router.post('/', authMiddleware, generarListaCompra);
 
-export default router;
+module.exports = router;

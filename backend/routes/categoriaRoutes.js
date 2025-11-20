@@ -3,8 +3,8 @@ const router = express.Router();
 const categoriaController = require('../controllers/categoriaController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Todas las rutas requieren autenticación
-router.use(authMiddleware.verificarToken);
+// ✅ Corregido
+router.use(authMiddleware);
 
 // Obtener todas las categorías
 router.get('/', categoriaController.obtenerTodas);
