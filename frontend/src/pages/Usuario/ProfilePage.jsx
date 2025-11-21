@@ -63,7 +63,6 @@ export default function ProfilePage() {
             <div className="card-body p-4">
               <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
                 <div>
-                  <p className="text-muted mb-1">Cuenta</p>
                   <h2 className="h4 mb-0">👤 Mi Perfil</h2>
                   <p className="text-muted mb-0 small">{user.correo}</p>
                 </div>
