@@ -105,7 +105,7 @@ export default function Header() {
                     onClick={handleLogout}
                   >
                     <i className="bi bi-box-arrow-right me-2"></i>
-                    Cerrar Sesión
+                    Cerrar sesión
                   </button>
                 </li>
 

@@ -61,13 +61,11 @@ export default function ProfilePage() {
         <div className="col-lg-8">
           <div className="card shadow-sm border-0">
             <div className="card-body p-4">
-              <div className="d-flex align-items-center justify-content-between mb-3">
+              <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
                 <div>
                   <p className="text-muted mb-1">Cuenta</p>
                   <h2 className="h4 mb-0">👤 Mi Perfil</h2>
-                </div>
-                <div className="badge bg-primary-subtle text-primary px-3 py-2">
-                  {user?.correo}
+                  <p className="text-muted mb-0 small">{user.correo}</p>
                 </div>
               </div>
 
@@ -76,12 +74,6 @@ export default function ProfilePage() {
                   <div className="border rounded-3 p-3 bg-light">
                     <p className="text-muted mb-1">Nombre</p>
                     <p className="h6 mb-0">{user.nombre}</p>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="border rounded-3 p-3 bg-light">
-                    <p className="text-muted mb-1">Email</p>
-                    <p className="h6 mb-0">{user.correo}</p>
                   </div>
                 </div>
                 <div className="col-md-6">
