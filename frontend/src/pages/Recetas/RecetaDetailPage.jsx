@@ -10,6 +10,7 @@ import {
   Row,
   Col,
   Container,
+  Alert,
 } from "react-bootstrap";
 
 export default function RecetaDetailPage() {
@@ -19,6 +20,9 @@ export default function RecetaDetailPage() {
   const [receta, setReceta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [scrollY, setScrollY] = useState(0);
+  const [esFavorito, setEsFavorito] = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
+  const [favError, setFavError] = useState(null);
 
   useEffect(() => {
     const fetchReceta = async () => {
@@ -42,6 +46,23 @@ export default function RecetaDetailPage() {
   }, [id]);
 
   useEffect(() => {
+    const fetchFavorito = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `http://localhost:5000/api/favoritos/${id}/check`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setEsFavorito(!!res.data.esFavorito);
+      } catch (error) {
+        console.error("❌ Error verificando favorito:", error);
+      }
+    };
+
+    fetchFavorito();
+  }, [id]);
+
+  useEffect(() => {
     let ticking = false;
 
     const handleScroll = () => {
@@ -62,6 +83,35 @@ export default function RecetaDetailPage() {
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const toggleFavorito = async () => {
+    setFavError(null);
+    setFavLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No se encontró token");
+
+      if (esFavorito) {
+        await axios.delete(`http://localhost:5000/api/favoritos/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setEsFavorito(false);
+      } else {
+        await axios.post(
+          `http://localhost:5000/api/favoritos/${id}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setEsFavorito(true);
+      }
+    } catch (error) {
+      console.error("❌ Error al alternar favorito:", error);
+      setFavError("No se pudo actualizar el estado de favorito.");
+    } finally {
+      setFavLoading(false);
+    }
+  };
 
   if (loading)
     return (
@@ -145,9 +195,17 @@ export default function RecetaDetailPage() {
             >
               ✏️ Editar
             </Button>
-            <Button variant="warning">⭐ Favorito</Button>
+            <Button
+              variant={esFavorito ? "warning" : "outline-warning"}
+              onClick={toggleFavorito}
+              disabled={favLoading}
+            >
+              {favLoading ? "Guardando..." : esFavorito ? "★ En favoritos" : "☆ Favorito"}
+            </Button>
           </div>
         </div>
+
+        {favError && <Alert variant="danger">{favError}</Alert>}
 
         {/* DESCRIPCIÓN */}
         <Card className="shadow-sm border-0 mb-4 seccion-card">
