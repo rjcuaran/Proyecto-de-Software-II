@@ -1,150 +1,123 @@
-// backend/controllers/recetaController.js
 const db = require("../config/database");
-const Receta = require("../models/Receta");
 
-const crearReceta = async (req, res) => {
-  try {
-    const id_usuario = req.user?.id; // ID del usuario autenticado
-    const { nombre, categoria, descripcion, preparacion, ingredientes } = req.body;
+// =====================
+// CREAR RECETA
+// =====================
+const crearReceta = (req, res) => {
+  const { nombre, categoria, descripcion, preparacion, ingredientes } = req.body;
+  const id_usuario = req.user?.id;
 
-    if (!nombre || !categoria || !descripcion || !preparacion) {
-      return res.status(400).json({
-        success: false,
-        mensaje: "Todos los campos de la receta son obligatorios.",
-      });
-    }
+  if (!nombre || !categoria || !descripcion || !preparacion) {
+    return res.status(400).json({ mensaje: "Faltan datos obligatorios" });
+  }
 
-    const recetaData = { nombre, categoria, descripcion, preparacion, id_usuario };
+  const sql = `INSERT INTO receta (nombre, categoria, descripcion, preparacion, id_usuario, fecha_creacion)
+               VALUES (?, ?, ?, ?, ?, NOW())`;
 
-    Receta.crear(recetaData, async (err, result) => {
+  db.query(
+    sql,
+    [nombre, categoria, descripcion, preparacion, id_usuario],
+    (err, result) => {
       if (err) {
-        console.error("❌ Error al crear receta:", err);
-        return res.status(500).json({ success: false, mensaje: "Error al crear la receta." });
+        console.error("❌ Error creando receta:", err);
+        return res.status(500).json({ mensaje: "Error creando receta" });
       }
 
-      const id_receta = result.id_receta;
-      console.log(`✅ Receta creada con ID: ${id_receta}`);
+      const id_receta = result.insertId;
 
-      if (Array.isArray(ingredientes) && ingredientes.length > 0) {
-        const ingredientesValidos = ingredientes.filter(
-          (i) => i.nombre && i.cantidad && i.unidad_medida
-        );
+      // Insertar ingredientes si existen
+      if (ingredientes && ingredientes.length > 0) {
+        const values = ingredientes.map((ing) => [
+          id_receta,
+          ing.nombre,
+          ing.cantidad,
+          ing.unidad_medida,
+        ]);
 
-        if (ingredientesValidos.length > 0) {
-          const values = ingredientesValidos.map((i) => [
-            id_receta,
-            i.nombre,
-            i.cantidad,
-            i.unidad_medida,
-          ]);
+        const sqlIng = `INSERT INTO ingrediente (id_receta, nombre, cantidad, unidad_medida)
+                        VALUES ?`;
 
-          const sql = `
-            INSERT INTO ingrediente (id_receta, nombre, cantidad, unidad_medida)
-            VALUES ?
-          `;
+        db.query(sqlIng, [values], (errIng) => {
+          if (errIng) {
+            console.error("❌ Error guardando ingredientes:", errIng);
+            return res
+              .status(500)
+              .json({ mensaje: "Receta creada, pero falló guardar ingredientes" });
+          }
 
-          db.query(sql, [values], (errInsert) => {
-            if (errInsert) {
-              console.error("⚠️ Error agregando ingredientes:", errInsert);
-              return res.status(201).json({
-                success: true,
-                mensaje: "Receta creada pero ocurrió un error al agregar ingredientes.",
-                id_receta,
-              });
-            }
-
-            console.log("✅ Ingredientes agregados correctamente");
-            return res.status(201).json({
-              success: true,
-              mensaje: "Receta e ingredientes creados correctamente.",
-              id_receta,
-            });
-          });
-        } else {
-          return res.status(201).json({
-            success: true,
-            mensaje: "Receta creada (sin ingredientes válidos).",
+          return res.json({
+            mensaje: "Receta creada con éxito",
             id_receta,
           });
-        }
+        });
       } else {
-        return res.status(201).json({
-          success: true,
-          mensaje: "Receta creada (sin ingredientes).",
+        return res.json({
+          mensaje: "Receta creada con éxito",
           id_receta,
         });
       }
-    });
-  } catch (error) {
-    console.error("❌ Error inesperado en crearReceta:", error);
-    res.status(500).json({
-      success: false,
-      mensaje: "Error inesperado al crear la receta.",
-    });
-  }
+    }
+  );
 };
 
-// 🧩 NUEVO: Obtener una receta con todos sus ingredientes
-const obtenerRecetaPorId = async (req, res) => {
-  try {
-    const id_receta = req.params.id;
-    const id_usuario = req.user?.id;
+// =====================
+// OBTENER TODAS LAS RECETAS DEL USUARIO
+// =====================
+const obtenerRecetas = (req, res) => {
+  const id_usuario = req.user?.id;
 
-    // 1️⃣ Verificar que la receta existe y pertenece al usuario autenticado
-    const queryReceta = `
-      SELECT * FROM receta 
-      WHERE id_receta = ? AND id_usuario = ?
-    `;
-    db.query(queryReceta, [id_receta, id_usuario], (err, results) => {
-      if (err) {
-        console.error("❌ Error al obtener receta:", err);
-        return res.status(500).json({ success: false, mensaje: "Error al obtener la receta." });
-      }
+  const sql = `
+      SELECT id_receta, nombre, categoria, descripcion
+      FROM receta
+      WHERE id_usuario = ?
+      ORDER BY fecha_creacion DESC
+  `;
 
-      if (results.length === 0) {
-        return res.status(404).json({
-          success: false,
-          mensaje: "Receta no encontrada o no pertenece al usuario.",
-        });
-      }
+  db.query(sql, [id_usuario], (err, results) => {
+    if (err) {
+      console.error("❌ Error en obtenerRecetas:", err);
+      return res.status(500).json({ mensaje: "Error obteniendo recetas" });
+    }
 
-      const receta = results[0];
-
-      // 2️⃣ Obtener los ingredientes asociados
-      const queryIngredientes = `
-        SELECT id_ingrediente, nombre, cantidad, unidad_medida
-        FROM ingrediente
-        WHERE id_receta = ?
-      `;
-
-      db.query(queryIngredientes, [id_receta], (errIng, ingredientes) => {
-        if (errIng) {
-          console.error("⚠️ Error obteniendo ingredientes:", errIng);
-          return res.status(500).json({
-            success: false,
-            mensaje: "Error al obtener los ingredientes de la receta.",
-          });
-        }
-
-        receta.ingredientes = ingredientes;
-
-        // 3️⃣ Respuesta final
-        return res.json({
-          success: true,
-          receta,
-        });
-      });
-    });
-  } catch (error) {
-    console.error("❌ Error inesperado en obtenerRecetaPorId:", error);
-    res.status(500).json({
-      success: false,
-      mensaje: "Error inesperado al obtener la receta.",
-    });
-  }
+    return res.json(results);
+  });
 };
 
+// =====================
+// OBTENER RECETA POR ID (CON INGREDIENTES)
+// =====================
+const obtenerRecetaPorId = (req, res) => {
+  const { id } = req.params;
+
+  const sqlReceta = `SELECT * FROM receta WHERE id_receta = ?`;
+
+  db.query(sqlReceta, [id], (err, recetaResult) => {
+    if (err) return res.status(500).json({ mensaje: "Error obteniendo receta" });
+    if (recetaResult.length === 0)
+      return res.status(404).json({ mensaje: "Receta no encontrada" });
+
+    const receta = recetaResult[0];
+
+    const sqlIng = `SELECT * FROM ingrediente WHERE id_receta = ?`;
+
+    db.query(sqlIng, [id], (errIng, ingResult) => {
+      if (errIng)
+        return res
+          .status(500)
+          .json({ mensaje: "Error obteniendo ingredientes" });
+
+      receta.ingredientes = ingResult;
+
+      return res.json(receta);
+    });
+  });
+};
+
+// =====================
+// EXPORTAR CONTROLADORES
+// =====================
 module.exports = {
   crearReceta,
-  obtenerRecetaPorId, // 👈 exportamos también esta función
+  obtenerRecetas,   // <-- AHORA SÍ ESTÁ DEFINIDO
+  obtenerRecetaPorId
 };

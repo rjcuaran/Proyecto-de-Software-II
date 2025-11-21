@@ -1,112 +1,61 @@
 // src/components/common/Footer.js
 import React from "react";
-import { Container, Row, Col } from "react-bootstrap";
-
-// Botón para volver arriba
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 export default function Footer() {
+  const year = new Date().getFullYear();
+
   return (
-    <footer
-      style={{
-        background: "linear-gradient(180deg, #0d0d0d 0%, #000 100%)",
-        color: "#ccc",
-        paddingTop: "50px",
-        marginTop: "80px",
-        borderTop: "1px solid rgba(255,255,255,0.1)",
-      }}
-    >
-      <Container>
+    <footer className="bg-dark text-light mt-auto py-4">
+      <div className="container">
+        <div className="row gy-4">
 
-        {/* SECCIÓN SUPERIOR */}
-        <Row className="text-center text-md-start mb-5">
-          {/* Columna 1 */}
-          <Col md={4} className="mb-4">
-            <h5 className="text-uppercase fw-bold text-light mb-3">
+          {/* BRAND */}
+          <div className="col-md-4 text-center text-md-start">
+            <h4 className="fw-bold text-info">
+              <i className="bi bi-journal-bookmark-fill me-2"></i>
               Organizador de Recetas
-            </h5>
-            <p style={{ maxWidth: "300px" }}>
-              Administra tus recetas, ingredientes y listas de compras
-              con una interfaz moderna y profesional.
+            </h4>
+            <p className="text-muted small">
+              Administra tus recetas, ingredientes y lista de compras en un solo lugar.
             </p>
-          </Col>
+          </div>
 
-          {/* Columna 2 */}
-          <Col md={4} className="mb-4">
-            <h6 className="fw-bold text-light mb-3">Enlaces útiles</h6>
-            <ul className="list-unstyled">
-              <li><a href="#" className="footer-link">Términos y Condiciones</a></li>
-              <li><a href="#" className="footer-link">Política de Privacidad</a></li>
-              <li><a href="#" className="footer-link">Centro de Ayuda</a></li>
-              <li><a href="#" className="footer-link">Contacto</a></li>
+          {/* LINKS */}
+          <div className="col-md-4 text-center">
+            <h6 className="text-uppercase text-info">Navegación</h6>
+            <ul className="list-unstyled small">
+              <li><a href="/recetas" className="text-light text-decoration-none">Mis Recetas</a></li>
+              <li><a href="/favoritos" className="text-light text-decoration-none">Favoritos</a></li>
+              <li><a href="/shopping-list" className="text-light text-decoration-none">Lista de compras</a></li>
+              <li><a href="/perfil" className="text-light text-decoration-none">Mi perfil</a></li>
             </ul>
-          </Col>
+          </div>
 
-          {/* Columna 3 */}
-          <Col md={4} className="mb-4">
-            <h6 className="fw-bold text-light mb-3">Síguenos</h6>
-            <div className="d-flex gap-3 justify-content-center justify-content-md-start">
-              <a href="#" className="footer-social">
+          {/* SOCIAL MEDIA */}
+          <div className="col-md-4 text-center text-md-end">
+            <h6 className="text-uppercase text-info">Sígueme</h6>
+            <div className="d-flex justify-content-center justify-content-md-end gap-3 fs-4">
+              <a href="#" className="text-light">
                 <i className="bi bi-facebook"></i>
               </a>
-              <a href="#" className="footer-social">
+              <a href="#" className="text-light">
                 <i className="bi bi-instagram"></i>
               </a>
-              <a href="#" className="footer-social">
+              <a href="#" className="text-light">
                 <i className="bi bi-youtube"></i>
               </a>
-              <a href="#" className="footer-social">
-                <i className="bi bi-twitter"></i>
-              </a>
             </div>
-          </Col>
-        </Row>
+          </div>
 
-        <hr style={{ borderColor: "rgba(255,255,255,0.1)" }} />
+        </div>
 
-        {/* SECCIÓN INFERIOR */}
-        <Row className="py-3 text-center text-md-between justify-content-between">
-          <Col md="auto" className="mb-2">
-            <span className="text-muted small">
-              © {new Date().getFullYear()} Organizador de Recetas — Todos los derechos reservados.
-            </span>
-          </Col>
+        <hr className="border-secondary my-3"/>
 
-          <Col md="auto">
-            <button
-              onClick={scrollToTop}
-              className="btn btn-outline-light btn-sm rounded-pill shadow-sm px-3 py-1"
-            >
-              ↑ Volver arriba
-            </button>
-          </Col>
-        </Row>
-      </Container>
-
-      {/* ESTILOS ESPECIALES */}
-      <style>{`
-        .footer-link {
-          color: #ccc;
-          text-decoration: none;
-          transition: all 0.2s ease;
-        }
-        .footer-link:hover {
-          color: #fff;
-          text-decoration: underline;
-        }
-
-        .footer-social {
-          font-size: 1.5rem;
-          color: #ccc;
-          transition: transform 0.2s ease, color 0.2s ease;
-        }
-        .footer-social:hover {
-          color: #0d6efd;
-          transform: translateY(-3px);
-        }
-      `}</style>
+        <div className="text-center small text-muted">
+          © {year} Organizador de Recetas – Todos los derechos reservados.
+        </div>
+      </div>
     </footer>
   );
 }

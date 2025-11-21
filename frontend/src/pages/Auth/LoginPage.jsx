@@ -1,54 +1,96 @@
+// src/pages/Auth/LoginPage.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import authService from "../../services/auth";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [correo, setCorreo] = useState("");
+  const [contraseña, setContraseña] = useState("");
   const [error, setError] = useState("");
 
-  const onChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
-
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const res = await authService.loginUser(form.email, form.password);
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        correo,
+        contraseña,
+      });
 
-      localStorage.setItem("token", res.token);
-      navigate("/dashboard");
+      localStorage.setItem("token", res.data.token);
+      navigate("/");
     } catch (err) {
-      console.error(err);
-      setError("Credenciales incorrectas");
+      setError("Credenciales incorrectas.");
     }
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: "430px" }}>
-      <h3 className="text-center mb-4">Iniciar Sesión</h3>
+    <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+      <div
+        className="card shadow-lg border-0 p-4"
+        style={{
+          width: "100%",
+          maxWidth: "420px",
+          borderRadius: "18px",
+        }}
+      >
+        <div className="text-center mb-4">
+          <i className="bi bi-egg-fried text-warning" style={{ fontSize: "4rem" }}></i>
+          <h2 className="fw-bold mt-2 text-primary">Organizador de Recetas</h2>
+          <p className="text-muted">Bienvenido de nuevo, inicia sesión</p>
+        </div>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+        {/* Error */}
+        {error && <div className="alert alert-danger">{error}</div>}
 
-      <form onSubmit={onSubmit}>
-        <input
-          type="email"
-          name="email"
-          className="form-control mb-3"
-          placeholder="Correo"
-          onChange={onChange}
-        />
-        <input
-          type="password"
-          name="password"
-          className="form-control mb-3"
-          placeholder="Contraseña"
-          onChange={onChange}
-        />
-        <button className="btn btn-primary w-100">Ingresar</button>
-      </form>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label fw-semibold">
+              <i className="bi bi-envelope-fill me-2 text-primary"></i>
+              Correo electrónico
+            </label>
+            <input
+              type="email"
+              className="form-control form-control-lg"
+              placeholder="correo@ejemplo.com"
+              value={correo}
+              onChange={(e) => setCorreo(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="form-label fw-semibold">
+              <i className="bi bi-lock-fill me-2 text-primary"></i>
+              Contraseña
+            </label>
+            <input
+              type="password"
+              className="form-control form-control-lg"
+              placeholder="••••••••"
+              value={contraseña}
+              onChange={(e) => setContraseña(e.target.value)}
+              required
+            />
+          </div>
+
+          <button className="btn btn-primary w-100 py-2 fw-semibold mb-3">
+            Iniciar sesión
+          </button>
+        </form>
+
+        <div className="text-center mt-3">
+          <p className="text-muted">
+            ¿No tienes cuenta?{" "}
+            <Link to="/register" className="fw-semibold">
+              Crear cuenta
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

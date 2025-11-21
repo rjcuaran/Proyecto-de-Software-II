@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const favoritosController = require('../controllers/favoritosController');
-const authMiddleware = require('../middleware/authMiddleware');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 // ✅ Corregido
 router.use(authMiddleware);

@@ -1,17 +1,23 @@
-import axios from "axios";
+// src/services/shoppingListService.js
 
-const generarListaCompra = async (recetasIds) => {
-  const token = localStorage.getItem("token");
+export function generarListaCompra(recetasSeleccionadas) {
+  const lista = {};
 
-  const res = await axios.post(
-    "http://localhost:5000/api/shopping-list/generar",
-    { recetas: recetasIds },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+  recetasSeleccionadas.forEach((receta) => {
+    receta.ingredientes.forEach((ing) => {
+      const key = ing.nombre.toLowerCase();
 
-  return res.data.lista;
-};
+      if (!lista[key]) {
+        lista[key] = {
+          nombre: ing.nombre,
+          cantidad: parseFloat(ing.cantidad),
+          unidad: ing.unidad_medida
+        };
+      } else {
+        lista[key].cantidad += parseFloat(ing.cantidad);
+      }
+    });
+  });
 
-export default {
-  generarListaCompra,
-};
+  return Object.values(lista);
+}

@@ -1,14 +1,25 @@
 const express = require("express");
 const router = express.Router();
-const { crearReceta, obtenerRecetaPorId } = require("../controllers/recetaController");
-const authMiddleware = require("../middleware/authMiddleware");
+const authMiddleware = require("../middlewares/authMiddleware");
 
-router.use(authMiddleware);
+// Importar controladores CORRECTAMENTE
+const {
+  crearReceta,
+  obtenerRecetas,
+  obtenerRecetaPorId,
+} = require("../controllers/recetaController");
 
-// Crear receta con ingredientes
-router.post("/", crearReceta);
+// ========================
+// RUTAS DE RECETAS
+// ========================
 
-// Obtener receta con sus ingredientes
-router.get("/:id", obtenerRecetaPorId);
+// Obtener todas las recetas del usuario
+router.get("/", authMiddleware, obtenerRecetas);
+
+// Crear receta
+router.post("/", authMiddleware, crearReceta);
+
+// Obtener receta por ID
+router.get("/:id", authMiddleware, obtenerRecetaPorId);
 
 module.exports = router;

@@ -1,146 +1,120 @@
 // src/components/common/Header.js
 import React from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Navbar, Nav, Container, Dropdown, Image } from "react-bootstrap";
+import { NavLink, useNavigate } from "react-router-dom";
+import authService from "../../services/auth";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 export default function Header() {
   const navigate = useNavigate();
-  const usuario = localStorage.getItem("user")
-    ? JSON.parse(localStorage.getItem("user"))
-    : null;
 
-  const cerrarSesion = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const handleLogout = () => {
+    authService.logout();
     navigate("/login");
   };
 
   return (
-    <Navbar
-      bg="dark"
-      variant="dark"
-      expand="lg"
-      sticky="top"
-      className="shadow-sm py-2"
-      style={{ background: "#1f1f1f" }}
-    >
-      <Container>
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
+      <div className="container">
 
         {/* LOGO */}
-        <Navbar.Brand
-          as={Link}
-          to="/"
-          className="fw-bold d-flex align-items-center gap-2"
-          style={{ fontSize: "1.35rem" }}
+        <span
+          className="navbar-brand d-flex align-items-center gap-2"
+          style={{ cursor: "pointer" }}
+          onClick={() => navigate("/")}
         >
-          <img
-            src="/logo192.png"
-            alt="Logo"
-            width="32"
-            height="32"
-            className="rounded"
-          />
-          Organizador de Recetas
-        </Navbar.Brand>
+          <i className="bi bi-book-half fs-3 text-warning"></i>
+          <span className="fw-bold fs-4">Organizador de Recetas</span>
+        </span>
 
-        {/* Toggle */}
-        <Navbar.Toggle aria-controls="menu-principal" />
+        {/* BOTÓN RESPONSIVE */}
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#mainNavbar"
+          aria-controls="mainNavbar"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <i className="bi bi-list fs-1"></i>
+        </button>
 
-        <Navbar.Collapse id="menu-principal">
+        {/* CONTENIDO */}
+        <div className="collapse navbar-collapse" id="mainNavbar">
 
-          {/* MENÚ IZQUIERDO */}
-          {usuario && (
-            <Nav className="me-auto">
+          {/* MENÚ IZQUIERDA */}
+          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
 
-              <NavLink
-                to="/"
-                className="nav-link px-3"
-              >
-                🏠 Inicio
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/recetas">
+                <i className="bi bi-journal-text me-2"></i>
+                Recetario
               </NavLink>
+            </li>
 
-              <NavLink
-                to="/recetas"
-                className="nav-link px-3"
-              >
-                📖 Mis Recetas
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/ingredientes">
+                <i className="bi bi-bag-check me-2"></i>
+                Ingredientes
               </NavLink>
+            </li>
 
-              <NavLink
-                to="/recetas/nueva"
-                className="nav-link px-3"
-              >
-                ✨ Crear Receta
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/favoritos">
+                <i className="bi bi-heart-fill text-danger me-2"></i>
+                Favoritos
               </NavLink>
+            </li>
 
-              <NavLink
-                to="/favoritos"
-                className="nav-link px-3"
-              >
-                ⭐ Favoritos
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/shopping-list">
+                <i className="bi bi-cart-check me-2"></i>
+                Lista de Compras
               </NavLink>
+            </li>
+          </ul>
 
-              <NavLink
-                to="/shopping-list"
-                className="nav-link px-3"
+          {/* MENÚ DERECHO (Perfil) */}
+          <ul className="navbar-nav ms-auto">
+
+            <li className="nav-item dropdown">
+              <span
+                className="nav-link dropdown-toggle d-flex align-items-center gap-2"
+                role="button"
+                data-bs-toggle="dropdown"
               >
-                🛒 Lista de Compras
-              </NavLink>
+                <i className="bi bi-person-circle fs-4"></i> Usuario
+              </span>
 
-  {/* 👇 Ícono temporal para pruebas */}
-  <i className="bi bi-star-fill text-warning fs-3"></i>
+              <ul className="dropdown-menu dropdown-menu-end shadow-lg">
 
-            </Nav>
-          )}
+                <li>
+                  <NavLink className="dropdown-item" to="/perfil">
+                    <i className="bi bi-person-lines-fill me-2"></i>
+                    Mi Perfil
+                  </NavLink>
+                </li>
 
-          {/* MENÚ DERECHO */}
-          <Nav>
-            {!usuario ? (
-              <>
-                <NavLink to="/login" className="nav-link px-3">
-                  Iniciar Sesión
-                </NavLink>
-                <NavLink to="/register" className="nav-link px-3">
-                  Registrarse
-                </NavLink>
-              </>
-            ) : (
-              <Dropdown align="end">
-                <Dropdown.Toggle
-                  variant="outline-light"
-                  id="dropdown-user"
-                  className="d-flex align-items-center gap-2"
-                  style={{
-                    borderRadius: "50px",
-                    padding: "6px 12px",
-                    background: "rgba(255,255,255,0.1)",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                  }}
-                >
-                  <Image
-                    src={`https://ui-avatars.com/api/?name=${usuario.nombre}&background=random`}
-                    roundedCircle
-                    width="32"
-                    height="32"
-                  />
-                  <span>{usuario.nombre}</span>
-                </Dropdown.Toggle>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
 
-                <Dropdown.Menu className="shadow rounded-3">
-                  <Dropdown.Item as={Link} to="/perfil">
-                    👤 Mi Perfil
-                  </Dropdown.Item>
-                  <Dropdown.Divider />
-                  <Dropdown.Item onClick={cerrarSesion} className="text-danger">
-                    🚪 Cerrar Sesión
-                  </Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
-            )}
-          </Nav>
+                <li>
+                  <button
+                    className="dropdown-item text-danger fw-semibold"
+                    onClick={handleLogout}
+                  >
+                    <i className="bi bi-box-arrow-right me-2"></i>
+                    Cerrar Sesión
+                  </button>
+                </li>
 
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+              </ul>
+            </li>
+
+          </ul>
+        </div>
+      </div>
+    </nav>
   );
 }

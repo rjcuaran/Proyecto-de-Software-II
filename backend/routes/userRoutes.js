@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const verificarToken = require('../middleware/authMiddleware'); // ✅ Importamos directamente la función
+const verificarToken = require('../middlewares/authMiddleware'); // ✅ Importamos directamente la función
 
 // ✅ Middleware de autenticación
 router.use(verificarToken);

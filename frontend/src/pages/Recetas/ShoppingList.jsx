@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import generarListaCompra from "../../services/shoppingListService";
+import { generarListaCompra } from "../../services/shoppingListService";
 
 const ShoppingList = () => {
   const { state } = useLocation();
