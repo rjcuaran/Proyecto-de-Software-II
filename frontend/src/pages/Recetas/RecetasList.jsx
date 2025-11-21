@@ -65,7 +65,7 @@ export default function RecetasList() {
                   <div className="receta-img-wrapper">
                     <Card.Img
                       variant="top"
-                      src={`http://localhost:5000/uploads/${receta.imagen}`}
+src={`http://localhost:5000/uploads/recetas/${receta.imagen}`}
                       className="receta-img"
                     />
                   </div>
