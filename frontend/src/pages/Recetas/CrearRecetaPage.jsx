@@ -16,6 +16,7 @@ export default function CrearRecetaPage() {
     ingredientes: [],
   });
 
+  const [imagen, setImagen] = useState(null); // <-- FOTO
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -41,11 +42,29 @@ export default function CrearRecetaPage() {
     try {
       const token = localStorage.getItem("token");
 
+      // FormData para enviar archivos
+      const formData = new FormData();
+      formData.append("nombre", receta.nombre);
+      formData.append("categoria", receta.categoria);
+      formData.append("descripcion", receta.descripcion);
+      formData.append("preparacion", receta.preparacion);
+
+      // Imagen
+      if (imagen) {
+        formData.append("imagen", imagen);
+      }
+
+      // Ingredientes convertidos a JSON
+      formData.append("ingredientes", JSON.stringify(receta.ingredientes));
+
       const res = await axios.post(
         "http://localhost:5000/api/recetas",
-        receta,
+        formData,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
 
@@ -66,7 +85,16 @@ export default function CrearRecetaPage() {
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
 
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmit} encType="multipart/form-data">
+            {/* FOTO DE LA RECETA */}
+            <Form.Group className="mb-3">
+              <Form.Label>Imagen de la receta</Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImagen(e.target.files[0])}
+              />
+            </Form.Group>
 
             <Form.Group className="mb-3">
               <Form.Label>Nombre de la receta</Form.Label>
@@ -129,7 +157,6 @@ export default function CrearRecetaPage() {
                 Guardar receta
               </Button>
             </div>
-
           </Form>
         </Card.Body>
       </Card>

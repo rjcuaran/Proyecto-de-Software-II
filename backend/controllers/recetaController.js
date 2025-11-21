@@ -1,22 +1,39 @@
 const db = require("../config/database");
+const path = require("path");
 
 // =====================
-// CREAR RECETA
+// CREAR RECETA (con imagen)
 // =====================
 const crearReceta = (req, res) => {
-  const { nombre, categoria, descripcion, preparacion, ingredientes } = req.body;
+  const { nombre, categoria, descripcion, preparacion } = req.body;
   const id_usuario = req.user?.id;
+
+  // Imagen subida por Multer
+  const imagen = req.file ? req.file.filename : null;
+
+  // Ingredientes llegan como STRING → los convertimos a JSON
+  let ingredientes = [];
+  try {
+    if (req.body.ingredientes) {
+      ingredientes = JSON.parse(req.body.ingredientes);
+    }
+  } catch (e) {
+    console.error("❌ Error parseando ingredientes:", e);
+    return res.status(400).json({ mensaje: "Formato inválido de ingredientes" });
+  }
 
   if (!nombre || !categoria || !descripcion || !preparacion) {
     return res.status(400).json({ mensaje: "Faltan datos obligatorios" });
   }
 
-  const sql = `INSERT INTO receta (nombre, categoria, descripcion, preparacion, id_usuario, fecha_creacion)
-               VALUES (?, ?, ?, ?, ?, NOW())`;
+  const sql = `
+    INSERT INTO receta (nombre, categoria, descripcion, preparacion, imagen, id_usuario, fecha_creacion)
+    VALUES (?, ?, ?, ?, ?, ?, NOW())
+  `;
 
   db.query(
     sql,
-    [nombre, categoria, descripcion, preparacion, id_usuario],
+    [nombre, categoria, descripcion, preparacion, imagen, id_usuario],
     (err, result) => {
       if (err) {
         console.error("❌ Error creando receta:", err);
@@ -26,7 +43,7 @@ const crearReceta = (req, res) => {
       const id_receta = result.insertId;
 
       // Insertar ingredientes si existen
-      if (ingredientes && ingredientes.length > 0) {
+      if (ingredientes.length > 0) {
         const values = ingredientes.map((ing) => [
           id_receta,
           ing.nombre,
@@ -34,26 +51,30 @@ const crearReceta = (req, res) => {
           ing.unidad_medida,
         ]);
 
-        const sqlIng = `INSERT INTO ingrediente (id_receta, nombre, cantidad, unidad_medida)
-                        VALUES ?`;
+        const sqlIng = `
+          INSERT INTO ingrediente (id_receta, nombre, cantidad, unidad_medida)
+          VALUES ?
+        `;
 
         db.query(sqlIng, [values], (errIng) => {
           if (errIng) {
             console.error("❌ Error guardando ingredientes:", errIng);
-            return res
-              .status(500)
-              .json({ mensaje: "Receta creada, pero falló guardar ingredientes" });
+            return res.status(500).json({
+              mensaje: "Receta creada, pero falló guardar ingredientes",
+            });
           }
 
           return res.json({
             mensaje: "Receta creada con éxito",
             id_receta,
+            imagen,
           });
         });
       } else {
         return res.json({
           mensaje: "Receta creada con éxito",
           id_receta,
+          imagen,
         });
       }
     }
@@ -61,13 +82,13 @@ const crearReceta = (req, res) => {
 };
 
 // =====================
-// OBTENER TODAS LAS RECETAS DEL USUARIO
+// OBTENER TODAS LAS RECETAS
 // =====================
 const obtenerRecetas = (req, res) => {
   const id_usuario = req.user?.id;
 
   const sql = `
-      SELECT id_receta, nombre, categoria, descripcion
+      SELECT id_receta, nombre, categoria, descripcion, imagen
       FROM receta
       WHERE id_usuario = ?
       ORDER BY fecha_creacion DESC
@@ -113,11 +134,8 @@ const obtenerRecetaPorId = (req, res) => {
   });
 };
 
-// =====================
-// EXPORTAR CONTROLADORES
-// =====================
 module.exports = {
   crearReceta,
-  obtenerRecetas,   // <-- AHORA SÍ ESTÁ DEFINIDO
-  obtenerRecetaPorId
+  obtenerRecetas,
+  obtenerRecetaPorId,
 };

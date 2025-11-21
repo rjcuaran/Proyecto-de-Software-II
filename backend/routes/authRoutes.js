@@ -1,21 +1,12 @@
-const express = require('express');
+// backend/routes/authRoutes.js
+const express = require("express");
 const router = express.Router();
-const authController = require('../controllers/authController');
-const authMiddleware = require('../middlewares/authMiddleware');
 
-// Ruta de registro (pública)
-router.post('/register', authController.registrar);
+const {
+  login
+} = require("../controllers/authController");
 
-// Ruta de login (pública)  
-router.post('/login', authController.login);
-
-// Ruta para verificar token (protegida)
-router.get('/verify', authMiddleware, (req, res) => {
-    res.json({
-        success: true,
-        mensaje: 'Token válido',
-        user: req.user
-    });
-});
+// Ruta: POST /api/auth/login
+router.post("/login", login);
 
 module.exports = router;

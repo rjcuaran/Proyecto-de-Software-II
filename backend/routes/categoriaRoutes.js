@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const categoriaController = require('../controllers/categoriaController');
-const authMiddleware = require('../middleware/authMiddleware');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 // ✅ Corregido
 router.use(authMiddleware);

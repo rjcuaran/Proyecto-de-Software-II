@@ -6,8 +6,8 @@ class Receta {
     const { nombre, categoria, descripcion, preparacion, id_usuario } = recetaData;
     
     const query = `
-      INSERT INTO receta (nombre, categoria, descripcion, preparacion, id_usuario, fecha_creacion)
-      VALUES (?, ?, ?, ?, ?, NOW())
+INSERT INTO receta (nombre, categoria, descripcion, preparacion, imagen, id_usuario, fecha_creacion)
+VALUES (?, ?, ?, ?, ?, ?, NOW())
     `;
     
     db.query(query, [nombre, categoria, descripcion, preparacion, id_usuario], (err, results) => {

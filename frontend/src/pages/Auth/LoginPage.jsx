@@ -6,8 +6,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [correo, setCorreo] = useState("");
-  const [contraseña, setContraseña] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
@@ -16,13 +16,14 @@ export default function LoginPage() {
 
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", {
-        correo,
-        contraseña,
+        email,
+        password,
       });
 
       localStorage.setItem("token", res.data.token);
       navigate("/");
     } catch (err) {
+      console.error(err);
       setError("Credenciales incorrectas.");
     }
   };
@@ -43,7 +44,6 @@ export default function LoginPage() {
           <p className="text-muted">Bienvenido de nuevo, inicia sesión</p>
         </div>
 
-        {/* Error */}
         {error && <div className="alert alert-danger">{error}</div>}
 
         <form onSubmit={handleSubmit}>
@@ -56,8 +56,8 @@ export default function LoginPage() {
               type="email"
               className="form-control form-control-lg"
               placeholder="correo@ejemplo.com"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -71,8 +71,8 @@ export default function LoginPage() {
               type="password"
               className="form-control form-control-lg"
               placeholder="••••••••"
-              value={contraseña}
-              onChange={(e) => setContraseña(e.target.value)}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>

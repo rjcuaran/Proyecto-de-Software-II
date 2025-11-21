@@ -25,6 +25,8 @@ app.use("/api/usuarios", userRoutes);
 app.use("/api/recetas", recetaRoutes);
 app.use("/api/favoritos", favoritosRoutes);
 app.use("/api/shopping-list", shoppingListRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 // Puerto
 const PORT = process.env.PORT || 5000;
