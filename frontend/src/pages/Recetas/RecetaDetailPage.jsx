@@ -18,6 +18,7 @@ export default function RecetaDetailPage() {
 
   const [receta, setReceta] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
     const fetchReceta = async () => {
@@ -40,6 +41,28 @@ export default function RecetaDetailPage() {
     fetchReceta();
   }, [id]);
 
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrollY(currentY);
+          ticking = false;
+        });
+
+        ticking = true;
+      }
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   if (loading)
     return (
       <div className="text-center mt-5">
@@ -55,6 +78,22 @@ export default function RecetaDetailPage() {
     ? `http://localhost:5000/uploads/${receta.imagen}`
     : null;
 
+  const parallaxOffset = Math.min(scrollY, 320);
+  const zoomScale = 1 + Math.min(parallaxOffset / 950, 0.12);
+  const heroMediaTransform = `scale(${zoomScale}) translateY(${parallaxOffset * 0.18}px)`;
+  const titleOpacity = Math.max(1 - parallaxOffset / 260, 0.35);
+  const titleTranslate = `translateY(${Math.min(parallaxOffset * 0.12, 30)}px)`;
+
+  const heroMediaStyle = imagenUrl
+    ? {
+        backgroundImage: `linear-gradient(180deg, rgba(10,11,15,0.65) 0%, rgba(10,11,15,0.35) 35%, rgba(10,11,15,0.75) 100%), url(${imagenUrl})`,
+        transform: heroMediaTransform,
+      }
+    : {
+        background: "linear-gradient(135deg, #1f2933, #3b4a5a)",
+        transform: heroMediaTransform,
+      };
+
   return (
     <div className="receta-detail-wrapper">
       {/* HERO PARALLAX */}
@@ -62,18 +101,9 @@ export default function RecetaDetailPage() {
         className={`receta-hero parallax-hero ${
           !imagenUrl ? "hero-sin-imagen" : ""
         }`}
-        style={
-          imagenUrl
-            ? {
-                backgroundImage: `linear-gradient(
-                  to bottom,
-                  rgba(0,0,0,0.55),
-                  rgba(0,0,0,0.65)
-                ), url(${imagenUrl})`,
-              }
-            : {}
-        }
       >
+        <div className="hero-media" style={heroMediaStyle} />
+
         {!imagenUrl && (
           <div className="sin-imagen-text">📷 Sin imagen disponible</div>
         )}
@@ -81,7 +111,12 @@ export default function RecetaDetailPage() {
         {/* Overlay de texto */}
         <div className="hero-overlay">
           <span className="hero-subtitle">Receta destacada</span>
-          <h1 className="fw-bold hero-title">{receta.nombre}</h1>
+          <h1
+            className="fw-bold hero-title"
+            style={{ opacity: titleOpacity, transform: titleTranslate }}
+          >
+            {receta.nombre}
+          </h1>
           <Badge bg="info" className="categoria-badge">
             {receta.categoria}
           </Badge>
@@ -163,29 +198,31 @@ export default function RecetaDetailPage() {
         .receta-hero {
           position: relative;
           width: 100%;
-          height: 320px;
+          height: clamp(380px, 42vh, 420px);
           display: flex;
           align-items: flex-end;
           color: #fff;
           overflow: hidden;
+          isolation: isolate;
         }
 
-        .parallax-hero {
+        .hero-media {
+          position: absolute;
+          inset: 0;
           background-size: cover;
           background-position: center center;
           background-repeat: no-repeat;
           background-attachment: fixed;
+          will-change: transform;
+          transition: transform 0.45s ease-out, filter 0.45s ease-out;
+          filter: saturate(1.05) contrast(1.02);
         }
 
         /* Desactivar parallax en móviles por rendimiento */
         @media (max-width: 768px) {
-          .parallax-hero {
+          .hero-media {
             background-attachment: scroll;
           }
-        }
-
-        .hero-sin-imagen {
-          background: linear-gradient(135deg, #1f2933, #3b4a5a);
         }
 
         .sin-imagen-text {
@@ -201,8 +238,16 @@ export default function RecetaDetailPage() {
         .hero-overlay {
           position: relative;
           z-index: 2;
-          padding: 40px 8vw;
+          padding: 46px 8vw;
           width: 100%;
+          background: linear-gradient(
+            180deg,
+            rgba(6, 8, 10, 0.15) 0%,
+            rgba(6, 8, 10, 0.25) 40%,
+            rgba(6, 8, 10, 0.55) 100%
+          );
+          backdrop-filter: blur(1px);
+          box-shadow: inset 0 -120px 160px rgba(0, 0, 0, 0.32);
         }
 
         .hero-subtitle {
@@ -210,12 +255,15 @@ export default function RecetaDetailPage() {
           letter-spacing: 0.16em;
           font-size: 0.8rem;
           opacity: 0.9;
+          display: inline-block;
+          padding: 6px 0;
         }
 
         .hero-title {
           font-size: clamp(1.8rem, 3vw, 2.6rem);
           margin: 6px 0 10px;
-          text-shadow: 0 8px 22px rgba(0,0,0,0.55);
+          text-shadow: 0 10px 30px rgba(0,0,0,0.6);
+          transition: opacity 0.35s ease, transform 0.35s ease;
         }
 
         .categoria-badge {
