@@ -27,6 +27,7 @@ export default function RecetasList() {
 
   const buildImagenUrl = (img) => {
     if (!img) return null;
+    if (/^https?:\/\//.test(img)) return img;
     const normalizada = img.includes("/") ? img : `recetas/${img}`;
     return `http://localhost:5000/uploads/${normalizada}`;
   };
@@ -92,6 +93,10 @@ export default function RecetasList() {
 
   const handleFiltroChange = (campo, valor) => {
     setFiltros((prev) => ({ ...prev, [campo]: valor }));
+  };
+
+  const limpiarFiltros = () => {
+    setFiltros({ q: "", categoria: "todas", orden: "desc" });
   };
 
   if (loading)
@@ -164,13 +169,24 @@ export default function RecetasList() {
                 </Form.Select>
               </Col>
             </Row>
+            {(filtros.q || filtros.categoria !== "todas" || filtros.orden !== "desc") && (
+              <div className="d-flex justify-content-end mt-3">
+                <Button variant="link" className="text-decoration-none" onClick={limpiarFiltros}>
+                  Limpiar filtros
+                </Button>
+              </div>
+            )}
           </Form>
         </Card.Body>
       </Card>
 
       {/* SIN RECETAS */}
       {recetas.length === 0 ? (
-        <Alert variant="info">Aún no has creado recetas.</Alert>
+        <Alert variant="info">
+          {filtros.q || filtros.categoria !== "todas" || filtros.orden !== "desc"
+            ? "No se encontraron recetas con estos filtros."
+            : "Aún no has creado recetas."}
+        </Alert>
       ) : (
         <Row xs={1} sm={2} md={3} lg={3} className="g-4">
           {recetas.map((receta) => (
@@ -252,9 +268,9 @@ export default function RecetasList() {
 
 /* ESTILO EXTRA PREMIUM */
 const styles = `
-.receta-img-wrapper { 
-  height: 180px; 
-  overflow: hidden; 
+.receta-img-wrapper {
+  height: 180px;
+  overflow: hidden;
 }
 
 .receta-img {
@@ -288,4 +304,13 @@ const styles = `
 }
 `;
 
-document.head.insertAdjacentHTML("beforeend", `<style>${styles}</style>`);
+// Inserta estilos una sola vez
+if (typeof document !== "undefined") {
+  const styleId = "recetas-list-premium-styles";
+  if (!document.getElementById(styleId)) {
+    const styleTag = document.createElement("style");
+    styleTag.id = styleId;
+    styleTag.innerHTML = styles;
+    document.head.appendChild(styleTag);
+  }
+}

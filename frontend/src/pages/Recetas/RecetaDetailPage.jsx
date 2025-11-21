@@ -138,15 +138,16 @@ export default function RecetaDetailPage() {
   if (!receta) return <p className="text-center">No se encontró la receta.</p>;
 
   // URL de la imagen para usarla en el parallax
-  const imagenPath =
-    receta.imagen && receta.imagen.includes("/")
-      ? receta.imagen
-      : receta.imagen
-      ? `recetas/${receta.imagen}`
-      : null;
+  const imagenPath = (() => {
+    if (!receta.imagen) return null;
+    if (/^https?:\/\//.test(receta.imagen)) return receta.imagen;
+    return receta.imagen.includes("/") ? receta.imagen : `recetas/${receta.imagen}`;
+  })();
 
   const imagenUrl = imagenPath
-    ? `http://localhost:5000/uploads/${imagenPath}`
+    ? imagenPath.startsWith("http")
+      ? imagenPath
+      : `http://localhost:5000/uploads/${imagenPath}`
     : null;
 
   const parallaxOffset = Math.min(scrollY, 320);
