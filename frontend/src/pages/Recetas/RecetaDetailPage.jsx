@@ -23,6 +23,7 @@ export default function RecetaDetailPage() {
   const [esFavorito, setEsFavorito] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
   const [favError, setFavError] = useState(null);
+  const [fechaFormateada, setFechaFormateada] = useState("");
 
   useEffect(() => {
     const fetchReceta = async () => {
@@ -35,6 +36,15 @@ export default function RecetaDetailPage() {
         );
 
         setReceta(res.data);
+        if (res.data.fecha_creacion) {
+          const fecha = new Date(res.data.fecha_creacion);
+          const fechaString = fecha.toLocaleDateString("es-ES", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          });
+          setFechaFormateada(fechaString);
+        }
       } catch (err) {
         console.error("❌ Error cargando receta:", err);
       } finally {
@@ -83,6 +93,10 @@ export default function RecetaDetailPage() {
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   const toggleFavorito = async () => {
     setFavError(null);
@@ -183,14 +197,21 @@ export default function RecetaDetailPage() {
       <Container className="mt-4">
         {/* BOTONES SUPERIORES */}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <Button variant="light" onClick={() => navigate(-1)}>
+          <Button variant="light" onClick={() => navigate(-1)} className="print-hidden">
             ← Volver
           </Button>
 
-          <div>
+          <div className="d-flex align-items-center gap-2 print-hidden">
+            <Button
+              variant="outline-secondary"
+              className="me-1"
+              onClick={handlePrint}
+            >
+              🖨 Imprimir / PDF
+            </Button>
             <Button
               variant="outline-primary"
-              className="me-2"
+              className="me-1"
               onClick={() => navigate(`/recetas/${id}/editar`)}
             >
               ✏️ Editar
@@ -204,6 +225,12 @@ export default function RecetaDetailPage() {
             </Button>
           </div>
         </div>
+
+        {fechaFormateada && (
+          <div className="text-muted mb-3 small meta-row">
+            ⏱ Creada el {fechaFormateada}
+          </div>
+        )}
 
         {favError && <Alert variant="danger">{favError}</Alert>}
 
@@ -356,6 +383,48 @@ export default function RecetaDetailPage() {
         .ingredient-card:hover {
           transform: translateY(-3px);
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.15);
+        }
+
+        .meta-row {
+          letter-spacing: 0.01em;
+        }
+
+        @media print {
+          body, .receta-detail-wrapper {
+            background: #ffffff !important;
+          }
+
+          .print-hidden {
+            display: none !important;
+          }
+
+          .receta-hero {
+            height: 280px;
+          }
+
+          .hero-media {
+            background-attachment: scroll;
+            filter: brightness(0.9);
+          }
+
+          .hero-overlay {
+            background: linear-gradient(
+              180deg,
+              rgba(6, 8, 10, 0.35) 0%,
+              rgba(6, 8, 10, 0.6) 100%
+            );
+            box-shadow: inset 0 -90px 120px rgba(0,0,0,0.22);
+          }
+
+          .seccion-card {
+            box-shadow: none !important;
+            border: 1px solid #e5e7eb;
+          }
+
+          .categoria-badge {
+            color: #0f172a;
+            background: #dbeafe !important;
+          }
         }
       `}</style>
     </div>

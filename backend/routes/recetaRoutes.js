@@ -9,6 +9,7 @@ const {
   obtenerRecetas,
   obtenerRecetaPorId,
   actualizarReceta,
+  obtenerCategorias,
 } = require("../controllers/recetaController");
 
 // ========================
@@ -17,6 +18,9 @@ const {
 
 // Obtener todas las recetas del usuario
 router.get("/", authMiddleware, obtenerRecetas);
+
+// Obtener listado de categorías disponibles
+router.get("/categorias", authMiddleware, obtenerCategorias);
 
 // Crear receta CON IMAGEN
 router.post(

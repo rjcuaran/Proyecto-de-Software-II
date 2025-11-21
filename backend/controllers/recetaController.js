@@ -87,21 +87,64 @@ const crearReceta = (req, res) => {
 // =====================
 const obtenerRecetas = (req, res) => {
   const id_usuario = req.user?.id;
+  const { q, categoria, orden } = req.query;
+
+  const filtros = ["id_usuario = ?"];
+  const params = [id_usuario];
+
+  if (q) {
+    filtros.push("nombre LIKE ?");
+    params.push(`%${q}%`);
+  }
+
+  if (categoria && categoria !== "todas") {
+    filtros.push("categoria = ?");
+    params.push(categoria);
+  }
+
+  const orderDirection = orden === "asc" ? "ASC" : "DESC";
 
   const sql = `
-      SELECT id_receta, nombre, categoria, descripcion, imagen
+      SELECT id_receta, nombre, categoria, descripcion, imagen, fecha_creacion
       FROM receta
-      WHERE id_usuario = ?
-      ORDER BY fecha_creacion DESC
+      WHERE ${filtros.join(" AND ")}
+      ORDER BY fecha_creacion ${orderDirection}
   `;
 
-  db.query(sql, [id_usuario], (err, results) => {
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error("❌ Error en obtenerRecetas:", err);
       return res.status(500).json({ mensaje: "Error obteniendo recetas" });
     }
 
     return res.json(results);
+  });
+};
+
+// =====================
+// OBTENER CATEGORÍAS DISPONIBLES
+// =====================
+const obtenerCategorias = (req, res) => {
+  const id_usuario = req.user?.id;
+
+  const sql = `
+    SELECT DISTINCT categoria
+    FROM receta
+    WHERE id_usuario = ?
+    ORDER BY categoria ASC
+  `;
+
+  db.query(sql, [id_usuario], (err, results) => {
+    if (err) {
+      console.error("❌ Error en obtenerCategorias:", err);
+      return res.status(500).json({ mensaje: "Error obteniendo categorías" });
+    }
+
+    const categorias = results
+      .map((row) => row.categoria)
+      .filter((cat) => !!cat);
+
+    return res.json(categorias);
   });
 };
 
@@ -254,4 +297,5 @@ module.exports = {
   obtenerRecetas,
   obtenerRecetaPorId,
   actualizarReceta,
+  obtenerCategorias,
 };
