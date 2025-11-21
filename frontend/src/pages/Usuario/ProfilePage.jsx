@@ -67,6 +67,10 @@ export default function ProfilePage() {
                   <h2 className="h4 mb-0">👤 Mi Perfil</h2>
                   <p className="text-muted mb-0 small">{user.correo}</p>
                 </div>
+
+                <button type="button" className="btn btn-outline-primary mt-3 mt-md-0">
+                  Editar perfil
+                </button>
               </div>
 
               <div className="row g-3">
