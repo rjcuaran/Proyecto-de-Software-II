@@ -8,6 +8,7 @@ const {
   crearReceta,
   obtenerRecetas,
   obtenerRecetaPorId,
+  actualizarReceta,
 } = require("../controllers/recetaController");
 
 // ========================
@@ -27,5 +28,13 @@ router.post(
 
 // Obtener receta por ID
 router.get("/:id", authMiddleware, obtenerRecetaPorId);
+
+// Actualizar receta (con opción de nueva imagen)
+router.put(
+  "/:id",
+  authMiddleware,
+  upload.single("imagen"),
+  actualizarReceta
+);
 
 module.exports = router;

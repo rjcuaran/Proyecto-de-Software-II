@@ -1,5 +1,6 @@
 const db = require("../config/database");
 const path = require("path");
+const fs = require("fs");
 
 // =====================
 // CREAR RECETA (con imagen)
@@ -134,8 +135,123 @@ const obtenerRecetaPorId = (req, res) => {
   });
 };
 
+// =====================
+// ACTUALIZAR RECETA (con opción de reemplazar imagen)
+// =====================
+const actualizarReceta = (req, res) => {
+  const { id } = req.params;
+  const { nombre, categoria, descripcion, preparacion, imagenActual } = req.body;
+
+  if (!nombre || !categoria || !descripcion || !preparacion) {
+    return res.status(400).json({ mensaje: "Faltan datos obligatorios" });
+  }
+
+  // Parseo de ingredientes: pueden venir como string (FormData) o como objeto
+  let ingredientes = [];
+  try {
+    if (req.body.ingredientes) {
+      ingredientes = Array.isArray(req.body.ingredientes)
+        ? req.body.ingredientes
+        : JSON.parse(req.body.ingredientes);
+    }
+  } catch (err) {
+    console.error("❌ Error parseando ingredientes en actualización:", err);
+    return res.status(400).json({ mensaje: "Formato inválido de ingredientes" });
+  }
+
+  // Imagen nueva subida por Multer (si existe)
+  const imagenNueva = req.file ? req.file.filename : null;
+
+  // 1) Obtener la receta actual para conservar imagen previa si no se envía nueva
+  const sqlSelect = "SELECT imagen FROM receta WHERE id_receta = ?";
+
+  db.query(sqlSelect, [id], (err, resultado) => {
+    if (err) {
+      console.error("❌ Error consultando receta:", err);
+      return res.status(500).json({ mensaje: "Error obteniendo receta" });
+    }
+
+    if (resultado.length === 0) {
+      return res.status(404).json({ mensaje: "Receta no encontrada" });
+    }
+
+    const imagenBD = resultado[0].imagen;
+    const imagenFinal = imagenNueva || imagenActual || imagenBD || null;
+
+    // 2) Actualizar datos principales de la receta
+    const sqlUpdate = `
+      UPDATE receta
+      SET nombre = ?, categoria = ?, descripcion = ?, preparacion = ?, imagen = ?
+      WHERE id_receta = ?
+    `;
+
+    db.query(
+      sqlUpdate,
+      [nombre, categoria, descripcion, preparacion, imagenFinal, id],
+      (errUpdate) => {
+        if (errUpdate) {
+          console.error("❌ Error actualizando receta:", errUpdate);
+          return res.status(500).json({ mensaje: "Error actualizando receta" });
+        }
+
+        // 3) Reemplazar ingredientes (borramos y volvemos a insertar)
+        const sqlDeleteIng = "DELETE FROM ingrediente WHERE id_receta = ?";
+        db.query(sqlDeleteIng, [id], (errDelete) => {
+          if (errDelete) {
+            console.error("❌ Error limpiando ingredientes:", errDelete);
+            return res
+              .status(500)
+              .json({ mensaje: "Receta actualizada, pero falló limpiar ingredientes" });
+          }
+
+          const insertarIngredientes = (callback) => {
+            if (!ingredientes || ingredientes.length === 0) return callback();
+
+            const values = ingredientes.map((ing) => [
+              id,
+              ing.nombre,
+              ing.cantidad,
+              ing.unidad_medida,
+            ]);
+
+            const sqlIng = `
+              INSERT INTO ingrediente (id_receta, nombre, cantidad, unidad_medida)
+              VALUES ?
+            `;
+
+            db.query(sqlIng, [values], (errIng) => {
+              if (errIng) {
+                console.error("❌ Error guardando ingredientes:", errIng);
+                return res.status(500).json({
+                  mensaje: "Receta actualizada, pero falló guardar ingredientes",
+                });
+              }
+              callback();
+            });
+          };
+
+          insertarIngredientes(() => {
+            // 4) Si hay imagen nueva y existía anterior distinta, eliminar archivo viejo
+            if (imagenNueva && imagenBD && imagenBD !== imagenNueva) {
+              const imagenPath = path.join(__dirname, "../uploads/recetas", imagenBD);
+              fs.unlink(imagenPath, (unlinkErr) => {
+                if (unlinkErr) {
+                  console.warn("⚠️ No se pudo eliminar la imagen anterior:", unlinkErr);
+                }
+              });
+            }
+
+            return res.json({ mensaje: "Receta actualizada con éxito", imagen: imagenFinal });
+          });
+        });
+      }
+    );
+  });
+};
+
 module.exports = {
   crearReceta,
   obtenerRecetas,
   obtenerRecetaPorId,
+  actualizarReceta,
 };

@@ -1,9 +1,23 @@
 // frontend/src/pages/Recetas/EditarRecetaPage.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import IngredienteForm from "../../components/ingredientes/IngredienteForm";
 import { Card, Button, Form, Alert, Spinner } from "react-bootstrap";
+
+const buildImagenUrl = (imagen) => {
+  if (!imagen) return null;
+
+  const normalized = imagen.replace(/\\/g, "/");
+  const withoutUploads = normalized.includes("/uploads/")
+    ? normalized.split("/uploads/").pop()
+    : normalized;
+  const finalPath = withoutUploads.startsWith("recetas/")
+    ? withoutUploads
+    : `recetas/${withoutUploads}`;
+
+  return `http://localhost:5000/uploads/${finalPath}`;
+};
 
 export default function EditarRecetaPage() {
   const { id } = useParams();
@@ -19,6 +33,11 @@ export default function EditarRecetaPage() {
   const [imagenPreview, setImagenPreview] = useState(null);
   const [nuevaImagen, setNuevaImagen] = useState(null);
 
+  const imagenPersistida = useMemo(
+    () => (receta?.imagen ? buildImagenUrl(receta.imagen) : null),
+    [receta?.imagen]
+  );
+
   useEffect(() => {
     const fetchReceta = async () => {
       try {
@@ -28,10 +47,7 @@ export default function EditarRecetaPage() {
         });
 
         setReceta(res.data);
-
-        if (res.data.imagen) {
-          setImagenPreview(`http://localhost:5000/uploads/${res.data.imagen}`);
-        }
+        setImagenPreview(buildImagenUrl(res.data.imagen));
 
       } catch (err) {
         setError("No se pudo cargar la receta.");
@@ -74,31 +90,23 @@ export default function EditarRecetaPage() {
     try {
       const token = localStorage.getItem("token");
 
-      // 🔥 FormData si hay imagen, JSON si no
-      let data;
-
+      const data = new FormData();
+      data.append("nombre", receta.nombre);
+      data.append("categoria", receta.categoria);
+      data.append("descripcion", receta.descripcion);
+      data.append("preparacion", receta.preparacion);
+      data.append("ingredientes", JSON.stringify(receta.ingredientes));
+      if (receta.imagen) {
+        data.append("imagenActual", receta.imagen);
+      }
       if (nuevaImagen) {
-        data = new FormData();
-        data.append("nombre", receta.nombre);
-        data.append("categoria", receta.categoria);
-        data.append("descripcion", receta.descripcion);
-        data.append("preparacion", receta.preparacion);
-        data.append("ingredientes", JSON.stringify(receta.ingredientes));
         data.append("imagen", nuevaImagen);
-      } else {
-        data = {
-          nombre: receta.nombre,
-          categoria: receta.categoria,
-          descripcion: receta.descripcion,
-          preparacion: receta.preparacion,
-          ingredientes: receta.ingredientes,
-        };
       }
 
       await axios.put(`http://localhost:5000/api/recetas/${id}`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
-          ...(nuevaImagen ? { "Content-Type": "multipart/form-data" } : {})
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -138,9 +146,9 @@ export default function EditarRecetaPage() {
             <div className="text-center mb-4">
               <h5 className="text-secondary">📸 Imagen de la receta</h5>
 
-              {imagenPreview ? (
+              {imagenPreview || imagenPersistida ? (
                 <img
-                  src={imagenPreview}
+                  src={imagenPreview || imagenPersistida}
                   alt="Vista previa"
                   className="rounded shadow"
                   style={{ width: "300px", height: "200px", objectFit: "cover" }}
