@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
-
 const authMiddleware = require("../middlewares/authMiddleware");
-const upload = require("../middlewares/uploadRecetaImage");
+const upload = require("../middlewares/uploadRecetaImage"); // <-- Multer
 
 // Controladores
 const {
@@ -11,6 +10,7 @@ const {
   obtenerRecetaPorId,
   actualizarReceta,
   obtenerCategorias,
+  eliminarReceta, // ✅ NUEVO
 } = require("../controllers/recetaController");
 
 // ========================
@@ -20,26 +20,29 @@ const {
 // Obtener todas las recetas del usuario
 router.get("/", authMiddleware, obtenerRecetas);
 
-// Obtener categorías
+// Obtener listado de categorías disponibles
 router.get("/categorias", authMiddleware, obtenerCategorias);
 
-// Crear receta con imagen
+// Crear receta CON IMAGEN
 router.post(
   "/",
   authMiddleware,
-  upload.single("imagen"),
+  upload.single("imagen"),   // <-- aquí recibimos la imagen
   crearReceta
 );
 
 // Obtener receta por ID
 router.get("/:id", authMiddleware, obtenerRecetaPorId);
 
-// 🔥 ACTUALIZAR receta usando POST (estable para imagen)
-router.post(
-  "/actualizar/:id",
+// Actualizar receta (con opción de nueva imagen)
+router.put(
+  "/:id",
   authMiddleware,
   upload.single("imagen"),
   actualizarReceta
 );
+
+// ✅ Eliminar receta (incluye ingredientes y, si aplica, la imagen física)
+router.delete("/:id", authMiddleware, eliminarReceta);
 
 module.exports = router;

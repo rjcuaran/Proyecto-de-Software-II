@@ -11,6 +11,7 @@ import {
   Col,
   Container,
   Alert,
+  Modal, // ✅ nuevo
 } from "react-bootstrap";
 
 export default function RecetaDetailPage() {
@@ -24,6 +25,11 @@ export default function RecetaDetailPage() {
   const [favLoading, setFavLoading] = useState(false);
   const [favError, setFavError] = useState(null);
   const [fechaFormateada, setFechaFormateada] = useState("");
+
+  // ✅ estados para eliminar
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     const fetchReceta = async () => {
@@ -100,9 +106,9 @@ export default function RecetaDetailPage() {
 
   const toggleFavorito = async () => {
     setFavError(null);
-    setFavLoading(true);
 
     try {
+      setFavLoading(true);
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No se encontró token");
 
@@ -124,6 +130,34 @@ export default function RecetaDetailPage() {
       setFavError("No se pudo actualizar el estado de favorito.");
     } finally {
       setFavLoading(false);
+    }
+  };
+
+  // ✅ Eliminar receta
+  const handleDeleteReceta = async () => {
+    setDeleteError(null);
+    setDeleteLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No se encontró token");
+
+      await axios.delete(`http://localhost:5000/api/recetas/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setDeleteLoading(false);
+      setShowDeleteModal(false);
+
+      // Volvemos al listado de recetas
+      navigate("/recetas");
+    } catch (error) {
+      console.error("❌ Error eliminando receta:", error);
+      setDeleteError(
+        error?.response?.data?.mensaje ||
+        "No se pudo eliminar la receta. Intenta nuevamente."
+      );
+      setDeleteLoading(false);
     }
   };
 
@@ -222,7 +256,7 @@ export default function RecetaDetailPage() {
             ← Volver
           </Button>
 
-          {/* Barra de acciones sticky (Editar + Favorito + Imprimir) */}
+          {/* Barra de acciones sticky (Editar + Favorito + Imprimir + Eliminar) */}
           <div className="acciones-sticky-wrapper print-hidden">
             <div className="acciones-sticky d-flex align-items-center gap-2">
               <Button
@@ -251,6 +285,14 @@ export default function RecetaDetailPage() {
                   ? "★ En favoritos"
                   : "☆ Favorito"}
               </Button>
+              <Button
+                variant="outline-danger"
+                className="accion-btn"
+                onClick={() => setShowDeleteModal(true)}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? "Eliminando..." : "🗑 Eliminar"}
+              </Button>
             </div>
           </div>
         </div>
@@ -263,6 +305,7 @@ export default function RecetaDetailPage() {
         )}
 
         {favError && <Alert variant="danger">{favError}</Alert>}
+        {deleteError && <Alert variant="danger">{deleteError}</Alert>}
 
         {/* DESCRIPCIÓN */}
         <Card className="shadow-sm border-0 mb-4 seccion-card">
@@ -335,6 +378,43 @@ export default function RecetaDetailPage() {
           </Card.Body>
         </Card>
       </Container>
+
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      <Modal
+        show={showDeleteModal}
+        onHide={() => (!deleteLoading ? setShowDeleteModal(false) : null)}
+        centered
+      >
+        <Modal.Header closeButton={!deleteLoading}>
+          <Modal.Title>Eliminar receta</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            ¿Estás seguro de que deseas eliminar la receta{" "}
+            <strong>{receta.nombre}</strong>?
+          </p>
+          <p className="mb-0 text-muted">
+            Esta acción no se puede deshacer y también se eliminarán sus
+            ingredientes asociados.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowDeleteModal(false)}
+            disabled={deleteLoading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleDeleteReceta}
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? "Eliminando..." : "Sí, eliminar"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* ESTILOS PREMIUM + PARALLAX + STICKY ACTIONS */}
       <style>{`
@@ -498,6 +578,7 @@ export default function RecetaDetailPage() {
             gap: 0.5rem;
             padding: 0.6rem 1rem;
             box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.32);
+            flex-wrap: wrap;
           }
 
           .accion-btn {
@@ -510,7 +591,7 @@ export default function RecetaDetailPage() {
           }
 
           .receta-detail-wrapper {
-            padding-bottom: 70px; /* espacio para la barra fija */
+            padding-bottom: 80px; /* espacio para la barra fija */
           }
         }
 
