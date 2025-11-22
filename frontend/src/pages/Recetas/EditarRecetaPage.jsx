@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import IngredienteForm from "../../components/ingredientes/IngredienteForm";
-import { Card, Button, Form, Alert, Spinner } from "react-bootstrap";
+import { Card, Button, Form, Alert, Spinner, Row, Col } from "react-bootstrap";
 
 const buildImagenUrl = (imagen) => {
   if (!imagen) return null;
@@ -12,6 +12,7 @@ const buildImagenUrl = (imagen) => {
   const withoutUploads = normalized.includes("/uploads/")
     ? normalized.split("/uploads/").pop()
     : normalized;
+
   const finalPath = withoutUploads.startsWith("recetas/")
     ? withoutUploads
     : `recetas/${withoutUploads}`;
@@ -48,7 +49,6 @@ export default function EditarRecetaPage() {
 
         setReceta(res.data);
         setImagenPreview(buildImagenUrl(res.data.imagen));
-
       } catch (err) {
         setError("No se pudo cargar la receta.");
       } finally {
@@ -78,7 +78,7 @@ export default function EditarRecetaPage() {
     if (!file) return;
 
     setNuevaImagen(file);
-    setImagenPreview(URL.createObjectURL(file)); // Vista previa inmediata
+    setImagenPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
@@ -89,32 +89,36 @@ export default function EditarRecetaPage() {
 
     try {
       const token = localStorage.getItem("token");
-
       const data = new FormData();
+
       data.append("nombre", receta.nombre);
       data.append("categoria", receta.categoria);
       data.append("descripcion", receta.descripcion);
       data.append("preparacion", receta.preparacion);
       data.append("ingredientes", JSON.stringify(receta.ingredientes));
+
       if (receta.imagen) {
         data.append("imagenActual", receta.imagen);
       }
+
       if (nuevaImagen) {
         data.append("imagen", nuevaImagen);
       }
 
-      await axios.put(`http://localhost:5000/api/recetas/${id}`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await axios.post(
+        `http://localhost:5000/api/recetas/actualizar/${id}`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       setSuccess("Receta actualizada con éxito.");
       setTimeout(() => navigate(`/recetas/${id}`), 1500);
-
     } catch (err) {
-      console.error(err);
       setError("Error actualizando la receta.");
     } finally {
       setSaving(false);
@@ -132,92 +136,115 @@ export default function EditarRecetaPage() {
   if (!receta) return <Alert variant="danger">Receta no encontrada.</Alert>;
 
   return (
-    <div className="container mt-4">
-      <Card className="shadow-lg border-0">
-        <Card.Body>
-          <h3 className="fw-bold text-primary">✏️ Editar Receta</h3>
+    <div className="container mt-4 editar-receta-wrapper">
+      <Card className="shadow-lg border-0 editar-receta-card">
+        <Card.Body className="p-4 p-md-5">
+          <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h3 className="fw-bold text-primary mb-1">✏️ Editar Receta</h3>
+              <p className="text-muted mb-0 small">
+                Ajusta la información. Si no cambias la imagen, se mantiene la actual.
+              </p>
+            </div>
+
+            <Button variant="outline-secondary" onClick={() => navigate(-1)} size="sm">
+              ← Volver
+            </Button>
+          </div>
 
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
 
           <Form onSubmit={handleSubmit}>
+            <Row className="g-4">
+              <Col xs={12} lg={7}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Nombre</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="nombre"
+                    value={receta.nombre}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
 
-            {/* FOTO DE LA RECETA */}
-            <div className="text-center mb-4">
-              <h5 className="text-secondary">📸 Imagen de la receta</h5>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Categoría</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="categoria"
+                    value={receta.categoria}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
 
-              {imagenPreview || imagenPersistida ? (
-                <img
-                  src={imagenPreview || imagenPersistida}
-                  alt="Vista previa"
-                  className="rounded shadow"
-                  style={{ width: "300px", height: "200px", objectFit: "cover" }}
-                />
-              ) : (
-                <p className="text-muted">No hay imagen cargada.</p>
-              )}
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Descripción</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={2}
+                    name="descripcion"
+                    value={receta.descripcion}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
 
-              <Form.Group className="mt-3">
-                <Form.Label className="fw-semibold">Cambiar imagen</Form.Label>
-                <Form.Control type="file" accept="image/*" onChange={handleImagenChange} />
-              </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Preparación</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={5}
+                    name="preparacion"
+                    value={receta.preparacion}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+
+              <Col xs={12} lg={5}>
+                <div className="text-center mb-2">
+                  <h5 className="text-secondary mb-3">📸 Imagen de la receta</h5>
+
+                  {imagenPreview ? (
+                    <div className="editar-imagen-preview-wrapper mb-2">
+                      <img
+                        src={imagenPreview}
+                        alt="Vista previa"
+                        className="editar-imagen-preview rounded"
+                      />
+                    </div>
+                  ) : (
+                    <div className="editar-imagen-placeholder mb-2">
+                      <span className="text-muted">📷 Sin imagen</span>
+                    </div>
+                  )}
+
+                  <Form.Group className="mt-3 text-start">
+                    <Form.Label className="fw-semibold">Cambiar imagen</Form.Label>
+                    <Form.Control type="file" accept="image/*" onChange={handleImagenChange} />
+                    <Form.Text className="text-muted small d-block mt-1">
+                      Si no seleccionas una nueva imagen, se mantendrá la actual.
+                    </Form.Text>
+                  </Form.Group>
+                </div>
+              </Col>
+            </Row>
+
+            <div className="mt-4">
+              <h5 className="fw-semibold mb-2">🧂 Ingredientes</h5>
+
+              <IngredienteForm
+                ingredientes={receta.ingredientes}
+                onChange={handleIngredientesChange}
+              />
             </div>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Nombre</Form.Label>
-              <Form.Control
-                type="text"
-                name="nombre"
-                value={receta.nombre}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Categoría</Form.Label>
-              <Form.Control
-                type="text"
-                name="categoria"
-                value={receta.categoria}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Descripción</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                name="descripcion"
-                value={receta.descripcion}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Preparación</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={5}
-                name="preparacion"
-                value={receta.preparacion}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
-
-            <h5 className="mt-4">🧂 Ingredientes</h5>
-
-            <IngredienteForm
-              ingredientes={receta.ingredientes}
-              onChange={handleIngredientesChange}
-            />
-
-            <div className="mt-4 d-flex justify-content-between">
-              <Button variant="secondary" onClick={() => navigate(-1)}>
+            <div className="mt-4 d-flex justify-content-between gap-2">
+              <Button variant="outline-secondary" onClick={() => navigate(-1)} type="button">
                 ← Cancelar
               </Button>
 
@@ -228,6 +255,37 @@ export default function EditarRecetaPage() {
           </Form>
         </Card.Body>
       </Card>
+
+      <style>{`
+        .editar-receta-card {
+          border-radius: 16px;
+        }
+        .editar-imagen-preview-wrapper {
+          width: 100%;
+          max-width: 320px;
+          margin: 0 auto;
+          overflow: hidden;
+          border-radius: 16px;
+          box-shadow: 0 14px 35px rgba(15, 23, 42, 0.2);
+        }
+        .editar-imagen-preview {
+          width: 100%;
+          height: 220px;
+          object-fit: cover;
+        }
+        .editar-imagen-placeholder {
+          width: 100%;
+          max-width: 320px;
+          height: 220px;
+          margin: 0 auto;
+          border-radius: 16px;
+          border: 2px dashed #d1d5db;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f9fafb;
+        }
+      `}</style>
     </div>
   );
 }

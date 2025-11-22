@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
+
 const authMiddleware = require("../middlewares/authMiddleware");
-const upload = require("../middlewares/uploadRecetaImage"); // <-- Multer agregado
+const upload = require("../middlewares/uploadRecetaImage");
 
 // Controladores
 const {
@@ -19,23 +20,23 @@ const {
 // Obtener todas las recetas del usuario
 router.get("/", authMiddleware, obtenerRecetas);
 
-// Obtener listado de categorías disponibles
+// Obtener categorías
 router.get("/categorias", authMiddleware, obtenerCategorias);
 
-// Crear receta CON IMAGEN
+// Crear receta con imagen
 router.post(
   "/",
   authMiddleware,
-  upload.single("imagen"),   // <-- aquí recibimos la imagen
+  upload.single("imagen"),
   crearReceta
 );
 
 // Obtener receta por ID
 router.get("/:id", authMiddleware, obtenerRecetaPorId);
 
-// Actualizar receta (con opción de nueva imagen)
-router.put(
-  "/:id",
+// 🔥 ACTUALIZAR receta usando POST (estable para imagen)
+router.post(
+  "/actualizar/:id",
   authMiddleware,
   upload.single("imagen"),
   actualizarReceta
