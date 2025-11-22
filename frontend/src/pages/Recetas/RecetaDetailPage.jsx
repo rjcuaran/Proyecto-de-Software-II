@@ -150,6 +150,7 @@ export default function RecetaDetailPage() {
       : `http://localhost:5000/uploads/${imagenPath}`
     : null;
 
+  // Parallax y animación suave del hero
   const parallaxOffset = Math.min(scrollY, 320);
   const zoomScale = 1 + Math.min(parallaxOffset / 950, 0.12);
   const heroMediaTransform = `scale(${zoomScale}) translateY(${parallaxOffset * 0.18}px)`;
@@ -158,13 +159,18 @@ export default function RecetaDetailPage() {
 
   const heroMediaStyle = imagenUrl
     ? {
-        backgroundImage: `linear-gradient(180deg, rgba(10,11,15,0.65) 0%, rgba(10,11,15,0.35) 35%, rgba(10,11,15,0.75) 100%), url(${imagenUrl})`,
+        backgroundImage: `linear-gradient(180deg, rgba(10,11,15,0.58) 0%, rgba(10,11,15,0.32) 38%, rgba(10,11,15,0.75) 100%), url(${imagenUrl})`,
         transform: heroMediaTransform,
       }
     : {
         background: "linear-gradient(135deg, #1f2933, #3b4a5a)",
         transform: heroMediaTransform,
       };
+
+  // Transformar preparación en pasos visuales (uno por línea)
+  const pasosPreparacion = receta.preparacion
+    ? receta.preparacion.split(/\r?\n/).filter((linea) => linea.trim() !== "")
+    : [];
 
   return (
     <div className="receta-detail-wrapper">
@@ -180,55 +186,78 @@ export default function RecetaDetailPage() {
           <div className="sin-imagen-text">📷 Sin imagen disponible</div>
         )}
 
-        {/* Overlay de texto */}
+        {/* Overlay centrado */}
         <div className="hero-overlay">
-          <span className="hero-subtitle">Receta destacada</span>
-          <h1
-            className="fw-bold hero-title"
-            style={{ opacity: titleOpacity, transform: titleTranslate }}
-          >
-            {receta.nombre}
-          </h1>
-          <Badge bg="info" className="categoria-badge">
-            {receta.categoria}
-          </Badge>
+          <div className="hero-overlay-inner">
+            <span className="hero-subtitle">Receta destacada</span>
+            <h1
+              className="fw-bold hero-title"
+              style={{ opacity: titleOpacity, transform: titleTranslate }}
+            >
+              {receta.nombre}
+            </h1>
+
+            <div className="hero-meta-row">
+              <Badge bg="info" className="categoria-badge">
+                {receta.categoria}
+              </Badge>
+              {fechaFormateada && (
+                <span className="hero-fecha d-none d-md-inline">
+                  ⏱ Creada el {fechaFormateada}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <Container className="mt-4">
-        {/* BOTONES SUPERIORES */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <Button variant="light" onClick={() => navigate(-1)} className="print-hidden">
+      <Container className="mt-4 mb-5">
+        {/* FILA SUPERIOR: Volver + barra sticky de acciones */}
+        <div className="top-row d-flex justify-content-between align-items-start mb-4">
+          <Button
+            variant="light"
+            onClick={() => navigate(-1)}
+            className="print-hidden volver-btn"
+          >
             ← Volver
           </Button>
 
-          <div className="d-flex align-items-center gap-2 print-hidden">
-            <Button
-              variant="outline-secondary"
-              className="me-1"
-              onClick={handlePrint}
-            >
-              🖨 Imprimir / PDF
-            </Button>
-            <Button
-              variant="outline-primary"
-              className="me-1"
-              onClick={() => navigate(`/recetas/${id}/editar`)}
-            >
-              ✏️ Editar
-            </Button>
-            <Button
-              variant={esFavorito ? "warning" : "outline-warning"}
-              onClick={toggleFavorito}
-              disabled={favLoading}
-            >
-              {favLoading ? "Guardando..." : esFavorito ? "★ En favoritos" : "☆ Favorito"}
-            </Button>
+          {/* Barra de acciones sticky (Editar + Favorito + Imprimir) */}
+          <div className="acciones-sticky-wrapper print-hidden">
+            <div className="acciones-sticky d-flex align-items-center gap-2">
+              <Button
+                variant="outline-secondary"
+                className="accion-btn"
+                onClick={handlePrint}
+              >
+                🖨 Imprimir / PDF
+              </Button>
+              <Button
+                variant="outline-primary"
+                className="accion-btn"
+                onClick={() => navigate(`/recetas/${id}/editar`)}
+              >
+                ✏️ Editar
+              </Button>
+              <Button
+                variant={esFavorito ? "warning" : "outline-warning"}
+                className="accion-btn"
+                onClick={toggleFavorito}
+                disabled={favLoading}
+              >
+                {favLoading
+                  ? "Guardando..."
+                  : esFavorito
+                  ? "★ En favoritos"
+                  : "☆ Favorito"}
+              </Button>
+            </div>
           </div>
         </div>
 
+        {/* Meta de fecha en mobile (debajo del top-row) */}
         {fechaFormateada && (
-          <div className="text-muted mb-3 small meta-row">
+          <div className="text-muted mb-3 small meta-row d-md-none">
             ⏱ Creada el {fechaFormateada}
           </div>
         )}
@@ -237,51 +266,77 @@ export default function RecetaDetailPage() {
 
         {/* DESCRIPCIÓN */}
         <Card className="shadow-sm border-0 mb-4 seccion-card">
-          <Card.Body>
+          <Card.Body className="seccion-body">
             <h3 className="fw-semibold seccion-titulo">📘 Descripción</h3>
-            <p className="text-muted fs-5 mb-0">{receta.descripcion}</p>
+            <p className="text-muted fs-5 mb-0 seccion-texto">
+              {receta.descripcion}
+            </p>
           </Card.Body>
         </Card>
 
         {/* INGREDIENTES */}
         <Card className="shadow-sm border-0 mb-4 seccion-card">
-          <Card.Body>
-            <h3 className="fw-semibold seccion-titulo">🧂 Ingredientes</h3>
+          <Card.Body className="seccion-body">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <h3 className="fw-semibold seccion-titulo mb-0">
+                🧂 Ingredientes
+              </h3>
+              <span className="small text-muted">
+                {Array.isArray(receta.ingredientes)
+                  ? `${receta.ingredientes.length} ingrediente(s)`
+                  : null}
+              </span>
+            </div>
 
-            <Row className="mt-3">
-              {receta.ingredientes.map((ing) => (
-                <Col md={6} lg={4} key={ing.id_ingrediente}>
-                  <Card className="ingredient-card shadow-sm border-0">
-                    <Card.Body>
-                      <strong className="fs-5 d-block mb-1">
-                        {ing.nombre}
-                      </strong>
-                      <div className="text-muted">
-                        {ing.cantidad} {ing.unidad_medida}
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
+            <Row className="mt-3 gy-3">
+              {Array.isArray(receta.ingredientes) &&
+                receta.ingredientes.map((ing) => (
+                  <Col md={6} lg={4} key={ing.id_ingrediente}>
+                    <Card className="ingredient-card shadow-sm border-0 h-100">
+                      <Card.Body>
+                        <strong className="fs-5 d-block mb-1">
+                          {ing.nombre}
+                        </strong>
+                        <div className="text-muted">
+                          {ing.cantidad} {ing.unidad_medida}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
             </Row>
           </Card.Body>
         </Card>
 
-        {/* PREPARACIÓN */}
-        <Card className="shadow-sm border-0 seccion-card mb-5">
-          <Card.Body>
+        {/* PREPARACIÓN / PASOS */}
+        <Card className="shadow-sm border-0 seccion-card">
+          <Card.Body className="seccion-body">
             <h3 className="fw-semibold seccion-titulo">👨‍🍳 Preparación</h3>
-            <p
-              className="fs-6 mt-2 mb-0"
-              style={{ whiteSpace: "pre-line" }}
-            >
-              {receta.preparacion}
-            </p>
+
+            {pasosPreparacion.length > 0 ? (
+              <ol className="pasos-list mt-3 mb-0">
+                {pasosPreparacion.map((paso, index) => (
+                  <li key={index} className="paso-item">
+                    <div className="paso-index">
+                      <span>{index + 1}</span>
+                    </div>
+                    <p className="mb-0">{paso}</p>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p
+                className="fs-6 mt-2 mb-0 seccion-texto"
+                style={{ whiteSpace: "pre-line" }}
+              >
+                {receta.preparacion}
+              </p>
+            )}
           </Card.Body>
         </Card>
       </Container>
 
-      {/* ESTILOS PREMIUM + PARALLAX */}
+      {/* ESTILOS PREMIUM + PARALLAX + STICKY ACTIONS */}
       <style>{`
         .receta-detail-wrapper {
           background: #f4f6fb;
@@ -291,7 +346,7 @@ export default function RecetaDetailPage() {
         .receta-hero {
           position: relative;
           width: 100%;
-          height: clamp(380px, 42vh, 420px);
+          height: clamp(420px, 55vh, 520px);
           display: flex;
           align-items: flex-end;
           color: #fff;
@@ -308,7 +363,7 @@ export default function RecetaDetailPage() {
           background-attachment: fixed;
           will-change: transform;
           transition: transform 0.45s ease-out, filter 0.45s ease-out;
-          filter: saturate(1.05) contrast(1.02);
+          filter: saturate(1.05) contrast(1.03);
         }
 
         /* Desactivar parallax en móviles por rendimiento */
@@ -331,44 +386,141 @@ export default function RecetaDetailPage() {
         .hero-overlay {
           position: relative;
           z-index: 2;
-          padding: 46px 8vw;
           width: 100%;
+          padding: 52px 7vw 42px;
           background: linear-gradient(
             180deg,
-            rgba(6, 8, 10, 0.15) 0%,
-            rgba(6, 8, 10, 0.25) 40%,
-            rgba(6, 8, 10, 0.55) 100%
+            rgba(6, 8, 10, 0.06) 0%,
+            rgba(6, 8, 10, 0.22) 35%,
+            rgba(6, 8, 10, 0.6) 100%
           );
-          backdrop-filter: blur(1px);
-          box-shadow: inset 0 -120px 160px rgba(0, 0, 0, 0.32);
+          backdrop-filter: blur(2px);
+          box-shadow: inset 0 -120px 160px rgba(0, 0, 0, 0.35);
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+        }
+
+        .hero-overlay-inner {
+          width: 100%;
+          max-width: 960px;
+          text-align: center;
         }
 
         .hero-subtitle {
           text-transform: uppercase;
           letter-spacing: 0.16em;
           font-size: 0.8rem;
-          opacity: 0.9;
+          opacity: 0.95;
           display: inline-block;
           padding: 6px 0;
         }
 
         .hero-title {
-          font-size: clamp(1.8rem, 3vw, 2.6rem);
+          font-size: clamp(1.9rem, 3.2vw, 2.9rem);
           margin: 6px 0 10px;
           text-shadow: 0 10px 30px rgba(0,0,0,0.6);
           transition: opacity 0.35s ease, transform 0.35s ease;
+          line-height: 1.1;
+        }
+
+        .hero-meta-row {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+          margin-top: 0.4rem;
+        }
+
+        .hero-fecha {
+          font-size: 0.85rem;
+          opacity: 0.95;
         }
 
         .categoria-badge {
           font-size: 0.95rem;
-          padding: 0.4rem 0.85rem;
+          padding: 0.4rem 0.9rem;
           border-radius: 999px;
-          background: rgba(56,189,248,0.95) !important;
+          background: rgba(56,189,248,0.97) !important;
+          box-shadow: 0 8px 22px rgba(8, 47, 73, 0.4);
+        }
+
+        .top-row {
+          column-gap: 1.5rem;
+        }
+
+        .volver-btn {
+          border-radius: 999px;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+          background: #ffffff;
+          border-color: #e5e7eb;
+          padding-inline: 1.1rem;
+        }
+
+        .acciones-sticky-wrapper {
+          position: relative;
+          flex: 0 0 auto;
+        }
+
+        .acciones-sticky {
+          position: sticky;
+          top: 18px;
+          z-index: 40;
+          background: rgba(248, 250, 252, 0.85);
+          backdrop-filter: blur(8px);
+          border-radius: 999px;
+          padding: 0.4rem 0.8rem;
+          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+        }
+
+        .accion-btn {
+          border-radius: 999px;
+          padding-inline: 0.9rem;
+          font-size: 0.9rem;
+          white-space: nowrap;
+        }
+
+        /* Barra fija en la parte inferior en móviles */
+        @media (max-width: 768px) {
+          .acciones-sticky-wrapper {
+            position: static;
+            width: 100%;
+          }
+
+          .acciones-sticky {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 18px 18px 0 0;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.32);
+          }
+
+          .accion-btn {
+            flex: 1 1 auto;
+            text-align: center;
+          }
+
+          .top-row {
+            margin-bottom: 1.25rem;
+          }
+
+          .receta-detail-wrapper {
+            padding-bottom: 70px; /* espacio para la barra fija */
+          }
         }
 
         .seccion-card {
-          border-radius: 18px;
+          border-radius: 20px;
           background: #ffffff;
+        }
+
+        .seccion-body {
+          padding: 1.6rem 1.75rem;
         }
 
         .seccion-titulo {
@@ -376,9 +528,14 @@ export default function RecetaDetailPage() {
           margin-bottom: 0.75rem;
         }
 
+        .seccion-texto {
+          line-height: 1.7;
+        }
+
         .ingredient-card {
           border-radius: 14px;
           transition: transform 0.18s ease, box-shadow 0.18s ease;
+          background: linear-gradient(135deg, #ffffff, #f9fafb);
         }
 
         .ingredient-card:hover {
@@ -390,12 +547,68 @@ export default function RecetaDetailPage() {
           letter-spacing: 0.01em;
         }
 
+        .pasos-list {
+          list-style: none;
+          padding-left: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.85rem;
+        }
+
+        .paso-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.75rem;
+          padding: 0.9rem 1rem;
+          border-radius: 14px;
+          background: #f9fafb;
+          border: 1px dashed rgba(148, 163, 184, 0.7);
+          transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .paso-item:hover {
+          background: #ffffff;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        .paso-index {
+          flex: 0 0 auto;
+          width: 32px;
+          height: 32px;
+          border-radius: 999px;
+          background: #0ea5e9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #f9fafb;
+          box-shadow: 0 8px 18px rgba(14, 165, 233, 0.5);
+          margin-top: 1px;
+        }
+
+        .paso-index span {
+          transform: translateY(-0.5px);
+        }
+
+        @media (max-width: 576px) {
+          .seccion-body {
+            padding: 1.35rem 1.3rem;
+          }
+
+          .hero-overlay {
+            padding-inline: 1.5rem;
+          }
+        }
+
         @media print {
           body, .receta-detail-wrapper {
             background: #ffffff !important;
           }
 
-          .print-hidden {
+          .print-hidden,
+          .acciones-sticky {
             display: none !important;
           }
 
@@ -425,6 +638,11 @@ export default function RecetaDetailPage() {
           .categoria-badge {
             color: #0f172a;
             background: #dbeafe !important;
+            box-shadow: none;
+          }
+
+          .paso-item {
+            box-shadow: none !important;
           }
         }
       `}</style>
