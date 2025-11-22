@@ -6,7 +6,7 @@ const EditarIngredientePage = () => {
 
   return (
     <div className="container mt-4">
-      <h2>Editar Ingrediente</h2>
+      <h2>Editar Ingredientes</h2>
       <p>Editando el ingrediente con ID: {id}</p>
     </div>
   );
