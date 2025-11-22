@@ -1,4 +1,4 @@
-// frontend/src/pages/Recetas/RecetaDetailPage.jsx
+// PARTE 1/2
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -11,7 +11,7 @@ import {
   Col,
   Container,
   Alert,
-  Modal, // ✅ nuevo
+  Modal,
 } from "react-bootstrap";
 
 export default function RecetaDetailPage() {
@@ -26,10 +26,16 @@ export default function RecetaDetailPage() {
   const [favError, setFavError] = useState(null);
   const [fechaFormateada, setFechaFormateada] = useState("");
 
-  // ✅ estados para eliminar
+  // Modal de eliminar
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+
+  // ⭐ Modal lista de compras
+  const [showShoppingModal, setShowShoppingModal] = useState(false);
+  const [shoppingLoading, setShoppingLoading] = useState(false);
+  const [shoppingMessage, setShoppingMessage] = useState(null);
+  const [shoppingError, setShoppingError] = useState(null);
 
   useEffect(() => {
     const fetchReceta = async () => {
@@ -133,600 +139,328 @@ export default function RecetaDetailPage() {
     }
   };
 
-  // ✅ Eliminar receta
-  const handleDeleteReceta = async () => {
-    setDeleteError(null);
-    setDeleteLoading(true);
-
+  // ⭐ Funciones del modal de lista de compras
+  const agregarIngredientes = async () => {
     try {
+      setShoppingLoading(true);
+      setShoppingError(null);
+      setShoppingMessage(null);
+
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("No se encontró token");
 
-      await axios.delete(`http://localhost:5000/api/recetas/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setDeleteLoading(false);
-      setShowDeleteModal(false);
-
-      // Volvemos al listado de recetas
-      navigate("/recetas");
-    } catch (error) {
-      console.error("❌ Error eliminando receta:", error);
-      setDeleteError(
-        error?.response?.data?.mensaje ||
-        "No se pudo eliminar la receta. Intenta nuevamente."
+      const res = await axios.post(
+        "http://localhost:5000/api/shopping-list/agregar",
+        { receta: id },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      setDeleteLoading(false);
+
+      setShoppingMessage("Ingredientes agregados a la lista.");
+    } catch (err) {
+      console.error("❌ Error al agregar ingredientes:", err);
+      setShoppingError("No se pudo agregar a la lista.");
+    } finally {
+      setShoppingLoading(false);
     }
   };
 
-  if (loading)
+  const reemplazarLista = async () => {
+    try {
+      setShoppingLoading(true);
+      setShoppingError(null);
+      setShoppingMessage(null);
+
+      const token = localStorage.getItem("token");
+
+      const res = await axios.post(
+        "http://localhost:5000/api/shopping-list/generar",
+        { recetas: [id] },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setShoppingMessage("Lista reemplazada con esta receta.");
+    } catch (err) {
+      console.error("❌ Error al generar lista:", err);
+      setShoppingError("No se pudo reemplazar la lista.");
+    } finally {
+      setShoppingLoading(false);
+    }
+  };
+
+
+
+
+
+
     return (
-      <div className="text-center mt-5">
-        <Spinner animation="border" />
-        <p className="mt-2">Cargando receta...</p>
-      </div>
-    );
-
-  if (!receta) return <p className="text-center">No se encontró la receta.</p>;
-
-  // URL de la imagen para usarla en el parallax
-  const imagenPath = (() => {
-    if (!receta.imagen) return null;
-    if (/^https?:\/\//.test(receta.imagen)) return receta.imagen;
-    return receta.imagen.includes("/") ? receta.imagen : `recetas/${receta.imagen}`;
-  })();
-
-  const imagenUrl = imagenPath
-    ? imagenPath.startsWith("http")
-      ? imagenPath
-      : `http://localhost:5000/uploads/${imagenPath}`
-    : null;
-
-  // Parallax y animación suave del hero
-  const parallaxOffset = Math.min(scrollY, 320);
-  const zoomScale = 1 + Math.min(parallaxOffset / 950, 0.12);
-  const heroMediaTransform = `scale(${zoomScale}) translateY(${parallaxOffset * 0.18}px)`;
-  const titleOpacity = Math.max(1 - parallaxOffset / 260, 0.35);
-  const titleTranslate = `translateY(${Math.min(parallaxOffset * 0.12, 30)}px)`;
-
-  const heroMediaStyle = imagenUrl
-    ? {
-        backgroundImage: `linear-gradient(180deg, rgba(10,11,15,0.58) 0%, rgba(10,11,15,0.32) 38%, rgba(10,11,15,0.75) 100%), url(${imagenUrl})`,
-        transform: heroMediaTransform,
-      }
-    : {
-        background: "linear-gradient(135deg, #1f2933, #3b4a5a)",
-        transform: heroMediaTransform,
-      };
-
-  // Transformar preparación en pasos visuales (uno por línea)
-  const pasosPreparacion = receta.preparacion
-    ? receta.preparacion.split(/\r?\n/).filter((linea) => linea.trim() !== "")
-    : [];
-
-  return (
-    <div className="receta-detail-wrapper">
-      {/* HERO PARALLAX */}
-      <div
-        className={`receta-hero parallax-hero ${
-          !imagenUrl ? "hero-sin-imagen" : ""
-        }`}
-      >
-        <div className="hero-media" style={heroMediaStyle} />
-
-        {!imagenUrl && (
-          <div className="sin-imagen-text">📷 Sin imagen disponible</div>
-        )}
-
-        {/* Overlay centrado */}
-        <div className="hero-overlay">
-          <div className="hero-overlay-inner">
-            <span className="hero-subtitle">Receta destacada</span>
-            <h1
-              className="fw-bold hero-title"
-              style={{ opacity: titleOpacity, transform: titleTranslate }}
-            >
-              {receta.nombre}
-            </h1>
-
-            <div className="hero-meta-row">
-              <Badge bg="info" className="categoria-badge">
-                {receta.categoria}
-              </Badge>
-              {fechaFormateada && (
-                <span className="hero-fecha d-none d-md-inline">
-                  ⏱ Creada el {fechaFormateada}
-                </span>
-              )}
-            </div>
-          </div>
+    <>
+      {loading ? (
+        <div className="text-center mt-5">
+          <Spinner animation="border" />
+          <p className="mt-3">Cargando receta...</p>
         </div>
-      </div>
-
-      <Container className="mt-4 mb-5">
-        {/* FILA SUPERIOR: Volver + barra sticky de acciones */}
-        <div className="top-row d-flex justify-content-between align-items-start mb-4">
-          <Button
-            variant="light"
-            onClick={() => navigate(-1)}
-            className="print-hidden volver-btn"
+      ) : !receta ? (
+        <Alert variant="danger" className="mt-4">
+          No se encontró la receta solicitada.
+        </Alert>
+      ) : (
+        <div className="receta-detail-page">
+          {/* HERO PARALLAX */}
+          <div
+            className="receta-hero"
+            style={{
+              backgroundImage: receta.imagen
+                ? `url(http://localhost:5000/uploads/recetas/${receta.imagen})`
+                : "linear-gradient(135deg,#f8fafc,#e2e8f0)",
+              backgroundPositionY: scrollY * 0.3,
+            }}
           >
-            ← Volver
-          </Button>
+            <div className="hero-overlay"></div>
+            <h1 className="hero-title">{receta.nombre}</h1>
+          </div>
 
-          {/* Barra de acciones sticky (Editar + Favorito + Imprimir + Eliminar) */}
-          <div className="acciones-sticky-wrapper print-hidden">
-            <div className="acciones-sticky d-flex align-items-center gap-2">
+          {/* ACCIONES STICKY */}
+          <div className="sticky-actions shadow-sm">
+            <div className="d-flex flex-wrap gap-2">
               <Button
-                variant="outline-secondary"
-                className="accion-btn"
-                onClick={handlePrint}
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate("/recetas")}
               >
-                🖨 Imprimir / PDF
+                ← Volver
               </Button>
+
               <Button
-                variant="outline-primary"
-                className="accion-btn"
-                onClick={() => navigate(`/recetas/${id}/editar`)}
+                variant="info"
+                size="sm"
+                onClick={() => navigate(`/recetas/editar/${id}`)}
               >
                 ✏️ Editar
               </Button>
+
               <Button
                 variant={esFavorito ? "warning" : "outline-warning"}
-                className="accion-btn"
-                onClick={toggleFavorito}
+                size="sm"
                 disabled={favLoading}
+                onClick={toggleFavorito}
               >
-                {favLoading
-                  ? "Guardando..."
-                  : esFavorito
-                  ? "★ En favoritos"
-                  : "☆ Favorito"}
+                ⭐ {esFavorito ? "Quitar Favorito" : "Agregar Favorito"}
+              </Button>
+
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => setShowDeleteModal(true)}
+              >
+                🗑️ Eliminar
+              </Button>
+
+              {/* ⭐ Nuevo botón */}
+              <Button
+                variant="success"
+                size="sm"
+                onClick={() => setShowShoppingModal(true)}
+              >
+                🛒 Lista de compras
+              </Button>
+
+              <Button variant="dark" size="sm" onClick={handlePrint}>
+                🖨️ Imprimir
+              </Button>
+            </div>
+          </div>
+
+          <Container className="mt-4 mb-5">
+            <Row>
+              <Col lg={7}>
+                <Card className="shadow-sm border-0 mb-4">
+                  <Card.Body>
+                    <h4 className="fw-bold mb-3">Ingredientes</h4>
+
+                    {receta.ingredientes?.length === 0 ? (
+                      <p className="text-muted">No hay ingredientes registrados.</p>
+                    ) : (
+                      <ul className="lista-ingredientes">
+                        {receta.ingredientes.map((ing, index) => (
+                          <li key={index}>
+                            <Badge bg="primary" className="me-2">
+                              {ing.cantidad} {ing.unidad_medida}
+                            </Badge>
+                            {ing.nombre}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </Card.Body>
+                </Card>
+
+                <Card className="shadow-sm border-0">
+                  <Card.Body>
+                    <h4 className="fw-bold mb-3">Preparación</h4>
+                    <p>{receta.preparacion}</p>
+                  </Card.Body>
+                </Card>
+              </Col>
+
+              <Col lg={5}>
+                <Card className="shadow-sm border-0 mb-3">
+                  <Card.Body>
+                    <h5 className="fw-bold">Detalles</h5>
+                    <p><strong>Categoría:</strong> {receta.categoria}</p>
+                    <p><strong>Creada el:</strong> {fechaFormateada}</p>
+                  </Card.Body>
+                </Card>
+
+                {favError && (
+                  <Alert variant="danger" className="mt-3">
+                    {favError}
+                  </Alert>
+                )}
+
+                {shoppingMessage && (
+                  <Alert variant="success" className="mt-3">
+                    {shoppingMessage}
+                  </Alert>
+                )}
+
+                {shoppingError && (
+                  <Alert variant="danger" className="mt-3">
+                    {shoppingError}
+                  </Alert>
+                )}
+
+              </Col>
+            </Row>
+          </Container>
+
+          {/* MODAL ELIMINAR */}
+          <Modal
+            show={showDeleteModal}
+            onHide={() => setShowDeleteModal(false)}
+            centered
+          >
+            <Modal.Header closeButton>
+              <Modal.Title>Eliminar Receta</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>¿Estás seguro de que deseas eliminar esta receta?</p>
+              {deleteError && (
+                <Alert variant="danger" className="mt-2">{deleteError}</Alert>
+              )}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                Cancelar
               </Button>
               <Button
-                variant="outline-danger"
-                className="accion-btn"
-                onClick={() => setShowDeleteModal(true)}
+                variant="danger"
                 disabled={deleteLoading}
+                onClick={() => console.log("Eliminar logic aquí")}
               >
-                {deleteLoading ? "Eliminando..." : "🗑 Eliminar"}
+                {deleteLoading ? "Eliminando..." : "Eliminar Definitivamente"}
               </Button>
-            </div>
-          </div>
-        </div>
+            </Modal.Footer>
+          </Modal>
 
-        {/* Meta de fecha en mobile (debajo del top-row) */}
-        {fechaFormateada && (
-          <div className="text-muted mb-3 small meta-row d-md-none">
-            ⏱ Creada el {fechaFormateada}
-          </div>
-        )}
-
-        {favError && <Alert variant="danger">{favError}</Alert>}
-        {deleteError && <Alert variant="danger">{deleteError}</Alert>}
-
-        {/* DESCRIPCIÓN */}
-        <Card className="shadow-sm border-0 mb-4 seccion-card">
-          <Card.Body className="seccion-body">
-            <h3 className="fw-semibold seccion-titulo">📘 Descripción</h3>
-            <p className="text-muted fs-5 mb-0 seccion-texto">
-              {receta.descripcion}
-            </p>
-          </Card.Body>
-        </Card>
-
-        {/* INGREDIENTES */}
-        <Card className="shadow-sm border-0 mb-4 seccion-card">
-          <Card.Body className="seccion-body">
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-              <h3 className="fw-semibold seccion-titulo mb-0">
-                🧂 Ingredientes
-              </h3>
-              <span className="small text-muted">
-                {Array.isArray(receta.ingredientes)
-                  ? `${receta.ingredientes.length} ingrediente(s)`
-                  : null}
-              </span>
-            </div>
-
-            <Row className="mt-3 gy-3">
-              {Array.isArray(receta.ingredientes) &&
-                receta.ingredientes.map((ing) => (
-                  <Col md={6} lg={4} key={ing.id_ingrediente}>
-                    <Card className="ingredient-card shadow-sm border-0 h-100">
-                      <Card.Body>
-                        <strong className="fs-5 d-block mb-1">
-                          {ing.nombre}
-                        </strong>
-                        <div className="text-muted">
-                          {ing.cantidad} {ing.unidad_medida}
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                ))}
-            </Row>
-          </Card.Body>
-        </Card>
-
-        {/* PREPARACIÓN / PASOS */}
-        <Card className="shadow-sm border-0 seccion-card">
-          <Card.Body className="seccion-body">
-            <h3 className="fw-semibold seccion-titulo">👨‍🍳 Preparación</h3>
-
-            {pasosPreparacion.length > 0 ? (
-              <ol className="pasos-list mt-3 mb-0">
-                {pasosPreparacion.map((paso, index) => (
-                  <li key={index} className="paso-item">
-                    <div className="paso-index">
-                      <span>{index + 1}</span>
-                    </div>
-                    <p className="mb-0">{paso}</p>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p
-                className="fs-6 mt-2 mb-0 seccion-texto"
-                style={{ whiteSpace: "pre-line" }}
-              >
-                {receta.preparacion}
+          {/* ⭐ MODAL LISTA DE COMPRAS */}
+          <Modal
+            show={showShoppingModal}
+            onHide={() => setShowShoppingModal(false)}
+            centered
+          >
+            <Modal.Header closeButton>
+              <Modal.Title>Lista de Compras</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p className="fs-5">
+                ¿Qué deseas hacer con los ingredientes de esta receta?
               </p>
-            )}
-          </Card.Body>
-        </Card>
-      </Container>
 
-      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
-      <Modal
-        show={showDeleteModal}
-        onHide={() => (!deleteLoading ? setShowDeleteModal(false) : null)}
-        centered
-      >
-        <Modal.Header closeButton={!deleteLoading}>
-          <Modal.Title>Eliminar receta</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>
-            ¿Estás seguro de que deseas eliminar la receta{" "}
-            <strong>{receta.nombre}</strong>?
-          </p>
-          <p className="mb-0 text-muted">
-            Esta acción no se puede deshacer y también se eliminarán sus
-            ingredientes asociados.
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => setShowDeleteModal(false)}
-            disabled={deleteLoading}
-          >
-            Cancelar
-          </Button>
-          <Button
-            variant="danger"
-            onClick={handleDeleteReceta}
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? "Eliminando..." : "Sí, eliminar"}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+              {shoppingError && (
+                <Alert variant="danger">{shoppingError}</Alert>
+              )}
 
-      {/* ESTILOS PREMIUM + PARALLAX + STICKY ACTIONS */}
-      <style>{`
-        .receta-detail-wrapper {
-          background: #f4f6fb;
-          min-height: 100vh;
-        }
+              {shoppingMessage && (
+                <Alert variant="success">{shoppingMessage}</Alert>
+              )}
+            </Modal.Body>
 
-        .receta-hero {
-          position: relative;
-          width: 100%;
-          height: clamp(420px, 55vh, 520px);
-          display: flex;
-          align-items: flex-end;
-          color: #fff;
-          overflow: hidden;
-          isolation: isolate;
-        }
+            <Modal.Footer className="d-flex flex-column gap-2">
+              <Button
+                variant="success"
+                disabled={shoppingLoading}
+                onClick={agregarIngredientes}
+                className="w-100"
+              >
+                {shoppingLoading ? "Procesando..." : "➕ Agregar a la lista actual"}
+              </Button>
 
-        .hero-media {
-          position: absolute;
-          inset: 0;
-          background-size: cover;
-          background-position: center center;
-          background-repeat: no-repeat;
-          background-attachment: fixed;
-          will-change: transform;
-          transition: transform 0.45s ease-out, filter 0.45s ease-out;
-          filter: saturate(1.05) contrast(1.03);
-        }
+              <Button
+                variant="primary"
+                disabled={shoppingLoading}
+                onClick={reemplazarLista}
+                className="w-100"
+              >
+                {shoppingLoading ? "Procesando..." : "🔄 Reemplazar lista completa"}
+              </Button>
 
-        /* Desactivar parallax en móviles por rendimiento */
-        @media (max-width: 768px) {
-          .hero-media {
-            background-attachment: scroll;
-          }
-        }
+              <Button
+                variant="secondary"
+                onClick={() => setShowShoppingModal(false)}
+                className="w-100"
+              >
+                Cancelar
+              </Button>
+            </Modal.Footer>
+          </Modal>
 
-        .sin-imagen-text {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          font-size: 1.2rem;
-          opacity: 0.85;
-        }
+          {/* ESTILOS */}
+          <style>{`
+            .receta-hero {
+              height: 300px;
+              background-size: cover;
+              background-position: center;
+              position: relative;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-bottom-left-radius: 35px;
+              border-bottom-right-radius: 35px;
+              overflow: hidden;
+            }
 
-        .hero-overlay {
-          position: relative;
-          z-index: 2;
-          width: 100%;
-          padding: 52px 7vw 42px;
-          background: linear-gradient(
-            180deg,
-            rgba(6, 8, 10, 0.06) 0%,
-            rgba(6, 8, 10, 0.22) 35%,
-            rgba(6, 8, 10, 0.6) 100%
-          );
-          backdrop-filter: blur(2px);
-          box-shadow: inset 0 -120px 160px rgba(0, 0, 0, 0.35);
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-        }
+            .hero-overlay {
+              position: absolute;
+              inset: 0;
+              background: rgba(0,0,0,0.35);
+            }
 
-        .hero-overlay-inner {
-          width: 100%;
-          max-width: 960px;
-          text-align: center;
-        }
+            .hero-title {
+              position: relative;
+              z-index: 10;
+              color: white;
+              font-size: 2.4rem;
+              text-align: center;
+              padding: 0 20px;
+            }
 
-        .hero-subtitle {
-          text-transform: uppercase;
-          letter-spacing: 0.16em;
-          font-size: 0.8rem;
-          opacity: 0.95;
-          display: inline-block;
-          padding: 6px 0;
-        }
+            .sticky-actions {
+              position: sticky;
+              top: 0;
+              z-index: 50;
+              background: white;
+              padding: 10px;
+              border-bottom: 1px solid #eee;
+              display: flex;
+              justify-content: space-between;
+            }
 
-        .hero-title {
-          font-size: clamp(1.9rem, 3.2vw, 2.9rem);
-          margin: 6px 0 10px;
-          text-shadow: 0 10px 30px rgba(0,0,0,0.6);
-          transition: opacity 0.35s ease, transform 0.35s ease;
-          line-height: 1.1;
-        }
-
-        .hero-meta-row {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 0.75rem;
-          flex-wrap: wrap;
-          margin-top: 0.4rem;
-        }
-
-        .hero-fecha {
-          font-size: 0.85rem;
-          opacity: 0.95;
-        }
-
-        .categoria-badge {
-          font-size: 0.95rem;
-          padding: 0.4rem 0.9rem;
-          border-radius: 999px;
-          background: rgba(56,189,248,0.97) !important;
-          box-shadow: 0 8px 22px rgba(8, 47, 73, 0.4);
-        }
-
-        .top-row {
-          column-gap: 1.5rem;
-        }
-
-        .volver-btn {
-          border-radius: 999px;
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-          background: #ffffff;
-          border-color: #e5e7eb;
-          padding-inline: 1.1rem;
-        }
-
-        .acciones-sticky-wrapper {
-          position: relative;
-          flex: 0 0 auto;
-        }
-
-        .acciones-sticky {
-          position: sticky;
-          top: 18px;
-          z-index: 40;
-          background: rgba(248, 250, 252, 0.85);
-          backdrop-filter: blur(8px);
-          border-radius: 999px;
-          padding: 0.4rem 0.8rem;
-          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
-        }
-
-        .accion-btn {
-          border-radius: 999px;
-          padding-inline: 0.9rem;
-          font-size: 0.9rem;
-          white-space: nowrap;
-        }
-
-        /* Barra fija en la parte inferior en móviles */
-        @media (max-width: 768px) {
-          .acciones-sticky-wrapper {
-            position: static;
-            width: 100%;
-          }
-
-          .acciones-sticky {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 18px 18px 0 0;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1rem;
-            box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.32);
-            flex-wrap: wrap;
-          }
-
-          .accion-btn {
-            flex: 1 1 auto;
-            text-align: center;
-          }
-
-          .top-row {
-            margin-bottom: 1.25rem;
-          }
-
-          .receta-detail-wrapper {
-            padding-bottom: 80px; /* espacio para la barra fija */
-          }
-        }
-
-        .seccion-card {
-          border-radius: 20px;
-          background: #ffffff;
-        }
-
-        .seccion-body {
-          padding: 1.6rem 1.75rem;
-        }
-
-        .seccion-titulo {
-          font-size: 1.4rem;
-          margin-bottom: 0.75rem;
-        }
-
-        .seccion-texto {
-          line-height: 1.7;
-        }
-
-        .ingredient-card {
-          border-radius: 14px;
-          transition: transform 0.18s ease, box-shadow 0.18s ease;
-          background: linear-gradient(135deg, #ffffff, #f9fafb);
-        }
-
-        .ingredient-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.15);
-        }
-
-        .meta-row {
-          letter-spacing: 0.01em;
-        }
-
-        .pasos-list {
-          list-style: none;
-          padding-left: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.85rem;
-        }
-
-        .paso-item {
-          display: flex;
-          align-items: flex-start;
-          gap: 0.75rem;
-          padding: 0.9rem 1rem;
-          border-radius: 14px;
-          background: #f9fafb;
-          border: 1px dashed rgba(148, 163, 184, 0.7);
-          transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-        }
-
-        .paso-item:hover {
-          background: #ffffff;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-        }
-
-        .paso-index {
-          flex: 0 0 auto;
-          width: 32px;
-          height: 32px;
-          border-radius: 999px;
-          background: #0ea5e9;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.9rem;
-          font-weight: 600;
-          color: #f9fafb;
-          box-shadow: 0 8px 18px rgba(14, 165, 233, 0.5);
-          margin-top: 1px;
-        }
-
-        .paso-index span {
-          transform: translateY(-0.5px);
-        }
-
-        @media (max-width: 576px) {
-          .seccion-body {
-            padding: 1.35rem 1.3rem;
-          }
-
-          .hero-overlay {
-            padding-inline: 1.5rem;
-          }
-        }
-
-        @media print {
-          body, .receta-detail-wrapper {
-            background: #ffffff !important;
-          }
-
-          .print-hidden,
-          .acciones-sticky {
-            display: none !important;
-          }
-
-          .receta-hero {
-            height: 280px;
-          }
-
-          .hero-media {
-            background-attachment: scroll;
-            filter: brightness(0.9);
-          }
-
-          .hero-overlay {
-            background: linear-gradient(
-              180deg,
-              rgba(6, 8, 10, 0.35) 0%,
-              rgba(6, 8, 10, 0.6) 100%
-            );
-            box-shadow: inset 0 -90px 120px rgba(0,0,0,0.22);
-          }
-
-          .seccion-card {
-            box-shadow: none !important;
-            border: 1px solid #e5e7eb;
-          }
-
-          .categoria-badge {
-            color: #0f172a;
-            background: #dbeafe !important;
-            box-shadow: none;
-          }
-
-          .paso-item {
-            box-shadow: none !important;
-          }
-        }
-      `}</style>
-    </div>
+            .lista-ingredientes li {
+              margin-bottom: 8px;
+              font-size: 1.05rem;
+            }
+          `}</style>
+        </div>
+      )}
+    </>
   );
 }

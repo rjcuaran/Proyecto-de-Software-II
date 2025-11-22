@@ -1,3 +1,5 @@
+// frontend/src/pages/Recetas/RecetasList.jsx
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -11,6 +13,7 @@ import {
   Badge,
   Form,
   InputGroup,
+  Modal,
 } from "react-bootstrap";
 
 export default function RecetasList() {
@@ -24,6 +27,11 @@ export default function RecetasList() {
     categoria: "todas",
     orden: "desc",
   });
+
+  const [seleccionadas, setSeleccionadas] = useState([]);
+
+  // 🔥 Modal Premium
+  const [showModal, setShowModal] = useState(false);
 
   const buildImagenUrl = (img) => {
     if (!img) return null;
@@ -42,14 +50,14 @@ export default function RecetasList() {
     });
   };
 
+  // 📌 CARGAR CATEGORÍAS
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "http://localhost:5000/api/recetas/categorias",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await axios.get("http://localhost:5000/api/recetas/categorias", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setCategorias(res.data || []);
       } catch (err) {
         console.error("⚠️ Error cargando categorías:", err);
@@ -59,6 +67,7 @@ export default function RecetasList() {
     fetchCategorias();
   }, []);
 
+  // 📌 CARGAR RECETAS CON FILTROS
   useEffect(() => {
     const fetchRecetas = async () => {
       try {
@@ -71,13 +80,18 @@ export default function RecetasList() {
           params: {
             q: filtros.q || undefined,
             categoria:
-              filtros.categoria && filtros.categoria !== "todas"
-                ? filtros.categoria
-                : undefined,
+              filtros.categoria !== "todas" ? filtros.categoria : undefined,
             orden: filtros.orden,
           },
         });
-        setRecetas(res.data);
+
+        setRecetas(res.data || []);
+
+        setSeleccionadas((prev) =>
+          prev.filter((idSel) =>
+            (res.data || []).some((r) => r.id_receta === idSel)
+          )
+        );
       } catch (err) {
         console.error("❌ Error al cargar recetas:", err);
         setError("No se pudieron cargar las recetas.");
@@ -86,9 +100,8 @@ export default function RecetasList() {
       }
     };
 
-    const debounce = setTimeout(fetchRecetas, 260);
-
-    return () => clearTimeout(debounce);
+    const d = setTimeout(fetchRecetas, 260);
+    return () => clearTimeout(d);
   }, [filtros]);
 
   const handleFiltroChange = (campo, valor) => {
@@ -99,10 +112,40 @@ export default function RecetasList() {
     setFiltros({ q: "", categoria: "todas", orden: "desc" });
   };
 
+  const toggleSeleccion = (idReceta) => {
+    setSeleccionadas((prev) =>
+      prev.includes(idReceta)
+        ? prev.filter((id) => id !== idReceta)
+        : [...prev, idReceta]
+    );
+  };
+
+  const seleccionarTodasVisibles = () => {
+    setSeleccionadas(recetas.map((r) => r.id_receta));
+  };
+
+  const limpiarSeleccion = () => {
+    setSeleccionadas([]);
+  };
+
+  // 👉 Modal para confirmar generar lista
+  const confirmarGenerarLista = () => {
+    if (seleccionadas.length === 0) return;
+    setShowModal(true);
+  };
+
+  // 👉 Acción confirmada del modal
+  const handleConfirmGenerar = () => {
+    setShowModal(false);
+    navigate("/shopping-list", {
+      state: { recetas: seleccionadas },
+    });
+  };
+
   if (loading)
     return (
       <div className="text-center mt-5">
-        <Spinner animation="border" role="status" />
+        <Spinner animation="border" />
         <p className="mt-2">Cargando recetas...</p>
       </div>
     );
@@ -112,27 +155,45 @@ export default function RecetasList() {
   return (
     <div className="container mt-4">
       {/* ENCABEZADO */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="fw-bold text-primary">🍽 Mis Recetas</h2>
-        <Button variant="success" onClick={() => navigate("/recetas/nueva")}>
-          ➕ Nueva receta
-        </Button>
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+          <h2 className="fw-bold text-primary mb-1">🍽 Mis Recetas</h2>
+          <p className="text-muted small">
+            Selecciona varias y genera tu lista de compras.
+          </p>
+        </div>
+
+        <div className="d-flex flex-wrap gap-2">
+          <Button variant="outline-secondary" onClick={() => navigate("/shopping-list")}>
+            🧾 Ver lista de compras
+          </Button>
+
+          <Button
+            variant="outline-primary"
+            disabled={seleccionadas.length === 0}
+            onClick={confirmarGenerarLista}
+          >
+            🛒 Generar lista ({seleccionadas.length})
+          </Button>
+
+          <Button variant="success" onClick={() => navigate("/recetas/nueva")}>
+            ➕ Nueva receta
+          </Button>
+        </div>
       </div>
 
       {/* FILTROS */}
-      <Card className="shadow-sm border-0 mb-4 filtros-card">
+      <Card className="shadow-sm border-0 mb-3 filtros-card">
         <Card.Body>
           <Form onSubmit={(e) => e.preventDefault()}>
-            <Row className="g-3 align-items-end">
+            <Row className="g-3">
               <Col xs={12} md={5}>
-                <Form.Label className="text-muted small mb-1">
-                  Buscar por nombre
-                </Form.Label>
+                <Form.Label className="text-muted small mb-1">Buscar</Form.Label>
                 <InputGroup>
                   <InputGroup.Text>🔍</InputGroup.Text>
                   <Form.Control
                     type="text"
-                    placeholder="Ej: Pasta, ensalada, postre..."
+                    placeholder="Ej: pasta, pollo, postre..."
                     value={filtros.q}
                     onChange={(e) => handleFiltroChange("q", e.target.value)}
                   />
@@ -140,26 +201,20 @@ export default function RecetasList() {
               </Col>
 
               <Col xs={12} md={4}>
-                <Form.Label className="text-muted small mb-1">
-                  Categoría
-                </Form.Label>
+                <Form.Label className="text-muted small mb-1">Categoría</Form.Label>
                 <Form.Select
                   value={filtros.categoria}
                   onChange={(e) => handleFiltroChange("categoria", e.target.value)}
                 >
                   <option value="todas">Todas</option>
                   {categorias.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
+                    <option key={cat}>{cat}</option>
                   ))}
                 </Form.Select>
               </Col>
 
               <Col xs={12} md={3}>
-                <Form.Label className="text-muted small mb-1">
-                  Ordenar por fecha
-                </Form.Label>
+                <Form.Label className="text-muted small mb-1">Orden</Form.Label>
                 <Form.Select
                   value={filtros.orden}
                   onChange={(e) => handleFiltroChange("orden", e.target.value)}
@@ -169,9 +224,10 @@ export default function RecetasList() {
                 </Form.Select>
               </Col>
             </Row>
+
             {(filtros.q || filtros.categoria !== "todas" || filtros.orden !== "desc") && (
               <div className="d-flex justify-content-end mt-3">
-                <Button variant="link" className="text-decoration-none" onClick={limpiarFiltros}>
+                <Button variant="link" onClick={limpiarFiltros}>
                   Limpiar filtros
                 </Button>
               </div>
@@ -180,60 +236,104 @@ export default function RecetasList() {
         </Card.Body>
       </Card>
 
-      {/* SIN RECETAS */}
+      {/* BARRA DE SELECCIÓN */}
+      <div className="d-flex justify-content-between small mb-3">
+        <div className="text-muted">
+          {seleccionadas.length > 0 ? (
+            <>
+              <strong>{seleccionadas.length}</strong> seleccionadas
+            </>
+          ) : (
+            <>Selecciona una o varias recetas</>
+          )}
+        </div>
+
+        <div className="d-flex gap-2">
+          <Button size="sm" variant="outline-secondary" onClick={seleccionarTodasVisibles}>
+            Seleccionar todas
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline-light"
+            className="border"
+            onClick={limpiarSeleccion}
+            disabled={seleccionadas.length === 0}
+          >
+            Limpiar
+          </Button>
+        </div>
+      </div>
+
+      {/* LISTADO */}
       {recetas.length === 0 ? (
-        <Alert variant="info">
-          {filtros.q || filtros.categoria !== "todas" || filtros.orden !== "desc"
-            ? "No se encontraron recetas con estos filtros."
-            : "Aún no has creado recetas."}
-        </Alert>
+        <Alert variant="info">No se encontraron recetas.</Alert>
       ) : (
         <Row xs={1} sm={2} md={3} lg={3} className="g-4">
-          {recetas.map((receta) => (
-            <Col key={receta.id_receta}>
-              <Card
-                className="border-0 shadow-sm rounded-4 overflow-hidden receta-card"
-                style={{ cursor: "pointer" }}
-                onClick={() => navigate(`/recetas/${receta.id_receta}`)}
-              >
-                {/* IMAGEN (si existe) */}
-                {receta.imagen ? (
-                  <div className="receta-img-wrapper">
-                    <Card.Img
-                      variant="top"
-                      src={buildImagenUrl(receta.imagen)}
-                      className="receta-img"
+          {recetas.map((receta) => {
+            const estaSeleccionada = seleccionadas.includes(receta.id_receta);
+
+            return (
+              <Col key={receta.id_receta}>
+                <Card
+                  className={
+                    "border-0 shadow-sm rounded-4 overflow-hidden receta-card" +
+                    (estaSeleccionada ? " receta-card-seleccionada" : "")}
+                >
+                  <div
+                    className="seleccion-checkbox"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Form.Check
+                      type="checkbox"
+                      checked={estaSeleccionada}
+                      onChange={() => toggleSeleccion(receta.id_receta)}
                     />
                   </div>
-                ) : (
+
                   <div
-                    className="bg-light d-flex justify-content-center align-items-center"
-                    style={{ height: "180px" }}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate(`/recetas/${receta.id_receta}`)}
                   >
-                    <span className="text-muted">📷 Sin imagen</span>
+                    {receta.imagen ? (
+                      <div className="receta-img-wrapper">
+                        <Card.Img
+                          variant="top"
+                          src={buildImagenUrl(receta.imagen)}
+                          className="receta-img"
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="bg-light d-flex justify-content-center align-items-center"
+                        style={{ height: "180px" }}
+                      >
+                        <span className="text-muted">📷 Sin imagen</span>
+                      </div>
+                    )}
+
+                    <Card.Body>
+                      <Card.Title className="fw-bold text-primary fs-5">
+                        {receta.nombre}
+                      </Card.Title>
+
+                      <Badge bg="info" className="mb-2">
+                        {receta.categoria}
+                      </Badge>
+
+                      <Card.Text className="text-muted small">
+                        {receta.descripcion?.substring(0, 80) || "Sin descripción"}...
+                      </Card.Text>
+
+                      {receta.fecha_creacion && (
+                        <div className="text-muted small">
+                          ⏱ {formatFecha(receta.fecha_creacion)}
+                        </div>
+                      )}
+                    </Card.Body>
                   </div>
-                )}
 
-                <Card.Body>
-                  <Card.Title className="fw-bold text-primary fs-5">
-                    {receta.nombre}
-                  </Card.Title>
-
-                  <Badge bg="info" className="mb-2">
-                    {receta.categoria}
-                  </Badge>
-
-                  <Card.Text className="text-muted small">
-                    {receta.descripcion?.substring(0, 80) || "Sin descripción"}...
-                  </Card.Text>
-
-                  {receta.fecha_creacion && (
-                    <div className="text-muted small mb-2">
-                      ⏱ Creada el {formatFecha(receta.fecha_creacion)}
-                    </div>
-                  )}
-
-                  <div className="d-flex justify-content-between mt-3">
+                  <div className="d-flex justify-content-between px-3 pb-3">
                     <Button
                       variant="outline-primary"
                       size="sm"
@@ -256,17 +356,45 @@ export default function RecetasList() {
                       ✏️ Editar
                     </Button>
                   </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
+                </Card>
+              </Col>
+            );
+          })}
         </Row>
       )}
+
+      {/* 🔥 MODAL PREMIUM CONFIRMACIÓN */}
+      <Modal show={showModal} centered onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Generar lista de compras</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          {seleccionadas.length === 1 ? (
+            <p>¿Deseas generar la lista de compras con esta receta seleccionada?</p>
+          ) : (
+            <p>
+              ¿Deseas generar la lista de compras con{" "}
+              <strong>{seleccionadas.length}</strong> recetas seleccionadas?
+            </p>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancelar
+          </Button>
+
+          <Button variant="primary" onClick={handleConfirmGenerar}>
+            Generar lista
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
 
-/* ESTILO EXTRA PREMIUM */
+/* ESTILOS EXTRA PREMIUM */
 const styles = `
 .receta-img-wrapper {
   height: 180px;
@@ -284,8 +412,23 @@ const styles = `
   transform: scale(1.07);
 }
 
-.receta-card:hover {
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15)!important;
+.receta-card {
+  position: relative;
+}
+
+.receta-card-seleccionada {
+  box-shadow: 0 0 0 3px #0ea5e9, 0 10px 28px rgba(14,165,233,0.35)!important;
+}
+
+.seleccion-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  background: rgba(255,255,255,0.95);
+  border-radius: 12px;
+  padding: 4px 8px;
+  box-shadow: 0 4px 10px rgba(15,23,42,0.2);
 }
 
 .filtros-card {
@@ -304,7 +447,6 @@ const styles = `
 }
 `;
 
-// Inserta estilos una sola vez
 if (typeof document !== "undefined") {
   const styleId = "recetas-list-premium-styles";
   if (!document.getElementById(styleId)) {
