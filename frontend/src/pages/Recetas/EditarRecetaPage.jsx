@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import IngredienteForm from "../../components/ingredientes/IngredienteForm";
 import { Card, Button, Form, Alert, Spinner, Row, Col } from "react-bootstrap";
 
+// 🔧 Normalizador de imágenes
 const buildImagenUrl = (imagen) => {
   if (!imagen) return null;
 
@@ -39,17 +40,21 @@ export default function EditarRecetaPage() {
     [receta?.imagen]
   );
 
+  // 📌 Cargar receta
   useEffect(() => {
     const fetchReceta = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`http://localhost:5000/api/recetas/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+
+        const res = await axios.get(
+          `http://localhost:5000/api/recetas/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
         setReceta(res.data);
         setImagenPreview(buildImagenUrl(res.data.imagen));
       } catch (err) {
+        console.error("❌ Error cargando receta:", err);
         setError("No se pudo cargar la receta.");
       } finally {
         setLoading(false);
@@ -60,17 +65,11 @@ export default function EditarRecetaPage() {
   }, [id]);
 
   const handleChange = (e) => {
-    setReceta({
-      ...receta,
-      [e.target.name]: e.target.value,
-    });
+    setReceta({ ...receta, [e.target.name]: e.target.value });
   };
 
   const handleIngredientesChange = (lista) => {
-    setReceta({
-      ...receta,
-      ingredientes: lista,
-    });
+    setReceta({ ...receta, ingredientes: lista });
   };
 
   const handleImagenChange = (e) => {
@@ -81,8 +80,10 @@ export default function EditarRecetaPage() {
     setImagenPreview(URL.createObjectURL(file));
   };
 
+  // 📌 Guardar cambios
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -95,30 +96,34 @@ export default function EditarRecetaPage() {
       data.append("categoria", receta.categoria);
       data.append("descripcion", receta.descripcion);
       data.append("preparacion", receta.preparacion);
-      data.append("ingredientes", JSON.stringify(receta.ingredientes));
+      data.append("ingredientes", JSON.stringify(receta.ingredientes || []));
 
+      // Mantener imagen si no fue cambiada
       if (receta.imagen) {
         data.append("imagenActual", receta.imagen);
       }
 
+      // Nueva imagen si aplica
       if (nuevaImagen) {
         data.append("imagen", nuevaImagen);
       }
 
-      await axios.post(
-        `http://localhost:5000/api/recetas/actualizar/${id}`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // 🔥 Actualizar receta
+      await axios.put(`http://localhost:5000/api/recetas/${id}`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       setSuccess("Receta actualizada con éxito.");
-      setTimeout(() => navigate(`/recetas/${id}`), 1500);
+
+      // 🔥 Navegación FORZADA al detalle con refresco garantizado
+      navigate(`/recetas/${id}?updated=${Date.now()}`, {
+        replace: true,
+      });
     } catch (err) {
+      console.error("❌ Error actualizando la receta:", err);
       setError("Error actualizando la receta.");
     } finally {
       setSaving(false);
@@ -133,7 +138,8 @@ export default function EditarRecetaPage() {
       </div>
     );
 
-  if (!receta) return <Alert variant="danger">Receta no encontrada.</Alert>;
+  if (!receta)
+    return <Alert variant="danger">Receta no encontrada.</Alert>;
 
   return (
     <div className="container mt-4 editar-receta-wrapper">
@@ -147,7 +153,11 @@ export default function EditarRecetaPage() {
               </p>
             </div>
 
-            <Button variant="outline-secondary" onClick={() => navigate(-1)} size="sm">
+            <Button
+              variant="outline-secondary"
+              onClick={() => navigate(-1)}
+              size="sm"
+            >
               ← Volver
             </Button>
           </div>
@@ -207,7 +217,7 @@ export default function EditarRecetaPage() {
 
               <Col xs={12} lg={5}>
                 <div className="text-center mb-2">
-                  <h5 className="text-secondary mb-3">📸 Imagen de la receta</h5>
+                  <h5 className="text-secondary mb-3">📸 Imagen actual</h5>
 
                   {imagenPreview ? (
                     <div className="editar-imagen-preview-wrapper mb-2">
@@ -224,31 +234,43 @@ export default function EditarRecetaPage() {
                   )}
 
                   <Form.Group className="mt-3 text-start">
-                    <Form.Label className="fw-semibold">Cambiar imagen</Form.Label>
-                    <Form.Control type="file" accept="image/*" onChange={handleImagenChange} />
-                    <Form.Text className="text-muted small d-block mt-1">
-                      Si no seleccionas una nueva imagen, se mantendrá la actual.
-                    </Form.Text>
+                    <Form.Label className="fw-semibold">
+                      Cambiar imagen
+                    </Form.Label>
+                    <Form.Control
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImagenChange}
+                    />
                   </Form.Group>
                 </div>
               </Col>
             </Row>
 
+            {/* 🧂 Ingredientes */}
             <div className="mt-4">
               <h5 className="fw-semibold mb-2">🧂 Ingredientes</h5>
 
               <IngredienteForm
-                ingredientes={receta.ingredientes}
+                ingredientesIniciales={receta.ingredientes || []}
                 onChange={handleIngredientesChange}
               />
             </div>
 
             <div className="mt-4 d-flex justify-content-between gap-2">
-              <Button variant="outline-secondary" onClick={() => navigate(-1)} type="button">
+              <Button
+                variant="outline-secondary"
+                onClick={() => navigate(-1)}
+                type="button"
+              >
                 ← Cancelar
               </Button>
 
-              <Button variant="primary" type="submit" disabled={saving}>
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={saving}
+              >
                 {saving ? "Guardando..." : "Guardar cambios"}
               </Button>
             </div>

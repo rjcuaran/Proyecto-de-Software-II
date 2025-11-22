@@ -1,4 +1,5 @@
-// PARTE 1/2
+// frontend/src/pages/Recetas/RecetaDetailPage.jsx
+// PARTE ÚNICA (archivo completo)
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -37,6 +38,7 @@ export default function RecetaDetailPage() {
   const [shoppingMessage, setShoppingMessage] = useState(null);
   const [shoppingError, setShoppingError] = useState(null);
 
+  // 📌 Cargar receta
   useEffect(() => {
     const fetchReceta = async () => {
       try {
@@ -67,6 +69,7 @@ export default function RecetaDetailPage() {
     fetchReceta();
   }, [id]);
 
+  // 📌 Verificar si es favorito
   useEffect(() => {
     const fetchFavorito = async () => {
       try {
@@ -84,6 +87,7 @@ export default function RecetaDetailPage() {
     fetchFavorito();
   }, [id]);
 
+  // Parallax scroll
   useEffect(() => {
     let ticking = false;
 
@@ -148,7 +152,7 @@ export default function RecetaDetailPage() {
 
       const token = localStorage.getItem("token");
 
-      const res = await axios.post(
+      await axios.post(
         "http://localhost:5000/api/shopping-list/agregar",
         { receta: id },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -171,7 +175,7 @@ export default function RecetaDetailPage() {
 
       const token = localStorage.getItem("token");
 
-      const res = await axios.post(
+      await axios.post(
         "http://localhost:5000/api/shopping-list/generar",
         { recetas: [id] },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -186,12 +190,29 @@ export default function RecetaDetailPage() {
     }
   };
 
+  // 🗑️ Eliminar receta definitivamente
+  const handleDeleteReceta = async () => {
+    setDeleteError(null);
+    try {
+      setDeleteLoading(true);
+      const token = localStorage.getItem("token");
 
+      await axios.delete(`http://localhost:5000/api/recetas/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
+      setShowDeleteModal(false);
+      // Volver al listado de recetas
+      navigate("/recetas");
+    } catch (err) {
+      console.error("❌ Error eliminando receta:", err);
+      setDeleteError("No se pudo eliminar la receta.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
-
-
-    return (
+  return (
     <>
       {loading ? (
         <div className="text-center mt-5">
@@ -232,7 +253,7 @@ export default function RecetaDetailPage() {
               <Button
                 variant="info"
                 size="sm"
-                onClick={() => navigate(`/recetas/editar/${id}`)}
+                onClick={() => navigate(`/recetas/${id}/editar`)}
               >
                 ✏️ Editar
               </Button>
@@ -272,12 +293,25 @@ export default function RecetaDetailPage() {
           <Container className="mt-4 mb-5">
             <Row>
               <Col lg={7}>
+                {/* 🧾 Descripción */}
+                <Card className="shadow-sm border-0 mb-4">
+                  <Card.Body>
+                    <h4 className="fw-bold mb-3">Descripción</h4>
+                    <p className="text-muted mb-0">
+                      {receta.descripcion || "Sin descripción."}
+                    </p>
+                  </Card.Body>
+                </Card>
+
+                {/* Ingredientes */}
                 <Card className="shadow-sm border-0 mb-4">
                   <Card.Body>
                     <h4 className="fw-bold mb-3">Ingredientes</h4>
 
                     {receta.ingredientes?.length === 0 ? (
-                      <p className="text-muted">No hay ingredientes registrados.</p>
+                      <p className="text-muted">
+                        No hay ingredientes registrados.
+                      </p>
                     ) : (
                       <ul className="lista-ingredientes">
                         {receta.ingredientes.map((ing, index) => (
@@ -293,6 +327,7 @@ export default function RecetaDetailPage() {
                   </Card.Body>
                 </Card>
 
+                {/* Preparación */}
                 <Card className="shadow-sm border-0">
                   <Card.Body>
                     <h4 className="fw-bold mb-3">Preparación</h4>
@@ -305,8 +340,12 @@ export default function RecetaDetailPage() {
                 <Card className="shadow-sm border-0 mb-3">
                   <Card.Body>
                     <h5 className="fw-bold">Detalles</h5>
-                    <p><strong>Categoría:</strong> {receta.categoria}</p>
-                    <p><strong>Creada el:</strong> {fechaFormateada}</p>
+                    <p>
+                      <strong>Categoría:</strong> {receta.categoria}
+                    </p>
+                    <p>
+                      <strong>Creada el:</strong> {fechaFormateada}
+                    </p>
                   </Card.Body>
                 </Card>
 
@@ -327,7 +366,6 @@ export default function RecetaDetailPage() {
                     {shoppingError}
                   </Alert>
                 )}
-
               </Col>
             </Row>
           </Container>
@@ -344,17 +382,22 @@ export default function RecetaDetailPage() {
             <Modal.Body>
               <p>¿Estás seguro de que deseas eliminar esta receta?</p>
               {deleteError && (
-                <Alert variant="danger" className="mt-2">{deleteError}</Alert>
+                <Alert variant="danger" className="mt-2">
+                  {deleteError}
+                </Alert>
               )}
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowDeleteModal(false)}
+              >
                 Cancelar
               </Button>
               <Button
                 variant="danger"
                 disabled={deleteLoading}
-                onClick={() => console.log("Eliminar logic aquí")}
+                onClick={handleDeleteReceta}
               >
                 {deleteLoading ? "Eliminando..." : "Eliminar Definitivamente"}
               </Button>

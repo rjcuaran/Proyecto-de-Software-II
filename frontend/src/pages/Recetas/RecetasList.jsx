@@ -85,7 +85,7 @@ export default function RecetasList() {
         const data = res.data || [];
         setRecetas(data);
 
-        // Limpiar seleccionadas que ya no estén en la lista actual
+        // Limpiar seleccionadas que ya no estén visibles
         setSeleccionadas((prev) =>
           prev.filter((idSel) => data.some((r) => r.id_receta === idSel))
         );
@@ -97,8 +97,8 @@ export default function RecetasList() {
       }
     };
 
-    const timeoutId = setTimeout(fetchRecetas, 260);
-    return () => clearTimeout(timeoutId);
+    const d = setTimeout(fetchRecetas, 260);
+    return () => clearTimeout(d);
   }, [filtros]);
 
   const handleFiltroChange = (campo, valor) => {
@@ -147,7 +147,7 @@ export default function RecetasList() {
   if (error) return <Alert variant="danger">{error}</Alert>;
 
   return (
-    <div className="container mt-4">
+    <div className="container mt-4 recetas-list-page">
       {/* ENCABEZADO */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
@@ -183,7 +183,7 @@ export default function RecetasList() {
       </div>
 
       {/* FILTROS */}
-      <Card className="shadow-sm border-0 mb-3">
+      <Card className="shadow-sm border-0 mb-3 filtros-card">
         <Card.Body>
           <Form onSubmit={(e) => e.preventDefault()}>
             <Row className="g-3 align-items-end">
@@ -287,12 +287,10 @@ export default function RecetasList() {
         )}
       </div>
 
-      {/* SIN RECETAS */}
+      {/* SIN RECETAS / LISTADO */}
       {recetas.length === 0 ? (
         <Alert variant="info">
-          {filtros.q ||
-          filtros.categoria !== "todas" ||
-          filtros.orden !== "desc"
+          {filtros.q || filtros.categoria !== "todas" || filtros.orden !== "desc"
             ? "No se encontraron recetas con estos filtros."
             : "Aún no has creado recetas."}
         </Alert>
@@ -304,76 +302,69 @@ export default function RecetasList() {
             return (
               <Col key={receta.id_receta}>
                 <Card
-                  className={`border-0 shadow-sm rounded-4 overflow-hidden ${
-                    estaSeleccionada ? "border border-2 border-info" : ""
-                  }`}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => navigate(`/recetas/${receta.id_receta}`)}
+                  className={
+                    "border-0 shadow-sm rounded-4 overflow-hidden receta-card" +
+                    (estaSeleccionada ? " receta-card-seleccionada" : "")
+                  }
                 >
-                  {/* Checkbox flotante: solo selecciona, no navega */}
+                  {/* Checkbox flotante */}
                   <div
-                    className="position-absolute"
-                    style={{
-                      top: 10,
-                      left: 10,
-                      zIndex: 5,
-                      background: "rgba(255,255,255,0.9)",
-                      borderRadius: 999,
-                      padding: "3px 8px",
-                      boxShadow: "0 4px 10px rgba(15,23,42,0.2)",
-                    }}
+                    className="seleccion-checkbox"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Form.Check
+                    <input
                       type="checkbox"
+                      className="checkbox-simple"
                       checked={estaSeleccionada}
                       onChange={() => toggleSeleccion(receta.id_receta)}
                     />
                   </div>
 
-                  {/* IMAGEN (si existe) */}
-                  {receta.imagen ? (
-                    <div style={{ height: 180, overflow: "hidden" }}>
-                      <Card.Img
-                        variant="top"
-                        src={buildImagenUrl(receta.imagen)}
-                        style={{
-                          height: "100%",
-                          width: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className="bg-light d-flex justify-content-center align-items-center"
-                      style={{ height: 180 }}
-                    >
-                      <span className="text-muted">📷 Sin imagen</span>
-                    </div>
-                  )}
-
-                  <Card.Body>
-                    <Card.Title className="fw-bold text-primary fs-5 d-flex justify-content-between align-items-start">
-                      <span>{receta.nombre}</span>
-                    </Card.Title>
-
-                    <Badge bg="info" className="mb-2">
-                      {receta.categoria}
-                    </Badge>
-
-                    <Card.Text className="text-muted small">
-                      {receta.descripcion?.substring(0, 80) ||
-                        "Sin descripción"}
-                      ...
-                    </Card.Text>
-
-                    {receta.fecha_creacion && (
-                      <div className="text-muted small mb-2">
-                        ⏱ Creada el {formatFecha(receta.fecha_creacion)}
+                  {/* CONTENIDO CLICKEABLE */}
+                  <div
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate(`/recetas/${receta.id_receta}`)}
+                  >
+                    {/* IMAGEN (si existe) */}
+                    {receta.imagen ? (
+                      <div className="receta-img-wrapper">
+                        <Card.Img
+                          variant="top"
+                          src={buildImagenUrl(receta.imagen)}
+                          className="receta-img"
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="bg-light d-flex justify-content-center align-items-center"
+                        style={{ height: "180px" }}
+                      >
+                        <span className="text-muted">📷 Sin imagen</span>
                       </div>
                     )}
-                  </Card.Body>
+
+                    <Card.Body>
+                      <Card.Title className="fw-bold text-primary fs-5 d-flex justify-content-between align-items-start">
+                        <span>{receta.nombre}</span>
+                      </Card.Title>
+
+                      <Badge bg="info" className="mb-2">
+                        {receta.categoria}
+                      </Badge>
+
+                      <Card.Text className="text-muted small">
+                        {receta.descripcion?.substring(0, 80) ||
+                          "Sin descripción"}
+                        ...
+                      </Card.Text>
+
+                      {receta.fecha_creacion && (
+                        <div className="text-muted small mb-2">
+                          ⏱ Creada el {formatFecha(receta.fecha_creacion)}
+                        </div>
+                      )}
+                    </Card.Body>
+                  </div>
 
                   {/* ACCIONES DE LA TARJETA */}
                   <div className="d-flex justify-content-between px-3 pb-3 pt-1">
@@ -407,4 +398,82 @@ export default function RecetasList() {
       )}
     </div>
   );
+}
+
+/* 🔧 ESTILOS PREMIUM INYECTADOS EN <head> (fuera del árbol de React) */
+
+const styles = `
+.receta-img-wrapper {
+  height: 180px;
+  overflow: hidden;
+}
+
+.receta-img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  transition: transform .4s ease;
+}
+
+.receta-card {
+  position: relative;
+}
+
+.receta-card:hover .receta-img {
+  transform: scale(1.07);
+}
+
+.receta-card:hover {
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15)!important;
+}
+
+/* Estado cuando la tarjeta está seleccionada para lista de compras */
+.receta-card-seleccionada {
+  box-shadow: 0 0 0 2px #0ea5e9, 0 10px 28px rgba(14,165,233,0.35)!important;
+}
+
+/* Checkbox flotante de selección */
+.seleccion-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  background: rgba(255,255,255,0.9);
+  border-radius: 999px;
+  padding: 3px 8px;
+  box-shadow: 0 4px 10px rgba(15,23,42,0.2);
+}
+
+.checkbox-simple {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #0ea5e9;
+}
+
+.filtros-card {
+  border-radius: 16px;
+  background: #fdfefe;
+}
+
+.filtros-card .input-group-text {
+  background: #f1f5f9;
+  border-color: #e5e7eb;
+}
+
+.filtros-card .form-control,
+.filtros-card .form-select {
+  border-radius: 10px;
+}
+`;
+
+// Inyectar estilos una sola vez en <head>
+if (typeof document !== "undefined") {
+  const styleId = "recetas-list-premium-styles";
+  if (!document.getElementById(styleId)) {
+    const tag = document.createElement("style");
+    tag.id = styleId;
+    tag.innerHTML = styles;
+    document.head.appendChild(tag);
+  }
 }

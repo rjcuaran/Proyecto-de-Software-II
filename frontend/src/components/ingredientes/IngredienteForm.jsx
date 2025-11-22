@@ -1,126 +1,140 @@
-// frontend/src/components/IngredienteForm.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Button, Form, Row, Col } from "react-bootstrap";
 
-const unidadesMedida = [
-  "gramos",
-  "mililitros",
-  "pizcas",
-  "cucharadas de postre",
-  "tazas",
-];
+export default function IngredienteForm({
+  ingredientesIniciales = [],
+  onChange,
+}) {
+  // 🔥 Unidades con formato premium
+  const unidadesMedida = [
+    "Unidades",
+    "Gramos",
+    "Mililitros",
+    "Pizcas",
+    "Cucharadas",
+    "Cucharaditas",
+    "Tazas",
+    "Onzas",
+  ];
 
-const IngredienteForm = ({ onChange }) => {
-  const [ingredientes, setIngredientes] = useState([
-    { nombre: "", cantidad: "", unidad_medida: "" },
-  ]);
+  // Estado interno de los ingredientes
+  const [ingredientes, setIngredientes] = useState([]);
+  const [initialized, setInitialized] = useState(false);
 
-  // 🧮 Maneja los cambios en cada campo
-  const handleChange = (index, field, value) => {
-    const nuevosIngredientes = [...ingredientes];
-    nuevosIngredientes[index][field] = value;
-    setIngredientes(nuevosIngredientes);
-    onChange(nuevosIngredientes); // Envía cambios al componente padre
+  // ✅ Inicializar SOLO una vez a partir de `ingredientesIniciales`
+  useEffect(() => {
+    if (initialized) return;
+
+    if (ingredientesIniciales && ingredientesIniciales.length > 0) {
+      const normalizados = ingredientesIniciales.map((ing) => ({
+        nombre: ing.nombre || "",
+        cantidad:
+          ing.cantidad !== null && ing.cantidad !== undefined
+            ? ing.cantidad
+            : "",
+        unidad_medida: ing.unidad_medida || "",
+      }));
+      setIngredientes(normalizados);
+    } else {
+      // Si no hay ingredientes aún, empezamos con 1 fila vacía
+      setIngredientes([{ nombre: "", cantidad: "", unidad_medida: "" }]);
+    }
+
+    setInitialized(true);
+  }, [ingredientesIniciales, initialized]);
+
+  // ✅ Notificar siempre al padre cuando cambie el arreglo
+  useEffect(() => {
+    if (typeof onChange === "function") {
+      onChange(ingredientes);
+    }
+  }, [ingredientes, onChange]);
+
+  const handleChange = (index, campo, valor) => {
+    setIngredientes((prev) => {
+      const copia = [...prev];
+      copia[index] = {
+        ...copia[index],
+        [campo]: valor,
+      };
+      return copia;
+    });
   };
 
-  // ➕ Agregar un nuevo ingrediente vacío
   const agregarIngrediente = () => {
-    setIngredientes([
-      ...ingredientes,
+    setIngredientes((prev) => [
+      ...prev,
       { nombre: "", cantidad: "", unidad_medida: "" },
     ]);
   };
 
-  // ❌ Eliminar ingrediente específico
   const eliminarIngrediente = (index) => {
-    const nuevosIngredientes = ingredientes.filter((_, i) => i !== index);
-    setIngredientes(nuevosIngredientes);
-    onChange(nuevosIngredientes);
-  };
-
-  // 🧾 Validar que todos los campos estén completos
-  const validarIngredientes = () => {
-    return ingredientes.every(
-      (ing) => ing.nombre && ing.cantidad && ing.unidad_medida
-    );
+    setIngredientes((prev) => {
+      if (prev.length === 1) {
+        // Siempre dejamos al menos una fila
+        return [{ nombre: "", cantidad: "", unidad_medida: "" }];
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   return (
-    <div className="p-4 bg-white rounded-2xl shadow-md border border-gray-100">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">
-        🧂 Ingredientes
-      </h3>
+    <div>
+      {ingredientes.map((ing, index) => (
+        <Row key={index} className="mb-3 g-2">
+          <Col md={5}>
+            <Form.Label>Ingrediente</Form.Label>
+            <Form.Control
+              type="text"
+              value={ing.nombre}
+              onChange={(e) => handleChange(index, "nombre", e.target.value)}
+              placeholder="Ej: Harina de trigo"
+            />
+          </Col>
 
-      {ingredientes.map((ingrediente, index) => (
-        <div
-          key={index}
-          className="grid grid-cols-12 gap-3 mb-3 items-center"
-        >
-          {/* Nombre */}
-          <input
-            type="text"
-            placeholder="Nombre del ingrediente"
-            value={ingrediente.nombre}
-            onChange={(e) =>
-              handleChange(index, "nombre", e.target.value)
-            }
-            className="col-span-5 p-2 border rounded-lg focus:ring-2 focus:ring-green-400 focus:outline-none"
-          />
+          <Col md={3}>
+            <Form.Label>Cantidad</Form.Label>
+            <Form.Control
+              type="number"
+              step="0.01"
+              min="0"
+              value={ing.cantidad}
+              onChange={(e) => handleChange(index, "cantidad", e.target.value)}
+              placeholder="Ej: 100"
+            />
+          </Col>
 
-          {/* Cantidad */}
-          <input
-            type="number"
-            placeholder="Cantidad"
-            value={ingrediente.cantidad}
-            onChange={(e) =>
-              handleChange(index, "cantidad", e.target.value)
-            }
-            className="col-span-3 p-2 border rounded-lg focus:ring-2 focus:ring-green-400 focus:outline-none"
-          />
+          <Col md={3}>
+            <Form.Label>Unidad</Form.Label>
+            <Form.Select
+              value={ing.unidad_medida}
+              onChange={(e) =>
+                handleChange(index, "unidad_medida", e.target.value)
+              }
+            >
+              <option value="">Selecciona unidad</option>
+              {unidadesMedida.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </Form.Select>
+          </Col>
 
-          {/* Unidad de medida */}
-          <select
-            value={ingrediente.unidad_medida}
-            onChange={(e) =>
-              handleChange(index, "unidad_medida", e.target.value)
-            }
-            className="col-span-3 p-2 border rounded-lg bg-white focus:ring-2 focus:ring-green-400 focus:outline-none"
-          >
-            <option value="">Selecciona unidad</option>
-            {unidadesMedida.map((unidad) => (
-              <option key={unidad} value={unidad}>
-                {unidad}
-              </option>
-            ))}
-          </select>
-
-          {/* Botón eliminar */}
-          <button
-            type="button"
-            onClick={() => eliminarIngrediente(index)}
-            className="col-span-1 text-red-500 hover:text-red-700 text-xl"
-          >
-            ✖
-          </button>
-        </div>
+          <Col md={1} className="d-flex align-items-end">
+            <Button
+              variant="outline-danger"
+              onClick={() => eliminarIngrediente(index)}
+            >
+              ✖
+            </Button>
+          </Col>
+        </Row>
       ))}
 
-      <div className="flex justify-between items-center mt-4">
-        <button
-          type="button"
-          onClick={agregarIngrediente}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-sm transition"
-        >
-          + Agregar ingrediente
-        </button>
-
-        {!validarIngredientes() && (
-          <p className="text-sm text-red-500">
-            ⚠️ Completa todos los campos antes de continuar
-          </p>
-        )}
-      </div>
+      <Button variant="success" className="mt-2" onClick={agregarIngrediente}>
+        ➕ Agregar ingrediente
+      </Button>
     </div>
   );
-};
-
-export default IngredienteForm;
+}
