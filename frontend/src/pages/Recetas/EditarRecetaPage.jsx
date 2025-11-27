@@ -109,19 +109,26 @@ export default function EditarRecetaPage() {
       }
 
       // 🔥 Actualizar receta
-      await axios.put(`http://localhost:5000/api/recetas/${id}`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const res = await axios.put(
+        `http://localhost:5000/api/recetas/${id}`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const updatedId = res?.data?.id || id;
 
       setSuccess("Receta actualizada con éxito.");
 
-      // 🔥 Navegación FORZADA al detalle con refresco garantizado
-      navigate(`/recetas/${id}?updated=${Date.now()}`, {
-        replace: true,
-      });
+      // 🔥 Navegación automática al detalle de la receta
+      // Pequeña pausa para que el usuario alcance a ver el mensaje de éxito
+      setTimeout(() => {
+        navigate(`/recetas/${updatedId}`);
+      }, 1200);
     } catch (err) {
       console.error("❌ Error actualizando la receta:", err);
       setError("Error actualizando la receta.");

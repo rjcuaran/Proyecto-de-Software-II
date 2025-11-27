@@ -1,3 +1,4 @@
+// frontend/src/components/ingredientes/IngredienteForm.jsx
 import React, { useState, useEffect } from "react";
 import { Button, Form, Row, Col } from "react-bootstrap";
 
@@ -43,38 +44,54 @@ export default function IngredienteForm({
     setInitialized(true);
   }, [ingredientesIniciales, initialized]);
 
-  // ✅ Notificar siempre al padre cuando cambie el arreglo
-  useEffect(() => {
-    if (typeof onChange === "function") {
-      onChange(ingredientes);
-    }
-  }, [ingredientes, onChange]);
+  /* 
+    ⚠️ IMPORTANTE:
+    Eliminamos el useEffect que notificaba cambios constantemente.
+    Ahora SOLO notificamos al padre cuando el usuario ACTÚA:
+      ➤ escribe
+      ➤ agrega ingrediente
+      ➤ elimina ingrediente
+  */
 
   const handleChange = (index, campo, valor) => {
     setIngredientes((prev) => {
       const copia = [...prev];
-      copia[index] = {
-        ...copia[index],
-        [campo]: valor,
-      };
+      copia[index] = { ...copia[index], [campo]: valor };
+
+      // 🔥 Notificar al padre SOLO cuando hay cambios reales
+      if (typeof onChange === "function") onChange(copia);
+
       return copia;
     });
   };
 
   const agregarIngrediente = () => {
-    setIngredientes((prev) => [
-      ...prev,
-      { nombre: "", cantidad: "", unidad_medida: "" },
-    ]);
+    setIngredientes((prev) => {
+      const nuevaLista = [
+        ...prev,
+        { nombre: "", cantidad: "", unidad_medida: "" },
+      ];
+
+      if (typeof onChange === "function") onChange(nuevaLista);
+
+      return nuevaLista;
+    });
   };
 
   const eliminarIngrediente = (index) => {
     setIngredientes((prev) => {
+      let nuevaLista;
+
       if (prev.length === 1) {
         // Siempre dejamos al menos una fila
-        return [{ nombre: "", cantidad: "", unidad_medida: "" }];
+        nuevaLista = [{ nombre: "", cantidad: "", unidad_medida: "" }];
+      } else {
+        nuevaLista = prev.filter((_, i) => i !== index);
       }
-      return prev.filter((_, i) => i !== index);
+
+      if (typeof onChange === "function") onChange(nuevaLista);
+
+      return nuevaLista;
     });
   };
 
@@ -82,6 +99,7 @@ export default function IngredienteForm({
     <div>
       {ingredientes.map((ing, index) => (
         <Row key={index} className="mb-3 g-2">
+          {/* Nombre */}
           <Col md={5}>
             <Form.Label>Ingrediente</Form.Label>
             <Form.Control
@@ -92,6 +110,7 @@ export default function IngredienteForm({
             />
           </Col>
 
+          {/* Cantidad */}
           <Col md={3}>
             <Form.Label>Cantidad</Form.Label>
             <Form.Control
@@ -104,6 +123,7 @@ export default function IngredienteForm({
             />
           </Col>
 
+          {/* Unidad de medida */}
           <Col md={3}>
             <Form.Label>Unidad</Form.Label>
             <Form.Select
@@ -121,6 +141,7 @@ export default function IngredienteForm({
             </Form.Select>
           </Col>
 
+          {/* Botón eliminar */}
           <Col md={1} className="d-flex align-items-end">
             <Button
               variant="outline-danger"
@@ -132,6 +153,7 @@ export default function IngredienteForm({
         </Row>
       ))}
 
+      {/* Botón agregar nuevo ingrediente */}
       <Button variant="success" className="mt-2" onClick={agregarIngrediente}>
         ➕ Agregar ingrediente
       </Button>

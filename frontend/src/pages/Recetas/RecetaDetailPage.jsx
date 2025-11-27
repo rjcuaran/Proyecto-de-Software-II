@@ -1,5 +1,6 @@
 // frontend/src/pages/Recetas/RecetaDetailPage.jsx
-// PARTE ÚNICA (archivo completo)
+// ARCHIVO COMPLETO Y CORREGIDO
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -15,6 +16,28 @@ import {
   Modal,
 } from "react-bootstrap";
 
+/* =====================================================
+   🔧 Normalizador de imágenes (MISMA FUNCIÓN DEL EDITOR)
+   ===================================================== */
+const buildImagenUrl = (imagen) => {
+  if (!imagen) return null;
+
+  // Normalizar barras invertidas
+  const normalized = imagen.replace(/\\/g, "/");
+
+  // Quitar /uploads si existe
+  const withoutUploads = normalized.includes("/uploads/")
+    ? normalized.split("/uploads/").pop()
+    : normalized;
+
+  // Asegurar que comience con recetas/
+  const finalPath = withoutUploads.startsWith("recetas/")
+    ? withoutUploads
+    : `recetas/${withoutUploads}`;
+
+  return `http://localhost:5000/uploads/${finalPath}`;
+};
+
 export default function RecetaDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -27,7 +50,7 @@ export default function RecetaDetailPage() {
   const [favError, setFavError] = useState(null);
   const [fechaFormateada, setFechaFormateada] = useState("");
 
-  // Modal de eliminar
+  // Modal delete
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
@@ -38,7 +61,9 @@ export default function RecetaDetailPage() {
   const [shoppingMessage, setShoppingMessage] = useState(null);
   const [shoppingError, setShoppingError] = useState(null);
 
-  // 📌 Cargar receta
+  /* =====================================================
+     📌 Cargar receta
+     ===================================================== */
   useEffect(() => {
     const fetchReceta = async () => {
       try {
@@ -50,6 +75,7 @@ export default function RecetaDetailPage() {
         );
 
         setReceta(res.data);
+
         if (res.data.fecha_creacion) {
           const fecha = new Date(res.data.fecha_creacion);
           const fechaString = fecha.toLocaleDateString("es-ES", {
@@ -69,7 +95,9 @@ export default function RecetaDetailPage() {
     fetchReceta();
   }, [id]);
 
-  // 📌 Verificar si es favorito
+  /* =====================================================
+     ⭐ Verificar si es favorito
+     ===================================================== */
   useEffect(() => {
     const fetchFavorito = async () => {
       try {
@@ -87,7 +115,9 @@ export default function RecetaDetailPage() {
     fetchFavorito();
   }, [id]);
 
-  // Parallax scroll
+  /* =====================================================
+     🎨 Parallax scroll
+     ===================================================== */
   useEffect(() => {
     let ticking = false;
 
@@ -110,9 +140,7 @@ export default function RecetaDetailPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
   const toggleFavorito = async () => {
     setFavError(null);
@@ -120,7 +148,6 @@ export default function RecetaDetailPage() {
     try {
       setFavLoading(true);
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("No se encontró token");
 
       if (esFavorito) {
         await axios.delete(`http://localhost:5000/api/favoritos/${id}`, {
@@ -143,7 +170,9 @@ export default function RecetaDetailPage() {
     }
   };
 
-  // ⭐ Funciones del modal de lista de compras
+  /* =====================================================
+     🛒 Lista de compras
+     ===================================================== */
   const agregarIngredientes = async () => {
     try {
       setShoppingLoading(true);
@@ -190,7 +219,9 @@ export default function RecetaDetailPage() {
     }
   };
 
-  // 🗑️ Eliminar receta definitivamente
+  /* =====================================================
+     🗑️ Eliminar receta
+     ===================================================== */
   const handleDeleteReceta = async () => {
     setDeleteError(null);
     try {
@@ -202,7 +233,6 @@ export default function RecetaDetailPage() {
       });
 
       setShowDeleteModal(false);
-      // Volver al listado de recetas
       navigate("/recetas");
     } catch (err) {
       console.error("❌ Error eliminando receta:", err);
@@ -212,6 +242,9 @@ export default function RecetaDetailPage() {
     }
   };
 
+  /* =====================================================
+     🟦 UI – Render principal
+     ===================================================== */
   return (
     <>
       {loading ? (
@@ -225,12 +258,12 @@ export default function RecetaDetailPage() {
         </Alert>
       ) : (
         <div className="receta-detail-page">
-          {/* HERO PARALLAX */}
+          {/* HERO PARALLAX CORREGIDO */}
           <div
             className="receta-hero"
             style={{
               backgroundImage: receta.imagen
-                ? `url(http://localhost:5000/uploads/recetas/${receta.imagen})`
+                ? `url(${buildImagenUrl(receta.imagen)})`
                 : "linear-gradient(135deg,#f8fafc,#e2e8f0)",
               backgroundPositionY: scrollY * 0.3,
             }}
@@ -275,7 +308,6 @@ export default function RecetaDetailPage() {
                 🗑️ Eliminar
               </Button>
 
-              {/* ⭐ Nuevo botón */}
               <Button
                 variant="success"
                 size="sm"
@@ -293,7 +325,7 @@ export default function RecetaDetailPage() {
           <Container className="mt-4 mb-5">
             <Row>
               <Col lg={7}>
-                {/* 🧾 Descripción */}
+                {/* Descripción */}
                 <Card className="shadow-sm border-0 mb-4">
                   <Card.Body>
                     <h4 className="fw-bold mb-3">Descripción</h4>
@@ -370,7 +402,7 @@ export default function RecetaDetailPage() {
             </Row>
           </Container>
 
-          {/* MODAL ELIMINAR */}
+          {/* MODALES (eliminar + compras) */}
           <Modal
             show={showDeleteModal}
             onHide={() => setShowDeleteModal(false)}
@@ -404,7 +436,6 @@ export default function RecetaDetailPage() {
             </Modal.Footer>
           </Modal>
 
-          {/* ⭐ MODAL LISTA DE COMPRAS */}
           <Modal
             show={showShoppingModal}
             onHide={() => setShowShoppingModal(false)}
