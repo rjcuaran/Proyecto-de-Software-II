@@ -13,16 +13,21 @@ export default function Header() {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
+    <nav
+      className="navbar navbar-expand-lg shadow-sm py-3"
+      style={{
+        backgroundColor: "#652A1C", // Café oscuro
+      }}
+    >
       <div className="container">
 
         {/* LOGO */}
         <span
           className="navbar-brand d-flex align-items-center gap-2"
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", color: "#F9ECDB" }}
           onClick={() => navigate("/")}
         >
-          <i className="bi bi-book-half fs-3 text-warning"></i>
+          <i className="bi bi-book-half fs-3" style={{ color: "#FFC000" }}></i>
           <span className="fw-bold fs-4">Organizador de Recetas</span>
         </span>
 
@@ -35,8 +40,9 @@ export default function Header() {
           aria-controls="mainNavbar"
           aria-expanded="false"
           aria-label="Toggle navigation"
+          style={{ borderColor: "#F9ECDB" }}
         >
-          <i className="bi bi-list fs-1"></i>
+          <i className="bi bi-list fs-1" style={{ color: "#F9ECDB" }}></i>
         </button>
 
         {/* CONTENIDO */}
@@ -46,28 +52,52 @@ export default function Header() {
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
 
             <li className="nav-item">
-              <NavLink className="nav-link" to="/recetas">
+              <NavLink
+                className="nav-link"
+                to="/recetas"
+                style={({ isActive }) => ({
+                  color: isActive ? "#FFC000" : "#F9ECDB",
+                })}
+              >
                 <i className="bi bi-journal-text me-2"></i>
                 Recetario
               </NavLink>
             </li>
 
             <li className="nav-item">
-              <NavLink className="nav-link" to="/ingredientes">
+              <NavLink
+                className="nav-link"
+                to="/ingredientes"
+                style={({ isActive }) => ({
+                  color: isActive ? "#FFC000" : "#F9ECDB",
+                })}
+              >
                 <i className="bi bi-bag-check me-2"></i>
                 Ingredientes
               </NavLink>
             </li>
 
             <li className="nav-item">
-              <NavLink className="nav-link" to="/favoritos">
-                <i className="bi bi-heart-fill text-danger me-2"></i>
+              <NavLink
+                className="nav-link"
+                to="/favoritos"
+                style={({ isActive }) => ({
+                  color: isActive ? "#FFC000" : "#F9ECDB",
+                })}
+              >
+                <i className="bi bi-heart-fill me-2" style={{ color: "#FFC000" }}></i>
                 Favoritos
               </NavLink>
             </li>
 
             <li className="nav-item">
-              <NavLink className="nav-link" to="/shopping-list">
+              <NavLink
+                className="nav-link"
+                to="/shopping-list"
+                style={({ isActive }) => ({
+                  color: isActive ? "#FFC000" : "#F9ECDB",
+                })}
+              >
                 <i className="bi bi-cart-check me-2"></i>
                 Lista de Compras
               </NavLink>
@@ -82,11 +112,14 @@ export default function Header() {
                 className="nav-link dropdown-toggle d-flex align-items-center gap-2"
                 role="button"
                 data-bs-toggle="dropdown"
+                style={{ color: "#F9ECDB" }}
               >
                 <i className="bi bi-person-circle fs-4"></i> Usuario
               </span>
 
-              <ul className="dropdown-menu dropdown-menu-end shadow-lg">
+              <ul className="dropdown-menu dropdown-menu-end shadow-lg"
+                style={{ backgroundColor: "#F5DFBE" }}
+              >
 
                 <li>
                   <NavLink className="dropdown-item" to="/perfil">
@@ -101,8 +134,9 @@ export default function Header() {
 
                 <li>
                   <button
-                    className="dropdown-item text-danger fw-semibold"
+                    className="dropdown-item fw-semibold"
                     onClick={handleLogout}
+                    style={{ color: "#652A1C" }}
                   >
                     <i className="bi bi-box-arrow-right me-2"></i>
                     Cerrar sesión

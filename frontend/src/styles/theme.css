@@ -1,0 +1,131 @@
+/* ============================
+    PALETA GOURMET OFICIAL
+   ============================ */
+
+:root {
+  /* Colores base */
+  --color-fondo: #F9ECDB;         /* Crema suave */
+  --color-fondo-claro: #F5DFBE;   /* Beige cálido */
+  --color-primario: #652A1C;      /* Marrón gourmet */
+  --color-acento: #FFC000;        /* Dorado pastel */
+  --color-texto: #4a2a1c;         /* Marrón intermedio elegante */
+  --color-blanco: #ffffff;
+
+  /* Sombras premium */
+  --shadow-soft: 0px 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0px 6px 18px rgba(0, 0, 0, 0.12);
+
+  /* Bordes y radios */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  /* Transiciones */
+  --transition: 0.25s ease-out;
+
+  /* Tipografía recomendada */
+  --font-principal: "Poppins", sans-serif;
+  --font-titulos: "Merienda", cursive;
+}
+
+/* ============================
+    ESTILOS BASE GLOBAL
+   ============================ */
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-fondo);
+  font-family: var(--font-principal);
+  color: var(--color-texto);
+}
+
+/* Títulos premium */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-titulos);
+  color: var(--color-primario);
+}
+
+/* Tarjetas premium */
+.card-premium {
+  background: var(--color-fondo-claro);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  padding: 1.4rem;
+  transition: var(--transition);
+}
+
+.card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
+}
+
+/* Botón principal */
+.btn-gourmet {
+  background: var(--color-primario);
+  color: var(--color-blanco);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 8px 18px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btn-gourmet:hover {
+  background: #4b1f14;
+  transform: translateY(-2px);
+}
+
+/* Botón secundario dorado */
+.btn-dorado {
+  background: var(--color-acento);
+  color: var(--color-primario);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 8px 18px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btn-dorado:hover {
+  background: #e6ab00;
+  transform: translateY(-2px);
+}
+
+/* Imagenes redondeadas */
+.img-card {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* Enlaces premium */
+a {
+  text-decoration: none;
+  color: var(--color-primario);
+  transition: var(--transition);
+}
+
+a:hover {
+  color: #8c3a26;
+}
+
+/* Hero gourmet */
+.hero-gourmet {
+  background: linear-gradient(
+    135deg,
+    #F5DFBE,
+    #F9ECDB,
+    #F5DFBE
+  );
+  padding: 40px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* Separadores decorativos */
+.divider-dorado {
+  height: 4px;
+  background: var(--color-acento);
+  border-radius: 10px;
+  margin: 20px 0;
+}
