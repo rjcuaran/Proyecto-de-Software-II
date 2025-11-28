@@ -550,126 +550,124 @@ export default function ProfilePage() {
         </div>
 
         {/* Estilos específicos para la página de perfil con paleta gourmet */}
-        <style>{`
-          .profile-page-wrapper {
-            background: radial-gradient(circle at top left, #F9ECDB, #F5DFBE 40%, #F9ECDB);
-            min-height: 100vh;
-          }
+        
+        
+<style>
+{`
+  .profile-page-wrapper {
+    background-color: #F9ECDB;   /* Fondo igual a la app completa */
+    min-height: 100vh;
+    padding-top: 20px;
+  }
 
-          .profile-hero {
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            background: linear-gradient(135deg, #F5DFBE, #F9ECDB);
-            border: 1px solid rgba(101, 42, 28, 0.2);
-          }
+  /* HERO SUPERIOR */
+  .profile-hero {
+    border-radius: 20px;
+    background: linear-gradient(135deg, #FCEED9, #F9E4C6);
+    border: 1px solid rgba(101, 42, 28, 0.15);
+  }
 
-          .profile-hero-content {
-            position: relative;
-            padding: 20px 16px;
-          }
+  .profile-hero-content {
+    padding: 24px 32px;
+  }
 
-          @media (min-width: 768px) {
-            .profile-hero-content {
-              padding: 24px 32px;
-            }
-          }
+  .profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #FCEED9;
+    border: 3px solid #FFC000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: #652A1C;
+    overflow: hidden;
+  }
 
-          .profile-avatar {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: #F5DFBE;
-            border: 3px solid #FFC000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.6rem;
-            color: #652A1C;
-            overflow: hidden;
-          }
+  .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-          .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
+  .text-chocolate {
+    color: #652A1C;
+  }
 
-          .text-chocolate {
-            color: #652A1C;
-          }
+  .text-muted-cream {
+    color: #8a624b;
+  }
 
-          .text-muted-cream {
-            color: #7a5541;
-          }
+  .bg-cream-soft {
+    background-color: #FCEED9;
+  }
 
-          .bg-cream-soft {
-            background-color: #F9ECDB;
-          }
+  .activity-card {
+    background: #FCEED9;
+    border: 1px solid rgba(101, 42, 28, 0.1);
+    padding: 12px;
+    border-radius: 12px;
+  }
 
-          .activity-card {
-            background: #F5DFBE;
-            border: 1px solid rgba(101, 42, 28, 0.15);
-            padding: 12px;
-            border-radius: 12px;
-          }
+  .recipe-card {
+    background: #FCEED9;
+    border: 1px solid rgba(101, 42, 28, 0.1);
+    overflow: hidden;
+    display: flex;
+  }
 
-          .recipe-card {
-            background: #F9ECDB;
-            border: 1px solid rgba(101, 42, 28, 0.15);
-            overflow: hidden;
-            display: flex;
-          }
+  .recipe-img img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-right: 1px solid rgba(101, 42, 28, 0.1);
+  }
 
-          .recipe-img img {
-            width: 90px;
-            height: 90px;
-            object-fit: cover;
-            border-right: 1px solid rgba(101, 42, 28, 0.15);
-          }
+  .recipe-content {
+    padding: 10px;
+    flex: 1;
+  }
 
-          .recipe-content {
-            padding: 10px;
-            flex: 1;
-          }
+  .btn-gourmet {
+    background-color: #652A1C;
+    color: #F9ECDB;
+    border-radius: 999px;
+    border: none;
+  }
 
-          .btn-gourmet {
-            background-color: #652A1C;
-            color: #F9ECDB;
-            border-radius: 999px;
-            border: none;
-          }
+  .btn-gourmet:hover {
+    background-color: #4a2016;
+    color: #F9ECDB;
+  }
 
-          .btn-gourmet:hover {
-            background-color: #4a2016;
-            color: #F9ECDB;
-          }
+  .btn-gourmet-outline {
+    background-color: transparent;
+    color: #652A1C;
+    border-radius: 999px;
+    border: 1px solid #652A1C;
+  }
 
-          .btn-gourmet-outline {
-            background-color: transparent;
-            color: #652A1C;
-            border-radius: 999px;
-            border: 1px solid #652A1C;
-          }
+  .btn-gourmet-outline:hover {
+    background-color: #652A1C;
+    color: #F9ECDB;
+  }
 
-          .btn-gourmet-outline:hover {
-            background-color: #652A1C;
-            color: #F9ECDB;
-          }
+  .btn-dorado {
+    background-color: #FFC000;
+    color: #652A1C;
+    border-radius: 999px;
+    border: none;
+  }
 
-          .btn-dorado {
-            background-color: #FFC000;
-            color: #652A1C;
-            border-radius: 999px;
-            border: none;
-          }
+  .btn-dorado:hover {
+    background-color: #e6ab00;
+    color: #652A1C;
+  }
+`}
+</style>
 
-          .btn-dorado:hover {
-            background-color: #e6ab00;
-            color: #652A1C;
-          }
-        `}</style>
       </div>
     </div>
   );

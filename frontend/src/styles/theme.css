@@ -1,131 +1,111 @@
 /* ============================
-    PALETA GOURMET OFICIAL
+   PALETA DE COLORES OFICIAL
+   (optimizados para armonía)
    ============================ */
 
 :root {
   /* Colores base */
-  --color-fondo: #F9ECDB;         /* Crema suave */
-  --color-fondo-claro: #F5DFBE;   /* Beige cálido */
-  --color-primario: #652A1C;      /* Marrón gourmet */
-  --color-acento: #FFC000;        /* Dorado pastel */
-  --color-texto: #4a2a1c;         /* Marrón intermedio elegante */
-  --color-blanco: #ffffff;
+  --color-fondo: #F9ECDB;
+  --color-fondo-suave: #F5DFBE;
 
-  /* Sombras premium */
-  --shadow-soft: 0px 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-card: 0px 6px 18px rgba(0, 0, 0, 0.12);
+  /* Color principal para header, botones primarios */
+  --color-cafe: #652A1C;
+  --color-cafe-oscuro: #4A1F14;
+  --color-cafe-suave: #7A3A25;
 
-  /* Bordes y radios */
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  /* Acentos */
+  --color-dorado: #FFC000;
+  --color-dorado-suave: #FFD769;
 
-  /* Transiciones */
-  --transition: 0.25s ease-out;
+  /* Texto */
+  --color-texto-oscuro: #3B2A23;
+  --color-texto: #4A2D22;
 
-  /* Tipografía recomendada */
-  --font-principal: "Poppins", sans-serif;
-  --font-titulos: "Merienda", cursive;
+  /* Bordes */
+  --color-borde-suave: #E8CBA8;
+  --color-borde-fuerte: #D5A874;
 }
 
 /* ============================
-    ESTILOS BASE GLOBAL
+   APLICACIÓN GENERAL
    ============================ */
 
 body {
-  margin: 0;
-  padding: 0;
-  background: var(--color-fondo);
-  font-family: var(--font-principal);
+  background-color: var(--color-fondo);
   color: var(--color-texto);
+  font-family: "Poppins", sans-serif;
 }
 
-/* Títulos premium */
+/* ============================
+   TARJETAS GENERALES
+   ============================ */
+
+.card,
+.profile-section,
+.profile-header-card {
+  background-color: var(--color-fondo-suave) !important;
+  border: 2px solid var(--color-borde-suave) !important;
+  border-radius: 18px !important;
+  box-shadow: 0px 3px 10px rgba(0,0,0,0.06) !important;
+}
+
+/* ============================
+   BOTONES
+   ============================ */
+
+button,
+.btn,
+.btn-primary {
+  background-color: var(--color-cafe) !important;
+  border-color: var(--color-cafe) !important;
+  color: white !important;
+}
+
+button:hover,
+.btn:hover {
+  background-color: var(--color-cafe-suave) !important;
+}
+
+/* Botón secundario */
+.btn-outline {
+  background-color: transparent !important;
+  border: 2px solid var(--color-cafe) !important;
+  color: var(--color-cafe) !important;
+}
+
+.btn-outline:hover {
+  background-color: var(--color-cafe) !important;
+  color: white !important;
+}
+
+/* ============================
+   AVATAR EN PERFIL
+   ============================ */
+
+.profile-avatar {
+  border: 4px solid var(--color-dorado);
+  box-shadow: 0px 3px 8px rgba(0,0,0,0.15);
+}
+
+/* ============================
+   TÍTULOS Y SECCIONES
+   ============================ */
+
 h1, h2, h3, h4, h5 {
-  font-family: var(--font-titulos);
-  color: var(--color-primario);
+  color: var(--color-cafe);
 }
 
-/* Tarjetas premium */
-.card-premium {
-  background: var(--color-fondo-claro);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
-  padding: 1.4rem;
-  transition: var(--transition);
-}
+/* ============================
+   CAMPOS DE FORMULARIO
+   ============================ */
 
-.card-premium:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-card);
-}
-
-/* Botón principal */
-.btn-gourmet {
-  background: var(--color-primario);
-  color: var(--color-blanco);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 8px 18px;
-  font-weight: 600;
-  transition: var(--transition);
-}
-
-.btn-gourmet:hover {
-  background: #4b1f14;
-  transform: translateY(-2px);
-}
-
-/* Botón secundario dorado */
-.btn-dorado {
-  background: var(--color-acento);
-  color: var(--color-primario);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 8px 18px;
-  font-weight: 600;
-  transition: var(--transition);
-}
-
-.btn-dorado:hover {
-  background: #e6ab00;
-  transform: translateY(-2px);
-}
-
-/* Imagenes redondeadas */
-.img-card {
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-/* Enlaces premium */
-a {
-  text-decoration: none;
-  color: var(--color-primario);
-  transition: var(--transition);
-}
-
-a:hover {
-  color: #8c3a26;
-}
-
-/* Hero gourmet */
-.hero-gourmet {
-  background: linear-gradient(
-    135deg,
-    #F5DFBE,
-    #F9ECDB,
-    #F5DFBE
-  );
-  padding: 40px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-}
-
-/* Separadores decorativos */
-.divider-dorado {
-  height: 4px;
-  background: var(--color-acento);
+input, select {
+  border: 2px solid var(--color-borde-fuerte) !important;
   border-radius: 10px;
-  margin: 20px 0;
+  background-color: white !important;
+}
+
+input:focus, select:focus {
+  border-color: var(--color-cafe) !important;
+  box-shadow: 0 0 6px rgba(101, 42, 28, 0.4);
 }
