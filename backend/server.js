@@ -28,6 +28,11 @@ app.use("/api/shopping-list", shoppingListRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
+app.use(
+  "/uploads/usuarios",
+  express.static(path.join(__dirname, "uploads/usuarios"))
+);
+
 // Puerto
 const PORT = process.env.PORT || 5000;
 

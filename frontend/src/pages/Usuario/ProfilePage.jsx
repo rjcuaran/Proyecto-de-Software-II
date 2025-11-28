@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+// frontend/src/pages/Usuario/ProfilePage.jsx
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
@@ -11,11 +12,15 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Actividad del usuario
   const [misRecetas, setMisRecetas] = useState([]);
   const [favoritos, setFavoritos] = useState([]);
   const [loadingRecetas, setLoadingRecetas] = useState(true);
   const [loadingFavoritos, setLoadingFavoritos] = useState(true);
+
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState(null);
+
+  const fileInputRef = useRef(null);
 
   const apiBaseUrl = useMemo(
     () => process.env.REACT_APP_API_URL || "http://localhost:5000",
@@ -101,7 +106,6 @@ export default function ProfilePage() {
     setSuccess(null);
     setIsEditing((prev) => {
       const next = !prev;
-      // Si estamos cancelando, restaurar valores originales
       if (!next && user) {
         setForm({
           nombre: user.nombre || "",
@@ -126,7 +130,6 @@ export default function ProfilePage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Actualizar usuario en memoria
       setUser((prev) =>
         prev
           ? {
@@ -150,12 +153,66 @@ export default function ProfilePage() {
     }
   };
 
-  // Distintos estados de carga / error
+  const handleAvatarButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleAvatarChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setAvatarMessage(null);
+    setAvatarUploading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const res = await axios.put(
+        `${apiBaseUrl}/api/usuarios/profile/avatar`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const newAvatar = res.data?.avatar;
+
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              avatar: newAvatar,
+            }
+          : prev
+      );
+
+      setAvatarMessage("Foto de perfil actualizada correctamente.");
+    } catch (err) {
+      console.error("Error actualizando avatar", err);
+      setAvatarMessage(
+        err.response?.data?.message ||
+          "No se pudo actualizar la foto de perfil. Intenta nuevamente."
+      );
+    } finally {
+      setAvatarUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mt-4">
         <div className="d-flex align-items-center gap-2">
-          <div className="spinner-border text-primary" role="status">
+          <div className="spinner-border text-warning" role="status">
             <span className="visually-hidden">Cargando...</span>
           </div>
           <span className="fw-semibold">Cargando tu perfil…</span>
@@ -191,55 +248,81 @@ export default function ProfilePage() {
       })
     : "";
 
+  const avatarUrl =
+    user.avatar && user.avatar !== ""
+      ? `${apiBaseUrl}/uploads/usuarios/${user.avatar}`
+      : null;
+
   return (
     <div className="profile-page-wrapper py-4">
       <div className="container">
         {/* HERO SUPERIOR */}
         <div className="profile-hero mb-4">
-          <div className="profile-hero-gradient" />
           <div className="profile-hero-content container">
             <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
               <div className="d-flex align-items-center gap-3">
                 <div className="profile-avatar">
-                  <span>{inicial}</span>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={user.nombre} />
+                  ) : (
+                    <span>{inicial}</span>
+                  )}
                 </div>
                 <div>
-                  <p className="text-uppercase small mb-1 text-white-50">
+                  <p className="text-uppercase small mb-1 text-muted-cream">
                     Mi cuenta
                   </p>
-                  <h1 className="h4 mb-1 text-white">{user.nombre}</h1>
-                  <p className="mb-0 text-white-50">{user.correo}</p>
+                  <h1 className="h4 mb-1 text-chocolate">{user.nombre}</h1>
+                  <p className="mb-0 text-muted-cream">{user.correo}</p>
+                  {fechaFormateada && (
+                    <p className="mb-0 text-muted-cream small">
+                      Usuario desde {fechaFormateada}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div className="text-md-end">
-                {fechaFormateada && (
-                  <p className="text-white-50 small mb-1">
-                    Usuario desde {fechaFormateada}
-                  </p>
-                )}
-
+              <div className="text-md-end d-flex flex-column align-items-md-end gap-2">
                 <button
                   type="button"
-                  className={`btn ${
-                    isEditing ? "btn-outline-light" : "btn-light"
-                  } btn-sm fw-semibold`}
+                  className="btn btn-sm btn-gourmet-outline"
+                  onClick={handleAvatarButtonClick}
+                  disabled={avatarUploading}
+                >
+                  {avatarUploading ? "Subiendo foto..." : "Cambiar foto"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-gourmet"
                   onClick={handleToggleEdit}
                 >
-                  {isEditing ? "Cancelar" : "Editar perfil"}
+                  {isEditing ? "Cancelar edición" : "Editar perfil"}
                 </button>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  onChange={handleAvatarChange}
+                />
               </div>
             </div>
           </div>
         </div>
 
-        {/* CONTENIDO */}
+        {avatarMessage && (
+          <div className="container mb-3">
+            <div className="alert alert-info py-2 small">{avatarMessage}</div>
+          </div>
+        )}
+
         <div className="row justify-content-center">
           <div className="col-lg-8">
             {/* Información básica */}
-            <div className="card shadow-sm border-0 rounded-4 mb-4">
+            <div className="card shadow-sm border-0 rounded-4 mb-4 bg-cream-soft">
               <div className="card-body p-4">
-                <h2 className="h5 mb-3">Información básica</h2>
+                <h2 className="h5 mb-3 text-chocolate">Información básica</h2>
 
                 {error && (
                   <div className="alert alert-danger py-2 small">{error}</div>
@@ -253,11 +336,11 @@ export default function ProfilePage() {
                 {!isEditing ? (
                   <div className="row g-3">
                     <div className="col-md-6">
-                      <p className="text-muted mb-1 small">Nombre</p>
+                      <p className="text-muted small mb-1">Nombre</p>
                       <p className="fw-semibold mb-0">{user.nombre}</p>
                     </div>
                     <div className="col-md-6">
-                      <p className="text-muted mb-1 small">Correo</p>
+                      <p className="text-muted small mb-1">Correo</p>
                       <p className="fw-semibold mb-0">{user.correo}</p>
                     </div>
                   </div>
@@ -302,7 +385,7 @@ export default function ProfilePage() {
                       </button>
                       <button
                         type="submit"
-                        className="btn btn-primary btn-sm px-3"
+                        className="btn btn-gourmet btn-sm px-3"
                         disabled={saving}
                       >
                         {saving ? "Guardando..." : "Guardar cambios"}
@@ -314,9 +397,9 @@ export default function ProfilePage() {
             </div>
 
             {/* Actividad reciente */}
-            <div className="card shadow-sm border-0 rounded-4 mb-4">
+            <div className="card shadow-sm border-0 rounded-4 mb-4 bg-cream-soft">
               <div className="card-body p-4">
-                <h2 className="h6 mb-3">📊 Actividad reciente</h2>
+                <h2 className="h6 mb-3 text-chocolate">📊 Actividad reciente</h2>
 
                 {loadingRecetas && loadingFavoritos ? (
                   <div>Cargando actividad...</div>
@@ -337,7 +420,7 @@ export default function ProfilePage() {
                               to={`/recetas/${
                                 misRecetas[misRecetas.length - 1].id_receta
                               }`}
-                              className="btn btn-sm btn-outline-primary rounded-pill"
+                              className="btn btn-sm btn-dorado rounded-pill"
                             >
                               Ver receta
                             </Link>
@@ -381,9 +464,9 @@ export default function ProfilePage() {
             </div>
 
             {/* Mis Recetas */}
-            <div className="card shadow-sm border-0 rounded-4 mb-4">
+            <div className="card shadow-sm border-0 rounded-4 mb-4 bg-cream-soft">
               <div className="card-body p-4">
-                <h2 className="h6 mb-3">👨‍🍳 Mis Recetas</h2>
+                <h2 className="h6 mb-3 text-chocolate">👨‍🍳 Mis Recetas</h2>
 
                 {loadingRecetas ? (
                   <p>Cargando recetas...</p>
@@ -409,7 +492,7 @@ export default function ProfilePage() {
                             </p>
                             <Link
                               to={`/recetas/${receta.id_receta}`}
-                              className="btn btn-sm btn-outline-primary rounded-pill"
+                              className="btn btn-sm btn-gourmet rounded-pill"
                             >
                               Ver receta
                             </Link>
@@ -423,9 +506,9 @@ export default function ProfilePage() {
             </div>
 
             {/* Mis Favoritos */}
-            <div className="card shadow-sm border-0 rounded-4 mb-4">
+            <div className="card shadow-sm border-0 rounded-4 mb-4 bg-cream-soft">
               <div className="card-body p-4">
-                <h2 className="h6 mb-3">⭐ Mis Favoritos</h2>
+                <h2 className="h6 mb-3 text-chocolate">⭐ Mis Favoritos</h2>
 
                 {loadingFavoritos ? (
                   <p>Cargando favoritos...</p>
@@ -451,7 +534,7 @@ export default function ProfilePage() {
                             </p>
                             <Link
                               to={`/recetas/${fav.id_receta}`}
-                              className="btn btn-sm btn-outline-warning rounded-pill"
+                              className="btn btn-sm btn-dorado rounded-pill"
                             >
                               Ver receta ⭐
                             </Link>
@@ -466,10 +549,10 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Estilos específicos de esta página */}
+        {/* Estilos específicos para la página de perfil con paleta gourmet */}
         <style>{`
           .profile-page-wrapper {
-            background: radial-gradient(circle at top left, #f5f3ff, #f9fafb 40%, #f1f5f9);
+            background: radial-gradient(circle at top left, #F9ECDB, #F5DFBE 40%, #F9ECDB);
             min-height: 100vh;
           }
 
@@ -477,15 +560,8 @@ export default function ProfilePage() {
             position: relative;
             border-radius: 20px;
             overflow: hidden;
-            background: linear-gradient(135deg, #4f46e5, #6366f1, #0ea5e9);
-            color: #fff;
-          }
-
-          .profile-hero-gradient {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at top left, rgba(250,250,250,0.18), transparent 60%);
-            opacity: 0.9;
+            background: linear-gradient(135deg, #F5DFBE, #F9ECDB);
+            border: 1px solid rgba(101, 42, 28, 0.2);
           }
 
           .profile-hero-content {
@@ -500,30 +576,48 @@ export default function ProfilePage() {
           }
 
           .profile-avatar {
-            width: 56px;
-            height: 56px;
+            width: 72px;
+            height: 72px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.4);
+            background: #F5DFBE;
+            border: 3px solid #FFC000;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 1.4rem;
-            color: #f9fafb;
-            backdrop-filter: blur(6px);
+            font-size: 1.6rem;
+            color: #652A1C;
+            overflow: hidden;
+          }
+
+          .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          .text-chocolate {
+            color: #652A1C;
+          }
+
+          .text-muted-cream {
+            color: #7a5541;
+          }
+
+          .bg-cream-soft {
+            background-color: #F9ECDB;
           }
 
           .activity-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: #F5DFBE;
+            border: 1px solid rgba(101, 42, 28, 0.15);
             padding: 12px;
             border-radius: 12px;
           }
 
           .recipe-card {
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: #F9ECDB;
+            border: 1px solid rgba(101, 42, 28, 0.15);
             overflow: hidden;
             display: flex;
           }
@@ -532,12 +626,48 @@ export default function ProfilePage() {
             width: 90px;
             height: 90px;
             object-fit: cover;
-            border-right: 1px solid #e2e8f0;
+            border-right: 1px solid rgba(101, 42, 28, 0.15);
           }
 
           .recipe-content {
             padding: 10px;
             flex: 1;
+          }
+
+          .btn-gourmet {
+            background-color: #652A1C;
+            color: #F9ECDB;
+            border-radius: 999px;
+            border: none;
+          }
+
+          .btn-gourmet:hover {
+            background-color: #4a2016;
+            color: #F9ECDB;
+          }
+
+          .btn-gourmet-outline {
+            background-color: transparent;
+            color: #652A1C;
+            border-radius: 999px;
+            border: 1px solid #652A1C;
+          }
+
+          .btn-gourmet-outline:hover {
+            background-color: #652A1C;
+            color: #F9ECDB;
+          }
+
+          .btn-dorado {
+            background-color: #FFC000;
+            color: #652A1C;
+            border-radius: 999px;
+            border: none;
+          }
+
+          .btn-dorado:hover {
+            background-color: #e6ab00;
+            color: #652A1C;
           }
         `}</style>
       </div>
