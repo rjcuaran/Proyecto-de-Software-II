@@ -1,7 +1,60 @@
 // frontend/src/pages/Usuario/ProfilePage.jsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import Cropper from "react-easy-crop";
+
+/* ========= Helpers para recortar imagen en el frontend ========= */
+
+const createImage = (url) =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener("load", () => resolve(image));
+    image.addEventListener("error", (error) => reject(error));
+    image.setAttribute("crossOrigin", "anonymous");
+    image.src = url;
+  });
+
+const getCroppedImg = async (imageSrc, cropPixels) => {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = cropPixels.width;
+  canvas.height = cropPixels.height;
+
+  ctx.drawImage(
+    image,
+    cropPixels.x,
+    cropPixels.y,
+    cropPixels.width,
+    cropPixels.height,
+    0,
+    0,
+    cropPixels.width,
+    cropPixels.height
+  );
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("No se pudo generar la imagen recortada."));
+          return;
+        }
+        resolve(blob);
+      },
+      "image/jpeg",
+      0.9
+    );
+  });
+};
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -20,12 +73,24 @@ export default function ProfilePage() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMessage, setAvatarMessage] = useState(null);
 
+  // Estado para el modal de recorte
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState(null);
+  const [rawAvatarFile, setRawAvatarFile] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
   const fileInputRef = useRef(null);
 
   const apiBaseUrl = useMemo(
     () => process.env.REACT_APP_API_URL || "http://localhost:5000",
     []
   );
+
+  const onCropComplete = useCallback((_, croppedAreaPixelsResult) => {
+    setCroppedAreaPixels(croppedAreaPixelsResult);
+  }, []);
 
   // Cargar perfil
   useEffect(() => {
@@ -159,17 +224,80 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAvatarChange = async (event) => {
+  // Seleccionar imagen → abrir modal de recorte
+  const handleAvatarChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+    const maxSizeMB = 5; // ⬅ ahora 5 MB
+
+    if (!allowedTypes.includes(file.type)) {
+      setAvatarMessage(
+        "Solo se permiten imágenes JPG o PNG. Por favor selecciona otra imagen."
+      );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      setAvatarMessage(
+        `La imagen es muy pesada. Máximo permitido: ${maxSizeMB} MB.`
+      );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setRawAvatarFile(file);
+    setSelectedImageUrl(objectUrl);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
     setAvatarMessage(null);
-    setAvatarUploading(true);
+    setIsCropModalOpen(true);
+  };
+
+  const resetCropState = () => {
+    if (selectedImageUrl) {
+      URL.revokeObjectURL(selectedImageUrl);
+    }
+    setSelectedImageUrl(null);
+    setRawAvatarFile(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+    setIsCropModalOpen(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleCancelCrop = () => {
+    resetCropState();
+  };
+
+  // Confirmar recorte → generar Blob → subir al backend
+  const handleConfirmCropUpload = async () => {
+    if (!selectedImageUrl || !croppedAreaPixels || !rawAvatarFile) {
+      setAvatarMessage("No se pudo procesar la imagen. Intenta otra vez.");
+      return;
+    }
 
     try {
+      setAvatarUploading(true);
+      setAvatarMessage(null);
+
+      const croppedBlob = await getCroppedImg(
+        selectedImageUrl,
+        croppedAreaPixels
+      );
+
+      const croppedFile = new File([croppedBlob], rawAvatarFile.name, {
+        type: "image/jpeg",
+      });
+
       const token = localStorage.getItem("token");
       const formData = new FormData();
-      formData.append("avatar", file);
+      formData.append("avatar", croppedFile);
 
       const res = await axios.put(
         `${apiBaseUrl}/api/usuarios/profile/avatar`,
@@ -194,6 +322,7 @@ export default function ProfilePage() {
       );
 
       setAvatarMessage("Foto de perfil actualizada correctamente.");
+      resetCropState();
     } catch (err) {
       console.error("Error actualizando avatar", err);
       setAvatarMessage(
@@ -202,9 +331,6 @@ export default function ProfilePage() {
       );
     } finally {
       setAvatarUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     }
   };
 
@@ -256,6 +382,66 @@ export default function ProfilePage() {
   return (
     <div className="profile-page-wrapper py-4">
       <div className="container">
+        {/* MODAL DE RECORTE DE AVATAR */}
+        {isCropModalOpen && selectedImageUrl && (
+          <div className="crop-modal-backdrop">
+            <div className="crop-modal">
+              <div className="crop-modal-header">
+                <h5>Recortar foto de perfil</h5>
+              </div>
+              <div className="crop-modal-body">
+                <div className="cropper-wrapper">
+                  <Cropper
+                    image={selectedImageUrl}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={1}
+                    cropShape="round"
+                    showGrid={false}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                  />
+                </div>
+                <div className="crop-controls mt-3">
+                  <label className="form-label small mb-1">Zoom</label>
+                  <input
+                    type="range"
+                    min={1}
+                    max={3}
+                    step={0.1}
+                    value={zoom}
+                    onChange={(e) => setZoom(Number(e.target.value))}
+                    className="form-range"
+                  />
+                  <p className="small text-muted mb-0">
+                    Arrastra la imagen para centrar tu rostro o la parte que
+                    quieras mostrar.
+                  </p>
+                </div>
+              </div>
+              <div className="crop-modal-footer d-flex justify-content-end gap-2 mt-3">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={handleCancelCrop}
+                  disabled={avatarUploading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-gourmet btn-sm"
+                  onClick={handleConfirmCropUpload}
+                  disabled={avatarUploading}
+                >
+                  {avatarUploading ? "Guardando..." : "Guardar recorte"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* HERO SUPERIOR */}
         <div className="profile-hero mb-4">
           <div className="profile-hero-content container">
@@ -306,6 +492,11 @@ export default function ProfilePage() {
                   style={{ display: "none" }}
                   onChange={handleAvatarChange}
                 />
+
+                <small className="text-muted mt-1" style={{ maxWidth: "260px" }}>
+                  Formatos permitidos: JPG, PNG. Tamaño máximo: 5&nbsp;MB.
+                  Puedes ajustar la imagen antes de guardar.
+                </small>
               </div>
             </div>
           </div>
@@ -550,17 +741,14 @@ export default function ProfilePage() {
         </div>
 
         {/* Estilos específicos para la página de perfil con paleta gourmet */}
-        
-        
-<style>
-{`
+        <style>
+          {`
   .profile-page-wrapper {
-    background-color: #F9ECDB;   /* Fondo igual a la app completa */
+    background-color: #F9ECDB;
     min-height: 100vh;
     padding-top: 20px;
   }
 
-  /* HERO SUPERIOR */
   .profile-hero {
     border-radius: 20px;
     background: linear-gradient(135deg, #FCEED9, #F9E4C6);
@@ -665,9 +853,43 @@ export default function ProfilePage() {
     background-color: #e6ab00;
     color: #652A1C;
   }
-`}
-</style>
 
+  /* Modal de recorte */
+  .crop-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+  }
+
+  .crop-modal {
+    background-color: #FFFFFF;
+    border-radius: 18px;
+    max-width: 520px;
+    width: 90%;
+    padding: 18px 20px 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    border: 2px solid #F5DFBE;
+  }
+
+  .crop-modal-header h5 {
+    margin: 0;
+    color: #652A1C;
+  }
+
+  .cropper-wrapper {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    background: #000;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+`}
+        </style>
       </div>
     </div>
   );

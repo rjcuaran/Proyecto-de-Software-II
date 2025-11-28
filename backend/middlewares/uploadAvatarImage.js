@@ -4,7 +4,7 @@ const path = require("path");
 const fs = require("fs");
 
 // Carpeta donde se guardarán las fotos de perfil
-const AVATAR_DIR = path.join(__dirname, "..", "uploads", "usuarios");
+const AVATAR_DIR = path.join(__dirname, "..", "uploads", "avatars");
 
 // Asegurar que la carpeta exista
 if (!fs.existsSync(AVATAR_DIR)) {
