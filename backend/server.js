@@ -34,7 +34,10 @@ app.use("/api/favoritos", favoritosRoutes);
 app.use("/api/shopping-list", shoppingListRoutes);
 const adminCategoriaRoutes = require("./routes/adminCategoriaRoutes");
 app.use("/api/admin/categorias", adminCategoriaRoutes);
-
+const adminIngredienteRoutes = require("./routes/adminIngredienteRoutes");
+app.use("/api/admin/ingredientes", adminIngredienteRoutes);
+const adminUnidadRoutes = require("./routes/adminUnidadRoutes");
+app.use("/api/admin/unidades", adminUnidadRoutes);
 
 
 
