@@ -42,6 +42,8 @@ const configuracionRoutes = require("./routes/configuracionRoutes");
 app.use("/api/admin/config", configuracionRoutes);
 const adminUsuarioRoutes = require("./routes/adminUsuarioRoutes");
 app.use("/api/admin/usuarios", adminUsuarioRoutes);
+const usuarioIngredienteRoutes = require("./routes/usuarioIngredienteRoutes");
+app.use("/api/ingredientes", usuarioIngredienteRoutes);
 
 
 
