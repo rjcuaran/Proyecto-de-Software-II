@@ -10,6 +10,13 @@ const favoritosRoutes = require("./routes/favoritosRoutes");
 const shoppingListRoutes = require("./routes/shoppingListRoutes");
 const authRoutes = require("./routes/authRoutes");
 
+
+// Rutas para administración de categorías
+const categoriaRoutes = require("./routes/categoriaRoutes");
+app.use("/api/admin/categorias", categoriaRoutes);
+
+
+
 // DB
 const db = require("./config/database");
 
@@ -25,6 +32,11 @@ app.use("/api/usuarios", userRoutes);
 app.use("/api/recetas", recetaRoutes);
 app.use("/api/favoritos", favoritosRoutes);
 app.use("/api/shopping-list", shoppingListRoutes);
+const adminCategoriaRoutes = require("./routes/adminCategoriaRoutes");
+app.use("/api/admin/categorias", adminCategoriaRoutes);
+
+
+
 
 // Servir imágenes
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

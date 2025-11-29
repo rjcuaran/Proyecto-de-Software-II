@@ -6,10 +6,13 @@ const userController = {
   getProfile: (req, res) => {
     const userId = req.user.id;
 
-    const sql =
-      "SELECT id_usuario, nombre, correo, fecha_registro, avatar FROM usuario WHERE id_usuario = ?";
+    const sql = `
+      SELECT id_usuario, nombre, correo, fecha_registro, avatar, role
+      FROM usuario WHERE id_usuario = ?
+    `;
 
     db.query(sql, [userId], (error, results) => {
+      console.error;
       if (error) {
         console.error("Error obteniendo perfil:", error);
         return res.status(500).json({
@@ -35,6 +38,7 @@ const userController = {
           correo: usuario.correo,
           fecha_registro: usuario.fecha_registro,
           avatar: usuario.avatar || null,
+          role: usuario.role || "user",
         },
       });
     });

@@ -1,3 +1,4 @@
+// backend/controllers/authController.js
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -40,6 +41,7 @@ const authController = {
             });
           }
 
+          // Al registrar, el usuario queda como "user"
           User.crear(
             {
               nombre,
@@ -55,8 +57,13 @@ const authController = {
                 });
               }
 
+              // 🔥 TOKEN INCLUYENDO ROLE = "user"
               const token = jwt.sign(
-                { id: results.insertId, email: email },
+                { 
+                  id: results.insertId, 
+                  email: email, 
+                  role: "user" 
+                },
                 process.env.JWT_SECRET,
                 { expiresIn: "24h" }
               );
@@ -69,7 +76,8 @@ const authController = {
                   id: results.insertId,
                   nombre: nombre,
                   email: email,
-                  avatar: null, // Nuevo
+                  role: "user",   // 🔥 añadimos role
+                  avatar: null,
                 },
               });
             }
@@ -131,8 +139,13 @@ const authController = {
             });
           }
 
+          // 🔥 TOKEN INCLUYENDO ROLE REAL DEL USUARIO
           const token = jwt.sign(
-            { id: user.id_usuario, email: user.correo },
+            { 
+              id: user.id_usuario, 
+              email: user.correo,
+              role: user.role   // << AQUI ESTA EL SUPER CAMBIO
+            },
             process.env.JWT_SECRET,
             { expiresIn: "24h" }
           );
@@ -145,7 +158,8 @@ const authController = {
               id: user.id_usuario,
               nombre: user.nombre,
               email: user.correo,
-              avatar: user.avatar, // 🔥 Ahora sí incluimos el avatar
+              role: user.role,  // 🔥 incluimos role en respuesta
+              avatar: user.avatar,
             },
           });
         });

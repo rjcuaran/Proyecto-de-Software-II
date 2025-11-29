@@ -1,3 +1,4 @@
+// backend/middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
 
 function verificarToken(req, res, next) {
@@ -16,7 +17,14 @@ function verificarToken(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+
+        // Guardamos toda la info del usuario, incluyendo el role
+        req.user = {
+            id: decoded.id,
+            email: decoded.email,
+            role: decoded.role || "user",
+        };
+
         next();
     } catch (error) {
         console.error('Error verificando token:', error);

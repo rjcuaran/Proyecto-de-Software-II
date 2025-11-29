@@ -1,3 +1,4 @@
+// backend/models/User.js
 const db = require('../config/database');
 
 class User {
@@ -13,7 +14,10 @@ class User {
   }
 
   static obtenerPorId(id_usuario, callback) {
-    const query = 'SELECT id_usuario, nombre, correo, fecha_registro FROM usuario WHERE id_usuario = ?';
+    const query = `
+      SELECT id_usuario, nombre, correo, fecha_registro, avatar, role 
+      FROM usuario WHERE id_usuario = ?
+    `;
     db.query(query, [id_usuario], callback);
   }
 
