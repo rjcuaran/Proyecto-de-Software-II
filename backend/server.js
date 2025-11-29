@@ -38,6 +38,10 @@ const adminIngredienteRoutes = require("./routes/adminIngredienteRoutes");
 app.use("/api/admin/ingredientes", adminIngredienteRoutes);
 const adminUnidadRoutes = require("./routes/adminUnidadRoutes");
 app.use("/api/admin/unidades", adminUnidadRoutes);
+const configuracionRoutes = require("./routes/configuracionRoutes");
+app.use("/api/admin/config", configuracionRoutes);
+const adminUsuarioRoutes = require("./routes/adminUsuarioRoutes");
+app.use("/api/admin/usuarios", adminUsuarioRoutes);
 
 
 
