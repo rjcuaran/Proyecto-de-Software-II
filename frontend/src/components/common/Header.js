@@ -1,4 +1,3 @@
-// src/components/common/Header.js
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import authService from "../../services/auth";
@@ -6,22 +5,26 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 
 export default function Header() {
   const navigate = useNavigate();
+  const user = authService.getUser();
 
   const handleLogout = () => {
     authService.logout();
     navigate("/login");
   };
 
+  const avatarUrl = user?.avatar
+    ? `http://localhost:5000/uploads/usuarios/${user.avatar}`
+    : null;
+
   return (
     <nav
       className="navbar navbar-expand-lg shadow-sm py-3"
       style={{
-        backgroundColor: "#652A1C", // Café oscuro
+        backgroundColor: "#652A1C",
       }}
     >
       <div className="container">
 
-        {/* LOGO */}
         <span
           className="navbar-brand d-flex align-items-center gap-2"
           style={{ cursor: "pointer", color: "#F9ECDB" }}
@@ -31,30 +34,22 @@ export default function Header() {
           <span className="fw-bold fs-4">Organizador de Recetas</span>
         </span>
 
-        {/* BOTÓN RESPONSIVE */}
         <button
           className="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#mainNavbar"
-          aria-controls="mainNavbar"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
           style={{ borderColor: "#F9ECDB" }}
         >
           <i className="bi bi-list fs-1" style={{ color: "#F9ECDB" }}></i>
         </button>
 
-        {/* CONTENIDO */}
         <div className="collapse navbar-collapse" id="mainNavbar">
 
-          {/* MENÚ IZQUIERDA */}
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
 
             <li className="nav-item">
-              <NavLink
-                className="nav-link"
-                to="/recetas"
+              <NavLink className="nav-link" to="/recetas"
                 style={({ isActive }) => ({
                   color: isActive ? "#FFC000" : "#F9ECDB",
                 })}
@@ -65,9 +60,7 @@ export default function Header() {
             </li>
 
             <li className="nav-item">
-              <NavLink
-                className="nav-link"
-                to="/ingredientes"
+              <NavLink className="nav-link" to="/ingredientes"
                 style={({ isActive }) => ({
                   color: isActive ? "#FFC000" : "#F9ECDB",
                 })}
@@ -78,9 +71,7 @@ export default function Header() {
             </li>
 
             <li className="nav-item">
-              <NavLink
-                className="nav-link"
-                to="/favoritos"
+              <NavLink className="nav-link" to="/favoritos"
                 style={({ isActive }) => ({
                   color: isActive ? "#FFC000" : "#F9ECDB",
                 })}
@@ -91,9 +82,7 @@ export default function Header() {
             </li>
 
             <li className="nav-item">
-              <NavLink
-                className="nav-link"
-                to="/shopping-list"
+              <NavLink className="nav-link" to="/shopping-list"
                 style={({ isActive }) => ({
                   color: isActive ? "#FFC000" : "#F9ECDB",
                 })}
@@ -104,7 +93,6 @@ export default function Header() {
             </li>
           </ul>
 
-          {/* MENÚ DERECHO (Perfil) */}
           <ul className="navbar-nav ms-auto">
 
             <li className="nav-item dropdown">
@@ -114,13 +102,27 @@ export default function Header() {
                 data-bs-toggle="dropdown"
                 style={{ color: "#F9ECDB" }}
               >
-                <i className="bi bi-person-circle fs-4"></i> Usuario
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="avatar"
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <i className="bi bi-person-circle fs-4"></i>
+                )}
+
+                <span>{user?.nombre || "Usuario"}</span>
               </span>
 
               <ul className="dropdown-menu dropdown-menu-end shadow-lg"
                 style={{ backgroundColor: "#F5DFBE" }}
               >
-
                 <li>
                   <NavLink className="dropdown-item" to="/perfil">
                     <i className="bi bi-person-lines-fill me-2"></i>

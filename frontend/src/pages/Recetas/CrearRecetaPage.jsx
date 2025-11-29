@@ -8,15 +8,33 @@ import { Card, Button, Form, Alert } from "react-bootstrap";
 export default function CrearRecetaPage() {
   const navigate = useNavigate();
 
+  // LISTA OFICIAL DE CATEGORÍAS
+  const categoriasOficiales = [
+    "Panadería",
+    "Repostería",
+    "Postres",
+    "Desayunos",
+    "Entradas",
+    "Platos principales",
+    "Sopas y cremas",
+    "Acompañamientos",
+    "Bebidas",
+    "Comida saludable",
+    "Vegano / Vegetariano",
+    "Internacional",
+    "Salsas",
+    "Especiales",
+  ];
+
   const [receta, setReceta] = useState({
     nombre: "",
-    categoria: "",
+    categoria: [], // ← ahora es un ARREGLO
     descripcion: "",
     preparacion: "",
     ingredientes: [],
   });
 
-  const [imagen, setImagen] = useState(null); // <-- FOTO
+  const [imagen, setImagen] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -25,6 +43,15 @@ export default function CrearRecetaPage() {
       ...receta,
       [e.target.name]: e.target.value,
     });
+  };
+
+  // MANEJAR CATEGORÍAS MULTIPLE SELECT
+  const handleCategoriasChange = (e) => {
+    const seleccionadas = Array.from(e.target.selectedOptions).map(
+      (option) => option.value
+    );
+
+    setReceta({ ...receta, categoria: seleccionadas });
   };
 
   const handleIngredientesChange = (listaIngredientes) => {
@@ -42,31 +69,27 @@ export default function CrearRecetaPage() {
     try {
       const token = localStorage.getItem("token");
 
-      // FormData para enviar archivos
       const formData = new FormData();
       formData.append("nombre", receta.nombre);
-      formData.append("categoria", receta.categoria);
+
+      // Enviar categorías como JSON
+      formData.append("categoria", JSON.stringify(receta.categoria));
+
       formData.append("descripcion", receta.descripcion);
       formData.append("preparacion", receta.preparacion);
 
-      // Imagen
       if (imagen) {
         formData.append("imagen", imagen);
       }
 
-      // Ingredientes convertidos a JSON
       formData.append("ingredientes", JSON.stringify(receta.ingredientes));
 
-      const res = await axios.post(
-        "http://localhost:5000/api/recetas",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      await axios.post("http://localhost:5000/api/recetas", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       setSuccess("Receta creada exitosamente");
       setTimeout(() => navigate("/recetas"), 1500);
@@ -86,6 +109,7 @@ export default function CrearRecetaPage() {
           {success && <Alert variant="success">{success}</Alert>}
 
           <Form onSubmit={handleSubmit} encType="multipart/form-data">
+            
             {/* FOTO DE LA RECETA */}
             <Form.Group className="mb-3">
               <Form.Label>Imagen de la receta</Form.Label>
@@ -96,6 +120,7 @@ export default function CrearRecetaPage() {
               />
             </Form.Group>
 
+            {/* NOMBRE */}
             <Form.Group className="mb-3">
               <Form.Label>Nombre de la receta</Form.Label>
               <Form.Control
@@ -107,17 +132,28 @@ export default function CrearRecetaPage() {
               />
             </Form.Group>
 
+            {/* CATEGORÍAS MULTIPLES */}
             <Form.Group className="mb-3">
-              <Form.Label>Categoría</Form.Label>
-              <Form.Control
-                type="text"
+              <Form.Label>Categorías de la receta</Form.Label>
+              <Form.Select
+                multiple
                 name="categoria"
                 value={receta.categoria}
-                onChange={handleChange}
+                onChange={handleCategoriasChange}
                 required
-              />
+              >
+                {categoriasOficiales.map((cat, idx) => (
+                  <option key={idx} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </Form.Select>
+              <Form.Text className="text-muted">
+                Mantén presionada la tecla CTRL (o CMD en Mac) para seleccionar varias categorías.
+              </Form.Text>
             </Form.Group>
 
+            {/* DESCRIPCIÓN */}
             <Form.Group className="mb-3">
               <Form.Label>Descripción</Form.Label>
               <Form.Control
@@ -130,6 +166,7 @@ export default function CrearRecetaPage() {
               />
             </Form.Group>
 
+            {/* PREPARACIÓN */}
             <Form.Group className="mb-3">
               <Form.Label>Preparación</Form.Label>
               <Form.Control
@@ -142,12 +179,14 @@ export default function CrearRecetaPage() {
               />
             </Form.Group>
 
+            {/* INGREDIENTES */}
             <h5 className="mt-4">🧂 Ingredientes</h5>
             <IngredienteForm
               ingredientes={receta.ingredientes}
               onChange={handleIngredientesChange}
             />
 
+            {/* BOTONES */}
             <div className="mt-4 d-flex justify-content-between">
               <Button variant="secondary" onClick={() => navigate(-1)}>
                 ← Cancelar
@@ -157,6 +196,7 @@ export default function CrearRecetaPage() {
                 Guardar receta
               </Button>
             </div>
+
           </Form>
         </Card.Body>
       </Card>

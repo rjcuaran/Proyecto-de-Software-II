@@ -25,6 +25,24 @@ export default function EditarRecetaPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // ⭐ LISTA OFICIAL DE CATEGORÍAS
+  const categoriasOficiales = [
+    "Panadería",
+    "Repostería",
+    "Postres",
+    "Desayunos",
+    "Entradas",
+    "Platos principales",
+    "Sopas y cremas",
+    "Acompañamientos",
+    "Bebidas",
+    "Comida saludable",
+    "Vegano / Vegetariano",
+    "Internacional",
+    "Salsas",
+    "Especiales",
+  ];
+
   const [receta, setReceta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -51,8 +69,17 @@ export default function EditarRecetaPage() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        setReceta(res.data);
-        setImagenPreview(buildImagenUrl(res.data.imagen));
+        // Asegurar que categoría es un ARRAY
+        const recetaCargada = {
+          ...res.data,
+          categoria:
+            Array.isArray(res.data.categoria)
+              ? res.data.categoria
+              : [res.data.categoria],
+        };
+
+        setReceta(recetaCargada);
+        setImagenPreview(buildImagenUrl(recetaCargada.imagen));
       } catch (err) {
         console.error("❌ Error cargando receta:", err);
         setError("No se pudo cargar la receta.");
@@ -66,6 +93,15 @@ export default function EditarRecetaPage() {
 
   const handleChange = (e) => {
     setReceta({ ...receta, [e.target.name]: e.target.value });
+  };
+
+  // ⭐ CONTROLADOR DE CATEGORÍAS (MULTIPLE SELECT)
+  const handleCategoriasChange = (e) => {
+    const seleccionadas = Array.from(e.target.selectedOptions).map(
+      (option) => option.value
+    );
+
+    setReceta({ ...receta, categoria: seleccionadas });
   };
 
   const handleIngredientesChange = (lista) => {
@@ -93,7 +129,10 @@ export default function EditarRecetaPage() {
       const data = new FormData();
 
       data.append("nombre", receta.nombre);
-      data.append("categoria", receta.categoria);
+
+      // ⭐ Enviar categorías como JSON
+      data.append("categoria", JSON.stringify(receta.categoria));
+
       data.append("descripcion", receta.descripcion);
       data.append("preparacion", receta.preparacion);
       data.append("ingredientes", JSON.stringify(receta.ingredientes || []));
@@ -124,8 +163,6 @@ export default function EditarRecetaPage() {
 
       setSuccess("Receta actualizada con éxito.");
 
-      // 🔥 Navegación automática al detalle de la receta
-      // Pequeña pausa para que el usuario alcance a ver el mensaje de éxito
       setTimeout(() => {
         navigate(`/recetas/${updatedId}`);
       }, 1200);
@@ -175,6 +212,7 @@ export default function EditarRecetaPage() {
           <Form onSubmit={handleSubmit}>
             <Row className="g-4">
               <Col xs={12} lg={7}>
+                {/* 🔶 NOMBRE */}
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-semibold">Nombre</Form.Label>
                   <Form.Control
@@ -186,17 +224,30 @@ export default function EditarRecetaPage() {
                   />
                 </Form.Group>
 
+                {/* 🔶 CATEGORÍAS MULTIPLES */}
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Categoría</Form.Label>
-                  <Form.Control
-                    type="text"
+                  <Form.Label className="fw-semibold">Categorías</Form.Label>
+
+                  <Form.Select
+                    multiple
                     name="categoria"
                     value={receta.categoria}
-                    onChange={handleChange}
+                    onChange={handleCategoriasChange}
                     required
-                  />
+                  >
+                    {categoriasOficiales.map((cat, idx) => (
+                      <option key={idx} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </Form.Select>
+
+                  <Form.Text className="text-muted">
+                    Mantén presionada CTRL (o CMD en Mac) para seleccionar varias.
+                  </Form.Text>
                 </Form.Group>
 
+                {/* 🔶 DESCRIPCIÓN */}
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-semibold">Descripción</Form.Label>
                   <Form.Control
@@ -209,6 +260,7 @@ export default function EditarRecetaPage() {
                   />
                 </Form.Group>
 
+                {/* 🔶 PREPARACIÓN */}
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-semibold">Preparación</Form.Label>
                   <Form.Control
@@ -222,6 +274,7 @@ export default function EditarRecetaPage() {
                 </Form.Group>
               </Col>
 
+              {/* 🔶 IMAGEN */}
               <Col xs={12} lg={5}>
                 <div className="text-center mb-2">
                   <h5 className="text-secondary mb-3">📸 Imagen actual</h5>
@@ -254,7 +307,7 @@ export default function EditarRecetaPage() {
               </Col>
             </Row>
 
-            {/* 🧂 Ingredientes */}
+            {/* 🧂 INGREDIENTES */}
             <div className="mt-4">
               <h5 className="fw-semibold mb-2">🧂 Ingredientes</h5>
 
@@ -264,6 +317,7 @@ export default function EditarRecetaPage() {
               />
             </div>
 
+            {/* BOTONES */}
             <div className="mt-4 d-flex justify-content-between gap-2">
               <Button
                 variant="outline-secondary"
@@ -285,6 +339,7 @@ export default function EditarRecetaPage() {
         </Card.Body>
       </Card>
 
+      {/* ESTILOS */}
       <style>{`
         .editar-receta-card {
           border-radius: 16px;

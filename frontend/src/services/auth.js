@@ -1,17 +1,22 @@
-// src/services/auth.js
-
 const authService = {
-  login(token) {
+  login(token, user) {
     localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
   },
 
   logout() {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
   },
 
   isAuthenticated() {
     const token = localStorage.getItem("token");
-    return !!token; // devuelve true si existe token
+    return !!token;
+  },
+
+  getUser() {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
   }
 };
 

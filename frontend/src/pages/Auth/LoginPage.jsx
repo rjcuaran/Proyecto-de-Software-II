@@ -1,7 +1,7 @@
-// src/pages/Auth/LoginPage.jsx
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import authService from "../../services/auth";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 export default function LoginPage() {
@@ -20,7 +20,8 @@ export default function LoginPage() {
         password,
       });
 
-      localStorage.setItem("token", res.data.token);
+      authService.login(res.data.token, res.data.user);
+
       navigate("/");
     } catch (err) {
       console.error(err);

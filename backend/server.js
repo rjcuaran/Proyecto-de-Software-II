@@ -8,7 +8,7 @@ const userRoutes = require("./routes/userRoutes");
 const recetaRoutes = require("./routes/recetaRoutes");
 const favoritosRoutes = require("./routes/favoritosRoutes");
 const shoppingListRoutes = require("./routes/shoppingListRoutes");
-const authRoutes = require("./routes/authRoutes"); // ✅ ← Nueva línea
+const authRoutes = require("./routes/authRoutes");
 
 // DB
 const db = require("./config/database");
@@ -20,17 +20,20 @@ app.use(cors());
 app.use(express.json());
 
 // Rutas principales
-app.use("/api/auth", authRoutes); // ✅ ← Nueva línea
+app.use("/api/auth", authRoutes);
 app.use("/api/usuarios", userRoutes);
 app.use("/api/recetas", recetaRoutes);
 app.use("/api/favoritos", favoritosRoutes);
 app.use("/api/shopping-list", shoppingListRoutes);
+
+// Servir imágenes
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-
+// 🔥 CORRECCIÓN IMPORTANTE
+// Antes servías '/uploads/usuarios', pero los avatares se guardan en '/uploads/avatars'
 app.use(
-  "/uploads/usuarios",
-  express.static(path.join(__dirname, "uploads/usuarios"))
+  "/uploads/avatars",
+  express.static(path.join(__dirname, "uploads/avatars"))
 );
 
 // Puerto

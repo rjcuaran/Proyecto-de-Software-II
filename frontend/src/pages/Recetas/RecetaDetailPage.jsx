@@ -38,6 +38,34 @@ const buildImagenUrl = (imagen) => {
   return `http://localhost:5000/uploads/${finalPath}`;
 };
 
+/* =====================================================
+   🔠 Formatear categoría (array o string JSON)
+   ===================================================== */
+const formatCategoria = (categoria) => {
+  if (!categoria) return "Sin categoría";
+
+  // Si YA es un array
+  if (Array.isArray(categoria)) {
+    return categoria.join(", ");
+  }
+
+  // Si es un string, intentamos parsear JSON
+  if (typeof categoria === "string") {
+    try {
+      const parsed = JSON.parse(categoria);
+      if (Array.isArray(parsed)) {
+        return parsed.join(", ");
+      }
+    } catch {
+      // No es JSON válido, seguimos abajo
+    }
+    return categoria; // string normal
+  }
+
+  // Cualquier otro caso raro
+  return String(categoria);
+};
+
 export default function RecetaDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -372,9 +400,12 @@ export default function RecetaDetailPage() {
                 <Card className="shadow-sm border-0 mb-3">
                   <Card.Body>
                     <h5 className="fw-bold">Detalles</h5>
+
                     <p>
-                      <strong>Categoría:</strong> {receta.categoria}
+                      <strong>Categoría:</strong>{" "}
+                      {formatCategoria(receta.categoria)}
                     </p>
+
                     <p>
                       <strong>Creada el:</strong> {fechaFormateada}
                     </p>

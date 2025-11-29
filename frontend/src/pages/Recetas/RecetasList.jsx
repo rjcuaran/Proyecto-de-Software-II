@@ -19,7 +19,25 @@ export default function RecetasList() {
   const [recetas, setRecetas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [categorias, setCategorias] = useState([]);
+
+  // ⭐ CATEGORÍAS OFICIALES (las mismas que en Crear / Editar)
+  const categoriasOficiales = [
+    "Panadería",
+    "Repostería",
+    "Postres",
+    "Desayunos",
+    "Entradas",
+    "Platos principales",
+    "Sopas y cremas",
+    "Acompañamientos",
+    "Bebidas",
+    "Comida saludable",
+    "Vegano / Vegetariano",
+    "Internacional",
+    "Salsas",
+    "Especiales",
+  ];
+
   const [filtros, setFiltros] = useState({
     q: "",
     categoria: "todas",
@@ -45,24 +63,6 @@ export default function RecetasList() {
       year: "numeric",
     });
   };
-
-  // 📌 CARGAR CATEGORÍAS
-  useEffect(() => {
-    const fetchCategorias = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "http://localhost:5000/api/recetas/categorias",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setCategorias(res.data || []);
-      } catch (err) {
-        console.error("⚠️ Error cargando categorías:", err);
-      }
-    };
-
-    fetchCategorias();
-  }, []);
 
   // 📌 CARGAR RECETAS CON FILTROS
   useEffect(() => {
@@ -213,7 +213,8 @@ export default function RecetasList() {
                   }
                 >
                   <option value="todas">Todas</option>
-                  {categorias.map((cat) => (
+                  {/* Usamos las categorías oficiales */}
+                  {categoriasOficiales.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>
@@ -348,8 +349,11 @@ export default function RecetasList() {
                         <span>{receta.nombre}</span>
                       </Card.Title>
 
+                      {/* Mostrar categoría de forma limpia */}
                       <Badge bg="info" className="mb-2">
-                        {receta.categoria}
+                        {Array.isArray(receta.categoria)
+                          ? receta.categoria.join(", ")
+                          : receta.categoria}
                       </Badge>
 
                       <Card.Text className="text-muted small">
