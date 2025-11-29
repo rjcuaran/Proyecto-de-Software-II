@@ -2,8 +2,9 @@
 const AdminIngrediente = require("../models/AdminIngrediente");
 
 const adminIngredienteController = {
+  // GET /api/admin/ingredientes
   obtenerTodos: (req, res) => {
-    AdminIngrediente.obtenerTodos((error, results) => {
+    AdminIngrediente.obtenerTodos((error, resultados) => {
       if (error) {
         console.error("Error obteniendo ingredientes:", error);
         return res.status(500).json({
@@ -11,51 +12,129 @@ const adminIngredienteController = {
           message: "Error obteniendo ingredientes",
         });
       }
-      return res.json({ success: true, data: results });
+
+      res.json({
+        success: true,
+        data: resultados,
+      });
     });
   },
 
+  // GET /api/admin/ingredientes/pendientes
   obtenerPendientes: (req, res) => {
-    AdminIngrediente.obtenerPendientes((error, results) => {
+    AdminIngrediente.obtenerPendientes((error, resultados) => {
       if (error) {
         console.error("Error obteniendo pendientes:", error);
         return res.status(500).json({
           success: false,
-          message: "Error obteniendo sugerencias",
+          message: "Error obteniendo ingredientes pendientes",
         });
       }
-      return res.json({ success: true, data: results });
+
+      res.json({
+        success: true,
+        data: resultados,
+      });
     });
   },
 
+  // POST /api/admin/ingredientes
   crear: (req, res) => {
     const { nombre } = req.body;
-    const creadoPor = req.user.id;
+    const usuario = req.user ? req.user.nombre || req.user.id_usuario : null;
 
     if (!nombre) {
       return res.status(400).json({
         success: false,
-        message: "El nombre es obligatorio",
+        message: "El nombre del ingrediente es obligatorio",
       });
     }
 
-    AdminIngrediente.crear(nombre, creadoPor, (error, result) => {
+    // VALIDAR DUPLICADO
+    AdminIngrediente.buscarExacto(nombre, (error, resultados) => {
       if (error) {
-        console.error("Error creando ingrediente:", error);
+        console.error("Error verificando duplicado:", error);
         return res.status(500).json({
           success: false,
-          message: "Error creando ingrediente",
+          message: "Error al verificar duplicado",
         });
       }
 
-      res.status(201).json({
-        success: true,
-        message: "Ingrediente creado correctamente",
-        id: result.insertId,
+      if (resultados.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Este ingrediente ya existe",
+        });
+      }
+
+      // Si NO existe, crear ingrediente
+      AdminIngrediente.crear(nombre, usuario, (err, resultado) => {
+        if (err) {
+          console.error("Error creando ingrediente:", err);
+          return res.status(500).json({
+            success: false,
+            message: "Error creando ingrediente",
+          });
+        }
+
+        res.json({
+          success: true,
+          message: "Ingrediente creado correctamente",
+          id: resultado.insertId,
+        });
       });
     });
   },
 
+  // PUT /api/admin/ingredientes/:id
+  actualizar: (req, res) => {
+    const { id } = req.params;
+    const { nombre } = req.body;
+
+    if (!nombre) {
+      return res.status(400).json({
+        success: false,
+        message: "El nombre del ingrediente es obligatorio",
+      });
+    }
+
+    AdminIngrediente.actualizar(id, nombre, (error) => {
+      if (error) {
+        console.error("Error actualizando ingrediente:", error);
+        return res.status(500).json({
+          success: false,
+          message: "Error actualizando ingrediente",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Ingrediente actualizado correctamente",
+      });
+    });
+  },
+
+  // DELETE /api/admin/ingredientes/:id
+  eliminar: (req, res) => {
+    const { id } = req.params;
+
+    AdminIngrediente.eliminar(id, (error) => {
+      if (error) {
+        console.error("Error eliminando ingrediente:", error);
+        return res.status(500).json({
+          success: false,
+          message: "Error eliminando ingrediente",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Ingrediente eliminado correctamente",
+      });
+    });
+  },
+
+  // PUT /api/admin/ingredientes/:id/aprobar
   aprobar: (req, res) => {
     const { id } = req.params;
 
@@ -75,67 +154,42 @@ const adminIngredienteController = {
     });
   },
 
+  // PUT /api/admin/ingredientes/:id/desaprobar
+  desaprobar: (req, res) => {
+    const { id } = req.params;
+
+    AdminIngrediente.desaprobar(id, (error) => {
+      if (error) {
+        console.error("Error quitando aprobación:", error);
+        return res.status(500).json({
+          success: false,
+          message: "Error quitando aprobación del ingrediente",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Aprobación eliminada",
+      });
+    });
+  },
+
+  // POST /api/admin/ingredientes/:id/rechazar
   rechazar: (req, res) => {
     const { id } = req.params;
 
     AdminIngrediente.rechazar(id, (error) => {
       if (error) {
-        console.error("Error eliminando sugerencia:", error);
+        console.error("Error rechazando ingrediente:", error);
         return res.status(500).json({
           success: false,
-          message: "Error eliminando sugerencia",
+          message: "Error rechazando ingrediente",
         });
       }
 
       res.json({
         success: true,
-        message: "Ingrediente rechazado y eliminado",
-      });
-    });
-  },
-
-  actualizar: (req, res) => {
-    const { id } = req.params;
-    const { nombre } = req.body;
-
-    if (!nombre) {
-      return res.status(400).json({
-        success: false,
-        message: "El nombre es obligatorio",
-      });
-    }
-
-    AdminIngrediente.actualizar(id, nombre, (error) => {
-      if (error) {
-        console.error("Error actualizando ingrediente:", error);
-        return res.status(500).json({
-          success: false,
-          message: "Error actualizando ingrediente",
-        });
-      }
-
-      res.json({
-        success: true,
-        message: "Ingrediente actualizado",
-      });
-    });
-  },
-
-  eliminar: (req, res) => {
-    const { id } = req.params;
-
-    AdminIngrediente.eliminar(id, (error) => {
-      if (error) {
-        console.error("Error eliminando ingrediente:", error);
-        return res.status(500).json({
-          success: false,
-          message: "Error eliminando ingrediente",
-        });
-      }
-
-      res.json({
-        success: true,
-        message: "Ingrediente eliminado",
+        message: "Ingrediente rechazado",
       });
     });
   },

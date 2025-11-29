@@ -4,17 +4,84 @@ const router = express.Router();
 
 const adminIngredienteController = require("../controllers/adminIngredienteController");
 const verificarToken = require("../middlewares/authMiddleware");
-const checkAdmin = require("../middlewares/checkAdmin");
+const { isAdmin } = require("../middlewares/authMiddleware");
 
 // INGREDIENTES PARA ADMIN
-router.get("/", verificarToken, checkAdmin, adminIngredienteController.obtenerTodos);
-router.get("/pendientes", verificarToken, checkAdmin, adminIngredienteController.obtenerPendientes);
-router.post("/", verificarToken, checkAdmin, adminIngredienteController.crear);
-router.put("/:id", verificarToken, checkAdmin, adminIngredienteController.actualizar);
-router.delete("/:id", verificarToken, checkAdmin, adminIngredienteController.eliminar);
 
-// Para aprobar o rechazar sugerencias
-router.post("/:id/aprobar", verificarToken, checkAdmin, adminIngredienteController.aprobar);
-router.post("/:id/rechazar", verificarToken, checkAdmin, adminIngredienteController.rechazar);
+// Listar todos los ingredientes globales
+router.get(
+  "/",
+  verificarToken,
+  isAdmin,
+  adminIngredienteController.obtenerTodos
+);
+
+// Listar ingredientes pendientes
+router.get(
+  "/pendientes",
+  verificarToken,
+  isAdmin,
+  adminIngredienteController.obtenerPendientes
+);
+
+// Crear ingrediente global
+router.post(
+  "/",
+  verificarToken,
+  isAdmin,
+  adminIngredienteController.crear
+);
+
+/* 
+------------------------------------------------------
+⚠️ RUTAS ESPECÍFICAS DEBEN IR ANTES DE /:id
+------------------------------------------------------
+*/
+
+// Aprobar ingrediente global
+router.put(
+  "/:id/aprobar",
+  verificarToken,
+  isAdmin,
+  adminIngredienteController.aprobar
+);
+
+// Quitar aprobación
+router.put(
+  "/:id/desaprobar",
+  verificarToken,
+  isAdmin,
+  adminIngredienteController.desaprobar
+);
+
+// Rechazar sugerencia pendiente
+router.post(
+  "/:id/rechazar",
+  verificarToken,
+  isAdmin,
+  adminIngredienteController.rechazar
+);
+
+/* 
+------------------------------------------------------
+⚠️ ESTA VA DE ÚLTIMA SIEMPRE
+------------------------------------------------------
+*/
+
+// Actualizar ingrediente global
+router.put(
+  "/:id",
+  verificarToken,
+  isAdmin,
+  adminIngredienteController.actualizar
+);
+
+// Eliminar ingrediente global
+router.delete(
+  "/:id",
+  verificarToken,
+  isAdmin,
+  adminIngredienteController.eliminar
+);
 
 module.exports = router;

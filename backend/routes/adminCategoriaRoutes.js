@@ -3,11 +3,12 @@ const router = express.Router();
 
 const adminCategoriaController = require("../controllers/adminCategoriaController");
 const verificarToken = require("../middlewares/authMiddleware");
-const checkAdmin = require("../middlewares/checkAdmin");
+const { isAdmin } = require("../middlewares/authMiddleware");
 
-router.get("/", verificarToken, checkAdmin, adminCategoriaController.obtenerTodas);
-router.post("/", verificarToken, checkAdmin, adminCategoriaController.crear);
-router.put("/:id", verificarToken, checkAdmin, adminCategoriaController.actualizar);
-router.delete("/:id", verificarToken, checkAdmin, adminCategoriaController.eliminar);
+// RUTAS ADMINISTRATIVAS — SOLO PARA SUPERUSUARIOS
+router.get("/", verificarToken, isAdmin, adminCategoriaController.obtenerTodas);
+router.post("/", verificarToken, isAdmin, adminCategoriaController.crear);
+router.put("/:id", verificarToken, isAdmin, adminCategoriaController.actualizar);
+router.delete("/:id", verificarToken, isAdmin, adminCategoriaController.eliminar);
 
 module.exports = router;

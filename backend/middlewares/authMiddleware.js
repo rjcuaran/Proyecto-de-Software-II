@@ -36,3 +36,21 @@ function verificarToken(req, res, next) {
 }
 
 module.exports = verificarToken;
+
+
+
+
+
+
+
+// Middleware para verificar rol de administrador
+module.exports.isAdmin = function (req, res, next) {
+    if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({
+            success: false,
+            mensaje: "Acceso denegado. Se requiere rol de administrador."
+        });
+    }
+    next();
+};
+

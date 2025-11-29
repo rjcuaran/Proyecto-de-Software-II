@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const categoriaController = require('../controllers/categoriaController');
-const authMiddleware = require('../middlewares/authMiddleware');
+const verificarToken = require('../middlewares/authMiddleware');
+const { isAdmin } = require('../middlewares/authMiddleware');
 
-// ✅ Corregido
-router.use(authMiddleware);
+// Proteger todas las rutas para usuarios autenticados
+router.use(verificarToken);
 
 // Obtener todas las categorías
 router.get('/', categoriaController.obtenerTodas);

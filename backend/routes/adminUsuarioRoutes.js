@@ -4,16 +4,17 @@ const router = express.Router();
 
 const adminUsuarioController = require("../controllers/adminUsuarioController");
 const verificarToken = require("../middlewares/authMiddleware");
-const checkAdmin = require("../middlewares/checkAdmin");
+const { isAdmin } = require("../middlewares/authMiddleware");
 
-router.get("/", verificarToken, checkAdmin, adminUsuarioController.obtenerTodos);
+// RUTAS ADMINISTRATIVAS DE USUARIOS
+router.get("/", verificarToken, isAdmin, adminUsuarioController.obtenerTodos);
 
-router.post("/:id/promover", verificarToken, checkAdmin, adminUsuarioController.promoverAdmin);
+router.post("/:id/promover", verificarToken, isAdmin, adminUsuarioController.promoverAdmin);
 
-router.post("/:id/quitar-admin", verificarToken, checkAdmin, adminUsuarioController.quitarAdmin);
+router.post("/:id/quitar-admin", verificarToken, isAdmin, adminUsuarioController.quitarAdmin);
 
-router.post("/:id/activar", verificarToken, checkAdmin, adminUsuarioController.activar);
+router.post("/:id/activar", verificarToken, isAdmin, adminUsuarioController.activar);
 
-router.post("/:id/desactivar", verificarToken, checkAdmin, adminUsuarioController.desactivar);
+router.post("/:id/desactivar", verificarToken, isAdmin, adminUsuarioController.desactivar);
 
 module.exports = router;

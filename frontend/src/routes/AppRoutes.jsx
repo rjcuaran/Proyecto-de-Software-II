@@ -26,6 +26,19 @@ import ProfilePage from "../pages/Usuario/ProfilePage";
 // Lista de compras
 import ShoppingList from "../pages/Recetas/ShoppingList";
 
+
+import AdminRoute from "../components/common/AdminRoute";
+
+import AdminHomePage from "../pages/Admin/AdminHomePage";
+
+import AdminCategoriasPage from "../pages/Admin/Categorias/AdminCategoriasPage";
+
+import AdminIngredientesPendientesPage from "../pages/Admin/Ingredientes/AdminIngredientesPendientesPage";
+import AdminIngredientesPage from "../pages/Admin/Ingredientes/AdminIngredientesPage";
+
+
+
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -128,6 +141,55 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
+
+
+
+
+
+<Route
+  path="/admin"
+  element={
+    <AdminRoute>
+      <AdminHomePage />
+    </AdminRoute>
+  }
+/>
+
+<Route
+  path="/admin/categorias"
+  element={
+    <AdminRoute>
+      <AdminCategoriasPage />
+    </AdminRoute>
+  }
+/>
+
+<Route
+  path="/admin/ingredientes"
+  element={
+    <AdminRoute>
+      <AdminIngredientesPage />
+    </AdminRoute>
+  }
+/>
+
+
+
+
+
+
+<Route
+  path="/admin/ingredientes/pendientes"
+  element={
+    <AdminRoute>
+      <AdminIngredientesPendientesPage />
+    </AdminRoute>
+  }
+/>
+
+
+
+
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />

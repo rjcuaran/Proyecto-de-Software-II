@@ -1,12 +1,13 @@
 // frontend/src/components/ingredientes/IngredienteForm.jsx
-import React, { useState, useEffect } from "react";
-import { Button, Form, Row, Col } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Button, Form, Row, Col, Spinner } from "react-bootstrap";
 
 export default function IngredienteForm({
   ingredientesIniciales = [],
+  ingredientes, // por compatibilidad con versiones anteriores
   onChange,
 }) {
-  // 🔥 Unidades con formato premium
+  // Lista de unidades "bonita"
   const unidadesMedida = [
     "Unidades",
     "Gramos",
@@ -18,16 +19,27 @@ export default function IngredienteForm({
     "Onzas",
   ];
 
-  // Estado interno de los ingredientes
-  const [ingredientes, setIngredientes] = useState([]);
+  // Decide de dónde tomar los iniciales
+  const iniciales =
+    (ingredientesIniciales && ingredientesIniciales.length > 0
+      ? ingredientesIniciales
+      : ingredientes) || [];
+
+  const [lista, setLista] = useState([]);
   const [initialized, setInitialized] = useState(false);
 
-  // ✅ Inicializar SOLO una vez a partir de `ingredientesIniciales`
+  // Resultados de búsqueda por fila
+  const [searchResults, setSearchResults] = useState({});
+  const [loadingRow, setLoadingRow] = useState(null);
+
+  // =========================
+  //   Inicializar ingredientes
+  // =========================
   useEffect(() => {
     if (initialized) return;
 
-    if (ingredientesIniciales && ingredientesIniciales.length > 0) {
-      const normalizados = ingredientesIniciales.map((ing) => ({
+    if (iniciales && iniciales.length > 0) {
+      const normalizados = iniciales.map((ing) => ({
         nombre: ing.nombre || "",
         cantidad:
           ing.cantidad !== null && ing.cantidad !== undefined
@@ -35,127 +47,264 @@ export default function IngredienteForm({
             : "",
         unidad_medida: ing.unidad_medida || "",
       }));
-      setIngredientes(normalizados);
+      setLista(normalizados);
     } else {
-      // Si no hay ingredientes aún, empezamos con 1 fila vacía
-      setIngredientes([{ nombre: "", cantidad: "", unidad_medida: "" }]);
+      setLista([{ nombre: "", cantidad: "", unidad_medida: "" }]);
     }
 
     setInitialized(true);
-  }, [ingredientesIniciales, initialized]);
+  }, [iniciales, initialized]);
 
-  /* 
-    ⚠️ IMPORTANTE:
-    Eliminamos el useEffect que notificaba cambios constantemente.
-    Ahora SOLO notificamos al padre cuando el usuario ACTÚA:
-      ➤ escribe
-      ➤ agrega ingrediente
-      ➤ elimina ingrediente
-  */
+  // Notificar cambios al padre
+  const notifyParent = (nuevaLista) => {
+    if (typeof onChange === "function") {
+      onChange(nuevaLista);
+    }
+  };
 
   const handleChange = (index, campo, valor) => {
-    setIngredientes((prev) => {
+    setLista((prev) => {
       const copia = [...prev];
       copia[index] = { ...copia[index], [campo]: valor };
+      notifyParent(copia);
 
-      // 🔥 Notificar al padre SOLO cuando hay cambios reales
-      if (typeof onChange === "function") onChange(copia);
+      // Cuando se escribe en el nombre: buscar sugerencias
+      if (campo === "nombre") {
+        buscarIngredientes(index, valor);
+      }
 
       return copia;
     });
   };
 
+  // =========================
+  //   Buscar ingredientes (autocompletar)
+  // =========================
+  const buscarIngredientes = async (index, texto) => {
+    const term = (texto || "").trim();
+
+    if (!term) {
+      setSearchResults((prev) => ({ ...prev, [index]: [] }));
+      return;
+    }
+
+    setLoadingRow(index);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `/api/ingredientes/buscar?q=${encodeURIComponent(term)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (data && data.success && Array.isArray(data.data)) {
+        setSearchResults((prev) => ({ ...prev, [index]: data.data }));
+      } else {
+        setSearchResults((prev) => ({ ...prev, [index]: [] }));
+      }
+    } catch (error) {
+      console.error("Error buscando ingredientes:", error);
+      setSearchResults((prev) => ({ ...prev, [index]: [] }));
+    }
+
+    setLoadingRow(null);
+  };
+
+  // =========================
+  //   Sugerir ingrediente
+  // =========================
+  const sugerirIngrediente = async (index, nombre) => {
+    const term = (nombre || "").trim();
+    if (!term) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`/api/ingredientes/sugerir`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ nombre: term }),
+      });
+
+      const data = await res.json();
+
+      if (data && data.success) {
+        // Dejamos el nombre tal cual y cerramos las sugerencias
+        handleChange(index, "nombre", term);
+        setSearchResults((prev) => ({ ...prev, [index]: [] }));
+      } else {
+        console.error("Error al sugerir ingrediente:", data);
+      }
+    } catch (error) {
+      console.error("Error sugiriendo ingrediente:", error);
+    }
+  };
+
+  // =========================
+  //   Agregar / Eliminar filas
+  // =========================
   const agregarIngrediente = () => {
-    setIngredientes((prev) => {
+    setLista((prev) => {
       const nuevaLista = [
         ...prev,
         { nombre: "", cantidad: "", unidad_medida: "" },
       ];
-
-      if (typeof onChange === "function") onChange(nuevaLista);
-
+      notifyParent(nuevaLista);
       return nuevaLista;
     });
   };
 
   const eliminarIngrediente = (index) => {
-    setIngredientes((prev) => {
+    setLista((prev) => {
       let nuevaLista;
 
       if (prev.length === 1) {
-        // Siempre dejamos al menos una fila
         nuevaLista = [{ nombre: "", cantidad: "", unidad_medida: "" }];
       } else {
         nuevaLista = prev.filter((_, i) => i !== index);
       }
 
-      if (typeof onChange === "function") onChange(nuevaLista);
-
+      notifyParent(nuevaLista);
       return nuevaLista;
     });
   };
 
+  // =========================
+  //   Render
+  // =========================
   return (
     <div>
-      {ingredientes.map((ing, index) => (
-        <Row key={index} className="mb-3 g-2">
-          {/* Nombre */}
-          <Col md={5}>
-            <Form.Label>Ingrediente</Form.Label>
-            <Form.Control
-              type="text"
-              value={ing.nombre}
-              onChange={(e) => handleChange(index, "nombre", e.target.value)}
-              placeholder="Ej: Harina de trigo"
-            />
-          </Col>
+      {lista.map((ing, index) => (
+        <div key={index} className="mb-3">
+          <Row className="g-2 align-items-end">
+            {/* Nombre */}
+            <Col md={5}>
+              <Form.Label>Ingrediente</Form.Label>
+              <Form.Control
+                type="text"
+                value={ing.nombre}
+                onChange={(e) =>
+                  handleChange(index, "nombre", e.target.value)
+                }
+                placeholder="Ej: Harina de trigo"
+              />
+            </Col>
 
-          {/* Cantidad */}
-          <Col md={3}>
-            <Form.Label>Cantidad</Form.Label>
-            <Form.Control
-              type="number"
-              step="0.01"
-              min="0"
-              value={ing.cantidad}
-              onChange={(e) => handleChange(index, "cantidad", e.target.value)}
-              placeholder="Ej: 100"
-            />
-          </Col>
+            {/* Cantidad */}
+            <Col md={3}>
+              <Form.Label>Cantidad</Form.Label>
+              <Form.Control
+                type="text"
+                value={ing.cantidad}
+                onChange={(e) =>
+                  handleChange(index, "cantidad", e.target.value)
+                }
+                placeholder="Ej: 100"
+              />
+            </Col>
 
-          {/* Unidad de medida */}
-          <Col md={3}>
-            <Form.Label>Unidad</Form.Label>
-            <Form.Select
-              value={ing.unidad_medida}
-              onChange={(e) =>
-                handleChange(index, "unidad_medida", e.target.value)
-              }
-            >
-              <option value="">Selecciona unidad</option>
-              {unidadesMedida.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
+            {/* Unidad */}
+            <Col md={3}>
+              <Form.Label>Unidad</Form.Label>
+              <Form.Select
+                value={ing.unidad_medida}
+                onChange={(e) =>
+                  handleChange(index, "unidad_medida", e.target.value)
+                }
+              >
+                <option value="">Selecciona unidad</option>
+                {unidadesMedida.map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
 
-          {/* Botón eliminar */}
-          <Col md={1} className="d-flex align-items-end">
-            <Button
-              variant="outline-danger"
-              onClick={() => eliminarIngrediente(index)}
-            >
-              ✖
-            </Button>
-          </Col>
-        </Row>
+            {/* Botón eliminar */}
+            <Col md={1} className="text-end">
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => eliminarIngrediente(index)}
+              >
+                ✕
+              </Button>
+            </Col>
+          </Row>
+
+          {/* Bloque de sugerencias – ahora EMPUJA el contenido (no tapa la fila de abajo) */}
+          <div className="mt-1">
+            {loadingRow === index && (
+              <div className="small text-muted d-flex align-items-center gap-2">
+                <Spinner animation="border" size="sm" /> Buscando ingredientes...
+              </div>
+            )}
+
+            {searchResults[index] && searchResults[index].length > 0 && (
+              <div
+                className="border rounded bg-white p-2 mt-1"
+                style={{
+                  fontSize: "0.85rem",
+                  maxHeight: "160px",
+                  overflowY: "auto",
+                }}
+              >
+                <div className="fw-semibold mb-1">Coincidencias:</div>
+                {searchResults[index].map((item) => (
+                  <div
+                    key={item.id}
+                    role="button"
+                    className="py-1 px-2 rounded hover-bg-light"
+                    style={{ cursor: "pointer" }}
+                    onClick={() =>
+                      handleChange(index, "nombre", item.nombre)
+                    }
+                  >
+                    {item.nombre}
+                    {item.aprobado ? "" : " (Pendiente)"}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Mensaje + Sugerir ingrediente */}
+            <div className="small text-muted mt-1">
+              {(!searchResults[index] ||
+                searchResults[index].length === 0) &&
+                ing.nombre.trim() !== "" && (
+                  <>
+                    No se encontraron ingredientes.{" "}
+                    <span
+                      role="button"
+                      style={{
+                        color: "#0d6efd",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                      }}
+                      onClick={() => sugerirIngrediente(index, ing.nombre)}
+                    >
+                      Sugerir ingrediente: {ing.nombre}
+                    </span>
+                  </>
+                )}
+            </div>
+          </div>
+        </div>
       ))}
 
-      {/* Botón agregar nuevo ingrediente */}
-      <Button variant="success" className="mt-2" onClick={agregarIngrediente}>
-        ➕ Agregar ingrediente
+      <Button variant="outline-primary" size="sm" onClick={agregarIngrediente}>
+        + Agregar ingrediente
       </Button>
     </div>
   );

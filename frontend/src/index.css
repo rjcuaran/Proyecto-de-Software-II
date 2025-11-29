@@ -11,3 +11,12 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.btn-admin {
+  width: 160px !important;     /* 🔴 MISMO ANCHO PARA TODOS */
+  height: 40px !important;     /* 🔴 MISMA ALTURA PARA TODOS */
+  padding: 6px 12px !important;
+  text-align: center;
+  font-size: 14px;
+  border-radius: 6px;
+}

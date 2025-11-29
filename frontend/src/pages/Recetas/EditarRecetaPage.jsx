@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import IngredienteForm from "../../components/ingredientes/IngredienteForm";
 import { Card, Button, Form, Alert, Spinner, Row, Col } from "react-bootstrap";
 
-// 🔧 Normalizador de imágenes
+// Normalizador de imágenes
 const buildImagenUrl = (imagen) => {
   if (!imagen) return null;
 
@@ -25,7 +25,7 @@ export default function EditarRecetaPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // ⭐ LISTA OFICIAL DE CATEGORÍAS
+  // Lista oficial de categorías
   const categoriasOficiales = [
     "Panadería",
     "Repostería",
@@ -58,7 +58,7 @@ export default function EditarRecetaPage() {
     [receta?.imagen]
   );
 
-  // 📌 Cargar receta
+  // Cargar receta
   useEffect(() => {
     const fetchReceta = async () => {
       try {
@@ -69,13 +69,37 @@ export default function EditarRecetaPage() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Asegurar que categoría es un ARRAY
+        const data = res.data;
+
+        // Asegurar que la categoría sea un ARRAY
+        let categoriasArray = [];
+
+        if (Array.isArray(data.categoria)) {
+          categoriasArray = data.categoria;
+        } else if (typeof data.categoria === "string" && data.categoria) {
+          // Puede venir como JSON o como texto simple
+          try {
+            const parsed = JSON.parse(data.categoria);
+            if (Array.isArray(parsed)) {
+              categoriasArray = parsed;
+            } else {
+              categoriasArray = [data.categoria];
+            }
+          } catch {
+            categoriasArray = data.categoria
+              .split(",")
+              .map((c) => c.trim())
+              .filter(Boolean);
+
+            if (categoriasArray.length === 0) {
+              categoriasArray = [data.categoria];
+            }
+          }
+        }
+
         const recetaCargada = {
-          ...res.data,
-          categoria:
-            Array.isArray(res.data.categoria)
-              ? res.data.categoria
-              : [res.data.categoria],
+          ...data,
+          categoria: categoriasArray,
         };
 
         setReceta(recetaCargada);
@@ -92,20 +116,20 @@ export default function EditarRecetaPage() {
   }, [id]);
 
   const handleChange = (e) => {
-    setReceta({ ...receta, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setReceta((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ⭐ CONTROLADOR DE CATEGORÍAS (MULTIPLE SELECT)
+  // Controlador de categorías (multiple select)
   const handleCategoriasChange = (e) => {
     const seleccionadas = Array.from(e.target.selectedOptions).map(
       (option) => option.value
     );
-
-    setReceta({ ...receta, categoria: seleccionadas });
+    setReceta((prev) => ({ ...prev, categoria: seleccionadas }));
   };
 
   const handleIngredientesChange = (lista) => {
-    setReceta({ ...receta, ingredientes: lista });
+    setReceta((prev) => ({ ...prev, ingredientes: lista }));
   };
 
   const handleImagenChange = (e) => {
@@ -116,7 +140,7 @@ export default function EditarRecetaPage() {
     setImagenPreview(URL.createObjectURL(file));
   };
 
-  // 📌 Guardar cambios
+  // Guardar cambios
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -129,10 +153,8 @@ export default function EditarRecetaPage() {
       const data = new FormData();
 
       data.append("nombre", receta.nombre);
-
-      // ⭐ Enviar categorías como JSON
-      data.append("categoria", JSON.stringify(receta.categoria));
-
+      // Enviar categorías como JSON (array)
+      data.append("categoria", JSON.stringify(receta.categoria || []));
       data.append("descripcion", receta.descripcion);
       data.append("preparacion", receta.preparacion);
       data.append("ingredientes", JSON.stringify(receta.ingredientes || []));
@@ -147,7 +169,6 @@ export default function EditarRecetaPage() {
         data.append("imagen", nuevaImagen);
       }
 
-      // 🔥 Actualizar receta
       const res = await axios.put(
         `http://localhost:5000/api/recetas/${id}`,
         data,
@@ -162,13 +183,17 @@ export default function EditarRecetaPage() {
       const updatedId = res?.data?.id || id;
 
       setSuccess("Receta actualizada con éxito.");
-
       setTimeout(() => {
         navigate(`/recetas/${updatedId}`);
       }, 1200);
     } catch (err) {
-      console.error("❌ Error actualizando la receta:", err);
-      setError("Error actualizando la receta.");
+      console.error(
+        "❌ Error actualizando la receta:",
+        err.response?.data || err
+      );
+      setError(
+        err.response?.data?.mensaje || "Error actualizando la receta."
+      );
     } finally {
       setSaving(false);
     }
@@ -193,28 +218,36 @@ export default function EditarRecetaPage() {
             <div>
               <h3 className="fw-bold text-primary mb-1">✏️ Editar Receta</h3>
               <p className="text-muted mb-0 small">
-                Ajusta la información. Si no cambias la imagen, se mantiene la actual.
+                Ajusta la información. Si no cambias la imagen, se mantiene la
+                actual.
               </p>
             </div>
 
-            <Button
-              variant="outline-secondary"
-              onClick={() => navigate(-1)}
-              size="sm"
-            >
-              ← Volver
-            </Button>
+            {imagenPersistida && (
+              <div className="text-center">
+                <span className="small d-block mb-1">Imagen actual</span>
+                <img
+                  src={imagenPreview || imagenPersistida}
+                  alt={receta.nombre}
+                  style={{
+                    width: "220px",
+                    height: "140px",
+                    objectFit: "cover",
+                    borderRadius: "12px",
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
 
-          <Form onSubmit={handleSubmit}>
-            <Row className="g-4">
-              <Col xs={12} lg={7}>
-                {/* 🔶 NOMBRE */}
+          <Form onSubmit={handleSubmit} encType="multipart/form-data">
+            <Row className="g-3">
+              <Col md={7}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Nombre</Form.Label>
+                  <Form.Label>Nombre</Form.Label>
                   <Form.Control
                     type="text"
                     name="nombre"
@@ -224,49 +257,44 @@ export default function EditarRecetaPage() {
                   />
                 </Form.Group>
 
-                {/* 🔶 CATEGORÍAS MULTIPLES */}
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Categorías</Form.Label>
-
-                  <Form.Select
+                  <Form.Label>Categorías</Form.Label>
+                  <Form.Control
+                    as="select"
                     multiple
-                    name="categoria"
-                    value={receta.categoria}
+                    value={receta.categoria || []}
                     onChange={handleCategoriasChange}
-                    required
                   >
-                    {categoriasOficiales.map((cat, idx) => (
-                      <option key={idx} value={cat}>
+                    {categoriasOficiales.map((cat) => (
+                      <option key={cat} value={cat}>
                         {cat}
                       </option>
                     ))}
-                  </Form.Select>
-
+                  </Form.Control>
                   <Form.Text className="text-muted">
-                    Mantén presionada CTRL (o CMD en Mac) para seleccionar varias.
+                    Mantén presionada CTRL (o CMD en Mac) para seleccionar
+                    varias.
                   </Form.Text>
                 </Form.Group>
 
-                {/* 🔶 DESCRIPCIÓN */}
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Descripción</Form.Label>
+                  <Form.Label>Descripción</Form.Label>
                   <Form.Control
                     as="textarea"
-                    rows={2}
                     name="descripcion"
+                    rows={3}
                     value={receta.descripcion}
                     onChange={handleChange}
                     required
                   />
                 </Form.Group>
 
-                {/* 🔶 PREPARACIÓN */}
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Preparación</Form.Label>
+                  <Form.Label>Preparación</Form.Label>
                   <Form.Control
                     as="textarea"
-                    rows={5}
                     name="preparacion"
+                    rows={5}
                     value={receta.preparacion}
                     onChange={handleChange}
                     required
@@ -274,102 +302,41 @@ export default function EditarRecetaPage() {
                 </Form.Group>
               </Col>
 
-              {/* 🔶 IMAGEN */}
-              <Col xs={12} lg={5}>
-                <div className="text-center mb-2">
-                  <h5 className="text-secondary mb-3">📸 Imagen actual</h5>
-
-                  {imagenPreview ? (
-                    <div className="editar-imagen-preview-wrapper mb-2">
-                      <img
-                        src={imagenPreview}
-                        alt="Vista previa"
-                        className="editar-imagen-preview rounded"
-                      />
-                    </div>
-                  ) : (
-                    <div className="editar-imagen-placeholder mb-2">
-                      <span className="text-muted">📷 Sin imagen</span>
-                    </div>
-                  )}
-
-                  <Form.Group className="mt-3 text-start">
-                    <Form.Label className="fw-semibold">
-                      Cambiar imagen
-                    </Form.Label>
-                    <Form.Control
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImagenChange}
-                    />
-                  </Form.Group>
-                </div>
+              <Col md={5}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Cambiar imagen</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImagenChange}
+                  />
+                  <Form.Text className="text-muted">
+                    Si no seleccionas una nueva, se mantiene la actual.
+                  </Form.Text>
+                </Form.Group>
               </Col>
             </Row>
 
-            {/* 🧂 INGREDIENTES */}
-            <div className="mt-4">
-              <h5 className="fw-semibold mb-2">🧂 Ingredientes</h5>
+            <hr className="my-4" />
 
-              <IngredienteForm
-                ingredientesIniciales={receta.ingredientes || []}
-                onChange={handleIngredientesChange}
-              />
-            </div>
+            <h5 className="mb-3">🧂 Ingredientes</h5>
+            <IngredienteForm
+              ingredientesIniciales={receta.ingredientes || []}
+              onChange={handleIngredientesChange}
+            />
 
-            {/* BOTONES */}
-            <div className="mt-4 d-flex justify-content-between gap-2">
-              <Button
-                variant="outline-secondary"
-                onClick={() => navigate(-1)}
-                type="button"
-              >
+            <div className="mt-4 d-flex justify-content-between">
+              <Button variant="secondary" onClick={() => navigate(-1)}>
                 ← Cancelar
               </Button>
 
-              <Button
-                variant="primary"
-                type="submit"
-                disabled={saving}
-              >
+              <Button variant="primary" type="submit" disabled={saving}>
                 {saving ? "Guardando..." : "Guardar cambios"}
               </Button>
             </div>
           </Form>
         </Card.Body>
       </Card>
-
-      {/* ESTILOS */}
-      <style>{`
-        .editar-receta-card {
-          border-radius: 16px;
-        }
-        .editar-imagen-preview-wrapper {
-          width: 100%;
-          max-width: 320px;
-          margin: 0 auto;
-          overflow: hidden;
-          border-radius: 16px;
-          box-shadow: 0 14px 35px rgba(15, 23, 42, 0.2);
-        }
-        .editar-imagen-preview {
-          width: 100%;
-          height: 220px;
-          object-fit: cover;
-        }
-        .editar-imagen-placeholder {
-          width: 100%;
-          max-width: 320px;
-          height: 220px;
-          margin: 0 auto;
-          border-radius: 16px;
-          border: 2px dashed #d1d5db;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #f9fafb;
-        }
-      `}</style>
     </div>
   );
 }

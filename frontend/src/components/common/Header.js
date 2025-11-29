@@ -91,6 +91,27 @@ export default function Header() {
                 Lista de Compras
               </NavLink>
             </li>
+
+
+
+
+{user?.role === "admin" && (
+  <li className="nav-item">
+    <NavLink
+      className="nav-link"
+      to="/admin"
+      style={({ isActive }) => ({
+        color: isActive ? "#FFC000" : "#F9ECDB",
+      })}
+    >
+      <i className="bi bi-speedometer2 me-2"></i>
+      Panel Admin
+    </NavLink>
+  </li>
+)}
+
+
+
           </ul>
 
           <ul className="navbar-nav ms-auto">

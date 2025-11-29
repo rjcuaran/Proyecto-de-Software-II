@@ -178,6 +178,19 @@ const obtenerRecetaPorId = (req, res) => {
   });
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // =====================
 // ACTUALIZAR RECETA (con opción de reemplazar imagen)
 // =====================
@@ -203,11 +216,20 @@ const actualizarReceta = (req, res) => {
     return res.status(400).json({ mensaje: "Formato inválido de ingredientes" });
   }
 
+  // ⚠️ Limpiar ingredientes (evitar filas vacías o mal formadas)
+  const ingredientesLimpios = (ingredientes || []).filter((ing) => {
+    if (!ing) return false;
+    if (typeof ing.nombre !== "string") return false;
+    const nombreLimpio = ing.nombre.trim();
+    return nombreLimpio !== "";
+  });
+
   // Imagen nueva subida por Multer (si existe)
   const imagenNueva = req.file ? req.file.filename : null;
 
   // 1) Obtener la receta actual (asegurar que es del usuario logueado)
-  const sqlSelect = "SELECT imagen FROM receta WHERE id_receta = ? AND id_usuario = ?";
+  const sqlSelect =
+    "SELECT imagen FROM receta WHERE id_receta = ? AND id_usuario = ?";
 
   db.query(sqlSelect, [id, id_usuario], (err, resultado) => {
     if (err) {
@@ -243,19 +265,23 @@ const actualizarReceta = (req, res) => {
         db.query(sqlDeleteIng, [id], (errDelete) => {
           if (errDelete) {
             console.error("❌ Error limpiando ingredientes:", errDelete);
-            return res
-              .status(500)
-              .json({ mensaje: "Receta actualizada, pero falló limpiar ingredientes" });
+            return res.status(500).json({
+              mensaje: "Receta actualizada, pero falló limpiar ingredientes",
+            });
           }
 
           const insertarIngredientes = (callback) => {
-            if (!ingredientes || ingredientes.length === 0) return callback();
+            if (!ingredientesLimpios || ingredientesLimpios.length === 0) {
+              return callback();
+            }
 
-            const values = ingredientes.map((ing) => [
+            const values = ingredientesLimpios.map((ing) => [
               id,
-              ing.nombre,
-              ing.cantidad,
-              ing.unidad_medida,
+              ing.nombre.trim(),
+              ing.cantidad === "" || ing.cantidad === undefined
+                ? null
+                : ing.cantidad,
+              ing.unidad_medida || null,
             ]);
 
             const sqlIng = `
@@ -277,21 +303,44 @@ const actualizarReceta = (req, res) => {
           insertarIngredientes(() => {
             // 4) Si hay imagen nueva y existía anterior distinta, eliminar archivo viejo
             if (imagenNueva && imagenBD && imagenBD !== imagenNueva) {
-              const imagenPath = path.join(__dirname, "../uploads/recetas", imagenBD);
+              const imagenPath = path.join(__dirname, "./uploads/recetas", imagenBD);
               fs.unlink(imagenPath, (unlinkErr) => {
                 if (unlinkErr) {
-                  console.warn("⚠️ No se pudo eliminar la imagen anterior:", unlinkErr);
+                  console.warn(
+                    "⚠️ No se pudo eliminar la imagen anterior:",
+                    unlinkErr
+                  );
                 }
               });
             }
 
-            return res.json({ mensaje: "Receta actualizada con éxito", imagen: imagenFinal });
+            return res.json({
+              mensaje: "Receta actualizada con éxito",
+              imagen: imagenFinal,
+              id,
+            });
           });
         });
       }
     );
   });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // =====================
 // ELIMINAR RECETA (y su imagen / ingredientes)
