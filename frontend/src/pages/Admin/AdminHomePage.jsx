@@ -25,12 +25,14 @@ export default function AdminHomePage() {
           🥘 Ingredientes Globales
         </NavLink>
 
+        {/* Línea eliminada:
         <NavLink
           to="/admin/ingredientes/pendientes"
           className="list-group-item list-group-item-action py-3"
         >
           ⏳ Ingredientes Pendientes
         </NavLink>
+        */}
 
         <NavLink
           to="/admin/unidades"

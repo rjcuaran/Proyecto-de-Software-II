@@ -1,4 +1,3 @@
-// backend/routes/adminIngredienteRoutes.js
 const express = require("express");
 const router = express.Router();
 
@@ -9,28 +8,10 @@ const { isAdmin } = require("../middlewares/authMiddleware");
 // INGREDIENTES PARA ADMIN
 
 // Listar todos los ingredientes globales
-router.get(
-  "/",
-  verificarToken,
-  isAdmin,
-  adminIngredienteController.obtenerTodos
-);
-
-// Listar ingredientes pendientes
-router.get(
-  "/pendientes",
-  verificarToken,
-  isAdmin,
-  adminIngredienteController.obtenerPendientes
-);
+router.get("/", verificarToken, isAdmin, adminIngredienteController.obtenerTodos);
 
 // Crear ingrediente global
-router.post(
-  "/",
-  verificarToken,
-  isAdmin,
-  adminIngredienteController.crear
-);
+router.post("/", verificarToken, isAdmin, adminIngredienteController.crear);
 
 /* 
 ------------------------------------------------------
@@ -39,28 +20,13 @@ router.post(
 */
 
 // Aprobar ingrediente global
-router.put(
-  "/:id/aprobar",
-  verificarToken,
-  isAdmin,
-  adminIngredienteController.aprobar
-);
+router.put("/:id/aprobar", verificarToken, isAdmin, adminIngredienteController.aprobar);
 
 // Quitar aprobación
-router.put(
-  "/:id/desaprobar",
-  verificarToken,
-  isAdmin,
-  adminIngredienteController.desaprobar
-);
+router.put("/:id/desaprobar", verificarToken, isAdmin, adminIngredienteController.desaprobar);
 
-// Rechazar sugerencia pendiente
-router.post(
-  "/:id/rechazar",
-  verificarToken,
-  isAdmin,
-  adminIngredienteController.rechazar
-);
+// Rechazar sugerencia
+router.post("/:id/rechazar", verificarToken, isAdmin, adminIngredienteController.rechazar);
 
 /* 
 ------------------------------------------------------
@@ -69,19 +35,9 @@ router.post(
 */
 
 // Actualizar ingrediente global
-router.put(
-  "/:id",
-  verificarToken,
-  isAdmin,
-  adminIngredienteController.actualizar
-);
+router.put("/:id", verificarToken, isAdmin, adminIngredienteController.actualizar);
 
 // Eliminar ingrediente global
-router.delete(
-  "/:id",
-  verificarToken,
-  isAdmin,
-  adminIngredienteController.eliminar
-);
+router.delete("/:id", verificarToken, isAdmin, adminIngredienteController.eliminar);
 
 module.exports = router;

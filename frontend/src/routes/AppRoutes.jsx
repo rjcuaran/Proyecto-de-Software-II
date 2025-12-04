@@ -33,7 +33,6 @@ import AdminHomePage from "../pages/Admin/AdminHomePage";
 
 import AdminCategoriasPage from "../pages/Admin/Categorias/AdminCategoriasPage";
 
-import AdminIngredientesPendientesPage from "../pages/Admin/Ingredientes/AdminIngredientesPendientesPage";
 import AdminIngredientesPage from "../pages/Admin/Ingredientes/AdminIngredientesPage";
 
 
@@ -178,14 +177,7 @@ export default function AppRoutes() {
 
 
 
-<Route
-  path="/admin/ingredientes/pendientes"
-  element={
-    <AdminRoute>
-      <AdminIngredientesPendientesPage />
-    </AdminRoute>
-  }
-/>
+
 
 
 

@@ -1,8 +1,6 @@
-// backend/controllers/adminIngredienteController.js
 const AdminIngrediente = require("../models/AdminIngrediente");
 
 const adminIngredienteController = {
-  // GET /api/admin/ingredientes
   obtenerTodos: (req, res) => {
     AdminIngrediente.obtenerTodos((error, resultados) => {
       if (error) {
@@ -20,25 +18,6 @@ const adminIngredienteController = {
     });
   },
 
-  // GET /api/admin/ingredientes/pendientes
-  obtenerPendientes: (req, res) => {
-    AdminIngrediente.obtenerPendientes((error, resultados) => {
-      if (error) {
-        console.error("Error obteniendo pendientes:", error);
-        return res.status(500).json({
-          success: false,
-          message: "Error obteniendo ingredientes pendientes",
-        });
-      }
-
-      res.json({
-        success: true,
-        data: resultados,
-      });
-    });
-  },
-
-  // POST /api/admin/ingredientes
   crear: (req, res) => {
     const { nombre } = req.body;
     const usuario = req.user ? req.user.nombre || req.user.id_usuario : null;
@@ -50,7 +29,6 @@ const adminIngredienteController = {
       });
     }
 
-    // VALIDAR DUPLICADO
     AdminIngrediente.buscarExacto(nombre, (error, resultados) => {
       if (error) {
         console.error("Error verificando duplicado:", error);
@@ -67,7 +45,6 @@ const adminIngredienteController = {
         });
       }
 
-      // Si NO existe, crear ingrediente
       AdminIngrediente.crear(nombre, usuario, (err, resultado) => {
         if (err) {
           console.error("Error creando ingrediente:", err);
@@ -86,7 +63,6 @@ const adminIngredienteController = {
     });
   },
 
-  // PUT /api/admin/ingredientes/:id
   actualizar: (req, res) => {
     const { id } = req.params;
     const { nombre } = req.body;
@@ -114,7 +90,6 @@ const adminIngredienteController = {
     });
   },
 
-  // DELETE /api/admin/ingredientes/:id
   eliminar: (req, res) => {
     const { id } = req.params;
 
@@ -134,7 +109,6 @@ const adminIngredienteController = {
     });
   },
 
-  // PUT /api/admin/ingredientes/:id/aprobar
   aprobar: (req, res) => {
     const { id } = req.params;
 
@@ -154,7 +128,6 @@ const adminIngredienteController = {
     });
   },
 
-  // PUT /api/admin/ingredientes/:id/desaprobar
   desaprobar: (req, res) => {
     const { id } = req.params;
 
@@ -174,7 +147,6 @@ const adminIngredienteController = {
     });
   },
 
-  // POST /api/admin/ingredientes/:id/rechazar
   rechazar: (req, res) => {
     const { id } = req.params;
 
