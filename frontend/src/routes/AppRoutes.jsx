@@ -26,17 +26,12 @@ import ProfilePage from "../pages/Usuario/ProfilePage";
 // Lista de compras
 import ShoppingList from "../pages/Recetas/ShoppingList";
 
-
+// Admin
 import AdminRoute from "../components/common/AdminRoute";
-
 import AdminHomePage from "../pages/Admin/AdminHomePage";
-
 import AdminCategoriasPage from "../pages/Admin/Categorias/AdminCategoriasPage";
-
 import AdminIngredientesPage from "../pages/Admin/Ingredientes/AdminIngredientesPage";
-
-
-
+import AdminUnidadesPage from "../pages/Admin/Unidades/AdminUnidadesPage";
 
 export default function AppRoutes() {
   return (
@@ -64,7 +59,6 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
       <Route
         path="/recetas/nueva"
         element={
@@ -73,7 +67,6 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
       <Route
         path="/recetas/:id"
         element={
@@ -82,7 +75,6 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
       <Route
         path="/recetas/:id/editar"
         element={
@@ -101,7 +93,6 @@ export default function AppRoutes() {
           </PrivateRoute>
         }
       />
-
       <Route
         path="/ingredientes/:id/editar"
         element={
@@ -141,47 +132,39 @@ export default function AppRoutes() {
         }
       />
 
-
-
-
-
-<Route
-  path="/admin"
-  element={
-    <AdminRoute>
-      <AdminHomePage />
-    </AdminRoute>
-  }
-/>
-
-<Route
-  path="/admin/categorias"
-  element={
-    <AdminRoute>
-      <AdminCategoriasPage />
-    </AdminRoute>
-  }
-/>
-
-<Route
-  path="/admin/ingredientes"
-  element={
-    <AdminRoute>
-      <AdminIngredientesPage />
-    </AdminRoute>
-  }
-/>
-
-
-
-
-
-
-
-
-
-
-
+      {/* Admin */}
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminHomePage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/categorias"
+        element={
+          <AdminRoute>
+            <AdminCategoriasPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/ingredientes"
+        element={
+          <AdminRoute>
+            <AdminIngredientesPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/unidades"
+        element={
+          <AdminRoute>
+            <AdminUnidadesPage />
+          </AdminRoute>
+        }
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
