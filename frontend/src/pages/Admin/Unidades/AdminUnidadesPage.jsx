@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import ConfirmModal from "../../../components/common/ConfirmModal";
 
 const AdminUnidadesPage = () => {
   const [nombre, setNombre] = useState('');
@@ -10,6 +11,10 @@ const AdminUnidadesPage = () => {
   const [sugerenciasNombre, setSugerenciasNombre] = useState([]);
   const [sugerenciasAbreviatura, setSugerenciasAbreviatura] = useState([]);
   const [editando, setEditando] = useState(null);
+
+  // Modal unificado (igual que ingredientes)
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [unidadAEliminar, setUnidadAEliminar] = useState(null);
 
   const token = localStorage.getItem('token');
 
@@ -22,15 +27,12 @@ const AdminUnidadesPage = () => {
   const obtenerUnidades = async () => {
     try {
       const res = await axios.get('http://localhost:3000/api/admin/unidades', axiosConfig);
-      if (Array.isArray(res.data)) {
-        setUnidades(res.data);
-      } else if (res.data.data && Array.isArray(res.data.data)) {
-        setUnidades(res.data.data);
-      } else if (res.data.unidades && Array.isArray(res.data.unidades)) {
-        setUnidades(res.data.unidades);
-      } else {
-        setUnidades([]);
-      }
+
+      if (Array.isArray(res.data)) setUnidades(res.data);
+      else if (res.data.data && Array.isArray(res.data.data)) setUnidades(res.data.data);
+      else if (res.data.unidades && Array.isArray(res.data.unidades)) setUnidades(res.data.unidades);
+      else setUnidades([]);
+
     } catch (err) {
       console.error('Error al obtener unidades:', err);
       setUnidades([]);
@@ -44,37 +46,43 @@ const AdminUnidadesPage = () => {
   const handleGuardarUnidad = async () => {
     setMensaje('');
     setError('');
+
     if (!nombre.trim() || !abreviatura.trim()) {
       setError('Nombre y abreviatura son obligatorios');
       return;
     }
+
     try {
       if (editando) {
-        const unidadExistente = unidades.find(u => u.nombre.toLowerCase() === nombre.toLowerCase() && u.id !== editando);
-        if (unidadExistente) {
+        const repetido = unidades.find(u => u.nombre.toLowerCase() === nombre.toLowerCase() && u.id !== editando);
+        if (repetido) {
           setError('Ya existe una unidad con ese nombre');
           return;
         }
+
         await axios.put(`http://localhost:3000/api/admin/unidades/${editando}`, { nombre, abreviatura }, axiosConfig);
         setMensaje('Unidad actualizada correctamente');
       } else {
-        const unidadExistente = unidades.find(u => u.nombre.toLowerCase() === nombre.toLowerCase());
-        if (unidadExistente) {
+        const repetido = unidades.find(u => u.nombre.toLowerCase() === nombre.toLowerCase());
+        if (repetido) {
           setError('Ya existe una unidad con ese nombre');
           return;
         }
+
         await axios.post('http://localhost:3000/api/admin/unidades', { nombre, abreviatura }, axiosConfig);
         setMensaje('Unidad guardada correctamente');
       }
+
       setNombre('');
       setAbreviatura('');
       setEditando(null);
       setSugerenciasNombre([]);
       setSugerenciasAbreviatura([]);
+
       obtenerUnidades();
     } catch (err) {
-      console.error(editando ? 'Error actualizando unidad:' : 'Error creando unidad:', err);
-      setError(editando ? 'No se pudo actualizar la unidad' : 'No se pudo guardar la unidad');
+      console.error('Error guardando:', err);
+      setError(editando ? 'No se pudo actualizar la unidad' : 'No se pudo crear la unidad');
     }
   };
 
@@ -88,17 +96,29 @@ const AdminUnidadesPage = () => {
     setSugerenciasAbreviatura([]);
   };
 
-  const handleEliminar = async (id) => {
-    if (!window.confirm('¿Estás seguro de eliminar esta unidad?')) {
-      return;
-    }
+  // Abrir modal de confirmación
+  const solicitarEliminar = (id) => {
+    setUnidadAEliminar(id);
+    setMostrarModal(true);
+  };
+
+  // Eliminar desde modal
+  const confirmarEliminar = async () => {
     try {
-      await axios.delete(`http://localhost:3000/api/admin/unidades/${id}`, axiosConfig);
+      await axios.delete(
+        `http://localhost:3000/api/admin/unidades/${unidadAEliminar}`,
+        axiosConfig
+      );
+
       setMensaje('Unidad eliminada correctamente');
+      setMostrarModal(false);
+      setUnidadAEliminar(null);
+
       obtenerUnidades();
     } catch (err) {
       console.error('Error al eliminar unidad:', err);
       setError('No se pudo eliminar la unidad');
+      setMostrarModal(false);
     }
   };
 
@@ -114,32 +134,34 @@ const AdminUnidadesPage = () => {
     <div className="container mt-4">
       <h2 className="text-center mb-4">Administrar Unidades de Medida</h2>
 
+      {/* Input nombre */}
       <div className="mb-2 position-relative">
         <input
           type="text"
           placeholder="Nombre"
+          className="form-control"
           value={nombre}
           onChange={(e) => {
-            setNombre(e.target.value);
-            setSugerenciasNombre(e.target.value ? filtrarSugerencias(e.target.value) : []);
+            const value = e.target.value;
+            setNombre(value);
+            setSugerenciasNombre(value ? filtrarSugerencias(value) : []);
             setSugerenciasAbreviatura([]);
           }}
           onFocus={() => setSugerenciasAbreviatura([])}
-          className="form-control"
         />
+
         {sugerenciasNombre.length > 0 && nombre.trim() !== '' && (
-          <ul className="list-group position-absolute w-100" style={{ zIndex: 1000, top: '100%', maxHeight: '150px', overflowY: 'auto' }}>
+          <ul className="list-group position-absolute w-100"
+              style={{ zIndex: 1000, top: "100%", maxHeight: "150px", overflowY: "auto" }}>
             {sugerenciasNombre.map((u) => (
-              <li
-                key={u.id}
-                className="list-group-item list-group-item-action"
-                onMouseDown={() => {
-                  setNombre(u.nombre);
-                  setAbreviatura(u.abreviatura);
-                  setSugerenciasNombre([]);
-                  setSugerenciasAbreviatura([]);
-                }}
-              >
+              <li key={u.id}
+                  className="list-group-item list-group-item-action"
+                  onMouseDown={() => {
+                    setNombre(u.nombre);
+                    setAbreviatura(u.abreviatura);
+                    setSugerenciasNombre([]);
+                    setSugerenciasAbreviatura([]);
+                  }}>
                 {u.nombre} ({u.abreviatura})
               </li>
             ))}
@@ -147,32 +169,34 @@ const AdminUnidadesPage = () => {
         )}
       </div>
 
+      {/* Input abreviatura */}
       <div className="mb-2 position-relative">
         <input
           type="text"
           placeholder="Abreviatura"
+          className="form-control"
           value={abreviatura}
           onChange={(e) => {
-            setAbreviatura(e.target.value);
-            setSugerenciasAbreviatura(e.target.value ? filtrarSugerencias(e.target.value) : []);
+            const value = e.target.value;
+            setAbreviatura(value);
+            setSugerenciasAbreviatura(value ? filtrarSugerencias(value) : []);
             setSugerenciasNombre([]);
           }}
           onFocus={() => setSugerenciasNombre([])}
-          className="form-control"
         />
+
         {sugerenciasAbreviatura.length > 0 && abreviatura.trim() !== '' && (
-          <ul className="list-group position-absolute w-100" style={{ zIndex: 1000, top: '100%', maxHeight: '150px', overflowY: 'auto' }}>
+          <ul className="list-group position-absolute w-100"
+              style={{ zIndex: 1000, top: "100%", maxHeight: "150px", overflowY: "auto" }}>
             {sugerenciasAbreviatura.map((u) => (
-              <li
-                key={u.id}
-                className="list-group-item list-group-item-action"
-                onMouseDown={() => {
-                  setNombre(u.nombre);
-                  setAbreviatura(u.abreviatura);
-                  setSugerenciasNombre([]);
-                  setSugerenciasAbreviatura([]);
-                }}
-              >
+              <li key={u.id}
+                  className="list-group-item list-group-item-action"
+                  onMouseDown={() => {
+                    setNombre(u.nombre);
+                    setAbreviatura(u.abreviatura);
+                    setSugerenciasNombre([]);
+                    setSugerenciasAbreviatura([]);
+                  }}>
                 {u.nombre} ({u.abreviatura})
               </li>
             ))}
@@ -180,13 +204,15 @@ const AdminUnidadesPage = () => {
         )}
       </div>
 
+      {/* Crear / Actualizar */}
       <button onClick={handleGuardarUnidad} className="btn btn-primary mb-3">
-        {editando ? 'Actualizar' : 'Crear'}
+        {editando ? "Actualizar" : "Crear"}
       </button>
 
       {mensaje && <div className="alert alert-success">{mensaje}</div>}
       {error && <div className="alert alert-danger">{error}</div>}
 
+      {/* Tabla */}
       <h4>Unidades Registradas</h4>
       <table className="table table-bordered">
         <thead>
@@ -199,28 +225,52 @@ const AdminUnidadesPage = () => {
         <tbody>
           {unidades.length === 0 ? (
             <tr>
-              <td colSpan="3" className="text-center">
-                No hay unidades registradas
-              </td>
+              <td colSpan="3" className="text-center">No hay unidades registradas</td>
             </tr>
           ) : (
             unidades.map((u) => (
               <tr key={u.id}>
                 <td>{u.nombre}</td>
                 <td>{u.abreviatura}</td>
-                <td>
-                  <button onClick={() => handleEditar(u)} className="btn btn-sm btn-secondary me-2">
-                    Editar
-                  </button>
-                  <button onClick={() => handleEliminar(u.id)} className="btn btn-sm btn-danger">
-                    Eliminar
-                  </button>
-                </td>
+                
+                
+                
+ <td>
+  <button
+    className="btn btn-secondary btn-admin me-2"
+    onClick={() => handleEditar(u)}
+  >
+    Editar
+  </button>
+
+  <button
+    className="btn btn-danger btn-admin"
+    onClick={() => solicitarEliminar(u.id)}
+  >
+    Eliminar
+  </button>
+</td>
+
+
+
+
+
+
               </tr>
             ))
           )}
         </tbody>
       </table>
+
+      {/* Modal unificado ConfirmModal */}
+      <ConfirmModal
+        visible={mostrarModal}
+        title="Confirmar Eliminación"
+        message="¿Está seguro de eliminar esta unidad de medida?"
+        onCancel={() => setMostrarModal(false)}
+        onConfirm={confirmarEliminar}
+      />
+
     </div>
   );
 };
