@@ -1,3 +1,4 @@
+// frontend/src/components/common/ConfirmModal.jsx
 import React, { useEffect } from "react";
 
 export default function ConfirmModal({
@@ -6,6 +7,7 @@ export default function ConfirmModal({
   message = "¿Está seguro?",
   onCancel,
   onConfirm,
+  confirmLabel = "Eliminar",   // 🔹 NUEVO: texto configurable del botón
 }) {
   // Cerrar con tecla ESC
   useEffect(() => {
@@ -60,7 +62,7 @@ export default function ConfirmModal({
               style={{ backgroundColor: "#652A1C", color: "white" }}
               onClick={onConfirm}
             >
-              Eliminar
+              {confirmLabel}
             </button>
           </div>
         </div>

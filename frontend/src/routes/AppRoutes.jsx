@@ -33,6 +33,9 @@ import AdminCategoriasPage from "../pages/Admin/Categorias/AdminCategoriasPage";
 import AdminIngredientesPage from "../pages/Admin/Ingredientes/AdminIngredientesPage";
 import AdminUnidadesPage from "../pages/Admin/Unidades/AdminUnidadesPage";
 
+// ⭐ NUEVO: Configuración del sitio
+import AdminConfiguracionPage from "../pages/Admin/Configuracion/AdminConfiguracionPage";
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -162,6 +165,16 @@ export default function AppRoutes() {
         element={
           <AdminRoute>
             <AdminUnidadesPage />
+          </AdminRoute>
+        }
+      />
+
+      {/* ⭐ NUEVO: Configuración del Sitio */}
+      <Route
+        path="/admin/configuracion"
+        element={
+          <AdminRoute>
+            <AdminConfiguracionPage />
           </AdminRoute>
         }
       />

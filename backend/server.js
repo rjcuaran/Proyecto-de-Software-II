@@ -43,7 +43,7 @@ const adminUnidadRoutes = require("./routes/adminUnidadRoutes");
 app.use("/api/admin/unidades", adminUnidadRoutes);
 
 const configuracionRoutes = require("./routes/configuracionRoutes");
-app.use("/api/admin/config", configuracionRoutes);
+app.use("/api/configuracion", configuracionRoutes);
 
 const adminUsuarioRoutes = require("./routes/adminUsuarioRoutes");
 app.use("/api/admin/usuarios", adminUsuarioRoutes);
