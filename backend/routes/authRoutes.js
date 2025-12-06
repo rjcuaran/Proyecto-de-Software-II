@@ -1,12 +1,25 @@
-// backend/routes/authRoutes.js
 const express = require("express");
 const router = express.Router();
 
 const {
-  login
+  login,
+  registrar,
+  forgotPassword,
+  resetPassword,
+  verificarToken,
 } = require("../controllers/authController");
 
-// Ruta: POST /api/auth/login
+// Login
 router.post("/login", login);
+
+// Registro
+router.post("/register", registrar);
+
+// Verificar token
+router.get("/verify", verificarToken);
+
+// Recuperación de contraseña (simple)
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 module.exports = router;

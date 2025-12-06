@@ -36,6 +36,9 @@ import AdminUnidadesPage from "../pages/Admin/Unidades/AdminUnidadesPage";
 // ⭐ NUEVO: Configuración del sitio
 import AdminConfiguracionPage from "../pages/Admin/Configuracion/AdminConfiguracionPage";
 
+import ForgotPasswordPage from "../pages/Auth/ForgotPasswordPage";
+import ResetPasswordPage from "../pages/Auth/ResetPasswordPage";
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -179,8 +182,20 @@ export default function AppRoutes() {
         }
       />
 
+
+<Route path="/forgot-password" element={<ForgotPasswordPage />} />
+<Route path="/reset-password/:correo" element={<ResetPasswordPage />} />
+
+
+
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
+
+
+
+
+
+
   );
 }

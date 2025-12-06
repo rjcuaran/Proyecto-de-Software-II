@@ -4,16 +4,17 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 
-// DB
+// Base de datos
 const db = require("./config/database");
 
-// Cargar variables de entorno
 dotenv.config();
 
-// Crear servidor
 const app = express();
 app.use(cors());
-app.use(express.json());
+
+// Aumentar límite máximo de JSON y formularios
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // ==========================
 //   RUTAS PÚBLICAS
@@ -42,14 +43,16 @@ app.use("/api/admin/ingredientes", adminIngredienteRoutes);
 const adminUnidadRoutes = require("./routes/adminUnidadRoutes");
 app.use("/api/admin/unidades", adminUnidadRoutes);
 
+// Configuración del sitio
 const configuracionRoutes = require("./routes/configuracionRoutes");
 app.use("/api/configuracion", configuracionRoutes);
 
+// Usuarios Admin
 const adminUsuarioRoutes = require("./routes/adminUsuarioRoutes");
 app.use("/api/admin/usuarios", adminUsuarioRoutes);
 
 // ==========================
-//   RUTAS USUARIO (INGREDIENTES)
+//   INGREDIENTES DE USUARIO
 // ==========================
 const usuarioIngredienteRoutes = require("./routes/usuarioIngredienteRoutes");
 app.use("/api/ingredientes", usuarioIngredienteRoutes);
@@ -58,10 +61,8 @@ app.use("/api/ingredientes", usuarioIngredienteRoutes);
 //   SERVIR IMÁGENES
 // ==========================
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use(
-  "/uploads/avatars",
-  express.static(path.join(__dirname, "uploads/avatars"))
-);
+app.use("/uploads/configuracion", express.static(path.join(__dirname, "uploads/configuracion")));
+app.use("/uploads/avatars", express.static(path.join(__dirname, "uploads/avatars")));
 
 // ==========================
 //   PUERTO

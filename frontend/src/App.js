@@ -14,6 +14,9 @@ import Footer from "./components/common/Footer";
 // Rutas centralizadas
 import AppRoutes from "./routes/AppRoutes";
 
+import ThemeProvider from "./context/ThemeProvider";
+import "./styles/theme.css";
+
 function App() {
   return (
     <Router>
@@ -34,5 +37,17 @@ function App() {
     </Router>
   );
 }
+
+<Router>
+  <ThemeProvider>
+    <Header />
+    <main className="flex-grow-1 py-3">
+      <AppRoutes />
+    </main>
+    <Footer />
+  </ThemeProvider>
+</Router>
+
+
 
 export default App;

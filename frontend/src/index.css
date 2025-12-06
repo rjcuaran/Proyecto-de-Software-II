@@ -13,10 +13,13 @@ code {
 }
 
 .btn-admin {
-  width: 160px !important;     /* 🔴 MISMO ANCHO PARA TODOS */
-  height: 40px !important;     /* 🔴 MISMA ALTURA PARA TODOS */
+  width: 160px !important;
+  height: 40px !important;
   padding: 6px 12px !important;
   text-align: center;
   font-size: 14px;
   border-radius: 6px;
+
+  background-color: var(--color-primario) !important;
+  color: var(--color-quinary) !important;
 }

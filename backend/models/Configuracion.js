@@ -2,23 +2,13 @@
 const db = require("../config/database");
 
 class Configuracion {
-  
-  
-  
-  
-static obtener(callback) {
+
+  static obtener(callback) {
     const sql = "SELECT * FROM configuracion_sitio WHERE id = 1 LIMIT 1";
     db.query(sql, callback);
-}
+  }
 
-
-
-
-
-
-  
-
-static actualizar(datos, callback) {
+  static actualizar(datos, callback) {
     const {
       logo,
       color_primario,
@@ -60,16 +50,11 @@ static actualizar(datos, callback) {
         footer_texto,
         link_facebook,
         link_instagram,
-        link_youtube,
+        link_youtube
       ],
       callback
     );
-}
-
-
-
-
-
+  }
 }
 
 module.exports = Configuracion;

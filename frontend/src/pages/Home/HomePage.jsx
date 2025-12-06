@@ -2,7 +2,11 @@ import React from "react";
 import { Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
+import { useSiteConfig } from "../../context/SiteConfigContext";
+
+// Imagen fallback (si no hay logo configurado)
 import logoGorro from "../../assets/logo-gorro.png";
+
 import punto from "../../assets/punto.png";
 import panRebanado from "../../assets/pan-rebanado.png";
 import pan from "../../assets/pan.png";
@@ -10,8 +14,15 @@ import cupcake from "../../assets/cupcake.png";
 import croissant from "../../assets/croissant.png";
 
 export default function HomePage() {
-
   const navigate = useNavigate();
+  const { config } = useSiteConfig();
+
+  // ===============================
+  // LOGO DINÁMICO DESDE CONFIGURACIÓN DEL SITIO
+  // ===============================
+const logoUrl = config?.logo
+  ? `http://localhost:3000/uploads/configuracion/${config.logo}`
+  : logoGorro;
 
   return (
     <div
@@ -34,7 +45,6 @@ export default function HomePage() {
           position: "relative",
         }}
       >
-
         {/* LOGO CENTRAL */}
         <div
           style={{
@@ -47,10 +57,12 @@ export default function HomePage() {
           }}
         >
           <img
-            src={logoGorro}
-            alt="Arte Dulce Creativo"
+            src={logoUrl}
+            alt="Logo principal del sitio"
             style={{
               width: "320px",
+              height: "auto",
+              objectFit: "contain",
             }}
           />
         </div>
@@ -146,7 +158,6 @@ export default function HomePage() {
             zIndex: 2,
           }}
         />
-
       </div>
 
       {/* TARJETA DE BIENVENIDA */}
@@ -188,7 +199,7 @@ export default function HomePage() {
             experiencia cálida, elegante y profesional.
           </p>
 
-          {/* BOTÓN DE NAVEGACIÓN CORRECTO */}
+          {/* BOTÓN DE NAVEGACIÓN */}
           <button
             onClick={() => navigate("/recetas/nueva")}
             style={{
@@ -205,10 +216,8 @@ export default function HomePage() {
           >
             Comienza creando tu primera receta 💛
           </button>
-
         </Card>
       </div>
-
     </div>
   );
 }
