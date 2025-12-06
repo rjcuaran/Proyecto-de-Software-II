@@ -11,6 +11,11 @@ const DEFAULT_COLORS = {
   color_quinary: "#FFFFFF",
 };
 
+const LOCAL_STORAGE_KEY = "siteConfig";
+
+/**
+ * Aplica los colores de la configuración al :root
+ */
 const applyTheme = (cfg) => {
   const root = document.documentElement;
 
@@ -37,28 +42,58 @@ const applyTheme = (cfg) => {
 };
 
 export const SiteConfigProvider = ({ children }) => {
-  const [config, setConfig] = useState(null);
+  // 1) Intentar cargar primero desde localStorage (si existe)
+  const [config, setConfig] = useState(() => {
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Aplicar tema inmediatamente con lo último guardado
+        applyTheme(parsed);
+        return parsed;
+      }
+    } catch (e) {
+      console.error("Error leyendo configuración desde localStorage:", e);
+    }
+    // Si no hay nada guardado, config inicia en null
+    return null;
+  });
+
   const [loading, setLoading] = useState(true);
 
   const cargarConfiguracion = async () => {
+    setLoading(true);
     try {
       const res = await api.get("/configuracion");
       // El backend responde { success: true, data: {...} }
-      const cfg = res.data?.data || res.data;
-      setConfig(cfg || null);
-      applyTheme(cfg);
+      const cfg = res.data?.data || res.data || null;
+
+      if (cfg) {
+        setConfig(cfg);
+        applyTheme(cfg);
+
+        // Guardar también en localStorage para que persista
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cfg));
+        } catch (e) {
+          console.error("No se pudo guardar configuración en localStorage:", e);
+        }
+      }
     } catch (error) {
       console.error("Error cargando configuración global:", error);
+      // Si falla, dejamos la config que ya estaba (por ejemplo, la de localStorage)
     } finally {
       setLoading(false);
     }
   };
 
+  // 2) Cargar configuración desde el backend al montar el proveedor
   useEffect(() => {
     cargarConfiguracion();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Si cambias la config desde el admin y recargas el contexto:
+  // 3) Si la config cambia por cualquier motivo, aplicar el tema de nuevo
   useEffect(() => {
     if (config) {
       applyTheme(config);
