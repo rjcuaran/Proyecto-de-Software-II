@@ -46,7 +46,9 @@ export default function AdminConfiguracionPage() {
         const data = res.data?.data || {};
 
         if (data.logo) {
-          setLogoPreview(`http://localhost:5000/uploads/configuracion/${data.logo}`);
+          setLogoPreview(
+            `http://localhost:5000/uploads/configuracion/${data.logo}`
+          );
         }
 
         setColorPrimario(data.color_primario || "#652A1C");
@@ -123,7 +125,7 @@ export default function AdminConfiguracionPage() {
       formData.append("link_youtube", linkYoutube);
 
       await api.put("/configuracion", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       // Aplicar tema global
@@ -132,13 +134,16 @@ export default function AdminConfiguracionPage() {
         color_secundario: colorSecundario,
         color_terciario: colorTerciario,
         color_cuaternario: colorCuaternario,
-        color_quinary: colorQuinary
+        color_quinary: colorQuinary,
       };
 
       setTheme(newTheme);
 
       Object.entries(newTheme).forEach(([key, value]) =>
-        document.documentElement.style.setProperty(`--${key.replace("_", "-")}`, value)
+        document.documentElement.style.setProperty(
+          `--${key.replace("_", "-")}`,
+          value
+        )
       );
 
       // Recargar configuración global
@@ -146,7 +151,6 @@ export default function AdminConfiguracionPage() {
 
       setMensaje("Configuración actualizada correctamente");
       setMostrarModalGuardar(false);
-
     } catch (err) {
       setError("No se pudo actualizar la configuración del sitio");
     } finally {
@@ -165,26 +169,19 @@ export default function AdminConfiguracionPage() {
     borderRadius: "14px",
     padding: "22px",
     boxShadow: "0 6px 12px rgba(0,0,0,0.12)",
-    animation: "fadeIn 0.3s ease"
+    animation: "fadeIn 0.3s ease",
   };
 
   const titleStyle = {
     color: "var(--color-primario)",
     fontWeight: "700",
     marginBottom: "12px",
-    fontSize: "1.15rem"
-  };
-
-  const sectionSeparator = {
-    height: "2px",
-    background: "var(--color-cuaternario)",
-    margin: "18px 0",
-    borderRadius: "2px"
+    fontSize: "1.15rem",
   };
 
   const inputLabel = {
     fontWeight: "600",
-    color: "var(--color-primario)"
+    color: "var(--color-primario)",
   };
 
   // ---------------------------------------------------------
@@ -192,7 +189,6 @@ export default function AdminConfiguracionPage() {
   // ---------------------------------------------------------
   return (
     <div className="container py-4">
-
       <h2 className="fw-bold mb-4" style={{ color: "var(--color-primario)" }}>
         Configuración del Sitio
       </h2>
@@ -201,9 +197,7 @@ export default function AdminConfiguracionPage() {
       {error && <div className="alert alert-danger">{error}</div>}
 
       <form onSubmit={manejarSubmit}>
-
         <div className="row g-4">
-
           {/* ====================== LOGO ======================= */}
           <div className="col-md-4">
             <div style={cardStyle}>
@@ -217,23 +211,31 @@ export default function AdminConfiguracionPage() {
                   border: "2px solid var(--color-cuaternario)",
                   height: "190px",
                   overflow: "hidden",
-                  boxShadow: "inset 0 2px 6px rgba(0,0,0,0.1)"
+                  boxShadow: "inset 0 2px 6px rgba(0,0,0,0.1)",
                 }}
               >
                 {logoPreview ? (
-                  <img src={logoPreview} alt="logo" style={{ width: "100%", objectFit: "contain" }} />
+                  <img
+                    src={logoPreview}
+                    alt="logo"
+                    style={{ width: "100%", objectFit: "contain" }}
+                  />
                 ) : (
                   <span className="text-muted">Sin logo</span>
                 )}
               </div>
 
-              <input type="file" accept="image/*" className="form-control" onChange={handleLogoChange} />
+              <input
+                type="file"
+                accept="image/*"
+                className="form-control"
+                onChange={handleLogoChange}
+              />
             </div>
           </div>
 
           {/* ====================== DERECHA ======================= */}
           <div className="col-md-8">
-
             {/* ------- COLORES ------- */}
             <div style={cardStyle} className="mb-3">
               <h5 style={titleStyle}>Colores del sitio</h5>
@@ -244,18 +246,44 @@ export default function AdminConfiguracionPage() {
                   ["Secundario", colorSecundario, setColorSecundario],
                   ["Terciario", colorTerciario, setColorTerciario],
                   ["Cuaternario", colorCuaternario, setColorCuaternario],
-                  ["Quinto color", colorQuinary, setColorQuinary]
+                  ["Quinto color", colorQuinary, setColorQuinary],
                 ].map(([label, value, setter]) => (
                   <div key={label} className="col-md-4 mb-3 text-center">
                     <label style={inputLabel}>{label}</label>
-                    <input
-                      type="color"
-                      className="form-control form-control-color mx-auto"
-                      value={value}
-                      onChange={(e) => setter(e.target.value)}
-                      style={{ width: "60px", height: "50px", cursor: "pointer" }}
-                    />
-                    <div className="small mt-1">{value}</div>
+
+                    {/* Picker + campo de texto para pegar HEX */}
+                    <div className="d-flex flex-column align-items-center gap-1">
+                      <input
+                        type="color"
+                        className="form-control form-control-color mx-auto"
+                        value={value}
+                        onChange={(e) => setter(e.target.value)}
+                        style={{
+                          width: "60px",
+                          height: "50px",
+                          cursor: "pointer",
+                        }}
+                      />
+
+                      {/* Aquí puedes pegar el nombre / código del color */}
+                      <input
+                        type="text"
+                        className="form-control form-control-sm text-center mt-1"
+                        value={value}
+                        onChange={(e) => {
+                          let v = e.target.value.trim();
+                          if (!v) {
+                            setter("");
+                            return;
+                          }
+                          if (!v.startsWith("#")) {
+                            v = `#${v}`;
+                          }
+                          setter(v);
+                        }}
+                        placeholder="#FFFFFF"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -266,13 +294,25 @@ export default function AdminConfiguracionPage() {
               <h5 style={titleStyle}>Redes sociales</h5>
 
               <label style={inputLabel}>Facebook</label>
-              <input className="form-control mb-2" value={linkFacebook} onChange={(e) => setLinkFacebook(e.target.value)} />
+              <input
+                className="form-control mb-2"
+                value={linkFacebook}
+                onChange={(e) => setLinkFacebook(e.target.value)}
+              />
 
               <label style={inputLabel}>Instagram</label>
-              <input className="form-control mb-2" value={linkInstagram} onChange={(e) => setLinkInstagram(e.target.value)} />
+              <input
+                className="form-control mb-2"
+                value={linkInstagram}
+                onChange={(e) => setLinkInstagram(e.target.value)}
+              />
 
               <label style={inputLabel}>YouTube</label>
-              <input className="form-control" value={linkYoutube} onChange={(e) => setLinkYoutube(e.target.value)} />
+              <input
+                className="form-control"
+                value={linkYoutube}
+                onChange={(e) => setLinkYoutube(e.target.value)}
+              />
             </div>
 
             {/* ------- FOOTER ------- */}
@@ -285,7 +325,6 @@ export default function AdminConfiguracionPage() {
                 onChange={(e) => setFooterTexto(e.target.value)}
               />
             </div>
-
           </div>
         </div>
 
@@ -303,13 +342,12 @@ export default function AdminConfiguracionPage() {
               fontWeight: "bold",
               fontSize: "1rem",
               boxShadow: "0 3px 8px rgba(0,0,0,0.28)",
-              transition: "0.3s"
+              transition: "0.3s",
             }}
           >
             {guardando ? "Guardando..." : "Guardar cambios"}
           </button>
         </div>
-
       </form>
 
       {/* MODAL */}
