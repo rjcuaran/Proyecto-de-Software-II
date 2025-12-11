@@ -52,7 +52,7 @@ export default function AdminHomePage() {
           to="/admin/usuarios"
           className="list-group-item list-group-item-action py-3"
         >
-          👥 Usuarios (opcional)
+          👥 Usuarios
         </NavLink>
 
       </div>

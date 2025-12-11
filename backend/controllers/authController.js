@@ -43,7 +43,6 @@ const authController = {
             });
           }
 
-          // Role por defecto = user
           User.crear(
             {
               nombre,
@@ -126,6 +125,22 @@ const authController = {
         }
 
         const user = results[0];
+
+        // 🚫 ⚠️ EVITAR LOGIN DE USUARIOS ELIMINADOS
+        if (user.eliminado === 1) {
+          return res.status(403).json({
+            success: false,
+            mensaje: "Este usuario ha sido eliminado. Comuníquese con el administrador."
+          });
+        }
+
+        // 🚫 Si el usuario está inactivo, no permitir login
+        if (user.estado === 0) {
+          return res.status(403).json({
+            success: false,
+            mensaje: "Su usuario está desactivado. Comuníquese con el administrador."
+          });
+        }
 
         bcrypt.compare(password, user.contraseña, (err, isMatch) => {
           if (err) {

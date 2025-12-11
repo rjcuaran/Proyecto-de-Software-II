@@ -33,8 +33,11 @@ import AdminCategoriasPage from "../pages/Admin/Categorias/AdminCategoriasPage";
 import AdminIngredientesPage from "../pages/Admin/Ingredientes/AdminIngredientesPage";
 import AdminUnidadesPage from "../pages/Admin/Unidades/AdminUnidadesPage";
 
-// ⭐ NUEVO: Configuración del sitio
+// ⭐ Configuración del sitio
 import AdminConfiguracionPage from "../pages/Admin/Configuracion/AdminConfiguracionPage";
+
+// ⭐ NUEVO: Usuarios
+import AdminUsuariosPage from "../pages/Admin/Usuarios/AdminUsuariosPage";
 
 import ForgotPasswordPage from "../pages/Auth/ForgotPasswordPage";
 import ResetPasswordPage from "../pages/Auth/ResetPasswordPage";
@@ -138,7 +141,7 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Admin */}
+      {/* ADMIN */}
       <Route
         path="/admin"
         element={
@@ -172,7 +175,7 @@ export default function AppRoutes() {
         }
       />
 
-      {/* ⭐ NUEVO: Configuración del Sitio */}
+      {/* ⭐ Configuración del Sitio */}
       <Route
         path="/admin/configuracion"
         element={
@@ -182,20 +185,22 @@ export default function AppRoutes() {
         }
       />
 
+      {/* ⭐ NUEVO: Usuarios */}
+      <Route
+        path="/admin/usuarios"
+        element={
+          <AdminRoute>
+            <AdminUsuariosPage />
+          </AdminRoute>
+        }
+      />
 
-<Route path="/forgot-password" element={<ForgotPasswordPage />} />
-<Route path="/reset-password/:correo" element={<ResetPasswordPage />} />
-
-
+      {/* Recuperación de contraseña */}
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:correo" element={<ResetPasswordPage />} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
-
-
-
-
-
-
   );
 }
