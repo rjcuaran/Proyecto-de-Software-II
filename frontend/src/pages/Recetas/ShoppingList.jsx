@@ -14,10 +14,13 @@ import {
   Modal,
 } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
+import { useSiteConfig } from "../../context/SiteConfigContext";
 
 export default function ShoppingListPage() {
   const location = useLocation();
   const recetasSeleccionadas = location.state?.recetas || null;
+
+  const { config } = useSiteConfig();
 
   const [lista, setLista] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,16 +31,16 @@ export default function ShoppingListPage() {
   const [mensajeExito, setMensajeExito] = useState("");
   const [modalExito, setModalExito] = useState(false);
 
-  // ======================================
-  //   CARGAR LISTA SI ES NORMAL
-  //   O GENERAR MULTIPLE SI LLEGA STATE
-  // ======================================
+  // =============================
+  // CARGAR LISTA O GENERAR MULTIPLE
+  // =============================
   useEffect(() => {
     if (recetasSeleccionadas && recetasSeleccionadas.length > 0) {
       generarListaMultiple();
     } else {
       cargarLista();
     }
+    // eslint-disable-next-line
   }, []);
 
   // =============================
@@ -80,8 +83,6 @@ export default function ShoppingListPage() {
 
       setMensajeExito(res.data.message || "Lista de compras generada.");
       setModalExito(true);
-
-      // Cargar lista final
       cargarLista();
     } catch (err) {
       console.error("❌ Error generando lista múltiple:", err);
@@ -118,7 +119,7 @@ export default function ShoppingListPage() {
   };
 
   // =============================
-  // FILTRO VISUAL
+  // FILTRO
   // =============================
   const listaFiltrada = lista.filter((item) => {
     if (filtro === "pendientes") return !item.comprado;
@@ -127,7 +128,14 @@ export default function ShoppingListPage() {
   });
 
   // =============================
-  // RENDER LOADING EN GENERACIÓN
+  // IMPRIMIR LISTA
+  // =============================
+  const imprimirLista = () => {
+    window.print();
+  };
+
+  // =============================
+  // LOADING
   // =============================
   if (generando)
     return (
@@ -149,24 +157,74 @@ export default function ShoppingListPage() {
 
   return (
     <Container className="mt-4 mb-5 shopping-wrapper">
-      <h1 className="fw-bold mb-3 titulo-principal">🛒 Lista de Compras</h1>
 
-      {/* Filtros */}
+      {/* TITULO */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h1
+          className="fw-bold titulo-principal m-0"
+          style={{ color: "var(--color-primario)" }}
+        >
+          🛒 Lista de Compras
+        </h1>
+
+        {/* BOTÓN IMPRIMIR */}
+        <Button
+          style={{
+            backgroundColor: "var(--color-primario)",
+            borderColor: "var(--color-primario)",
+            color: "var(--color-secundario)",
+          }}
+          onClick={imprimirLista}
+        >
+          Imprimir
+        </Button>
+      </div>
+
+      {/* FILTROS */}
       <div className="d-flex gap-2 mb-4 flex-wrap">
         <Button
-          variant={filtro === "todos" ? "primary" : "outline-primary"}
+          className="btn-dinamico"
+          style={{
+            backgroundColor:
+              filtro === "todos"
+                ? "var(--color-primario)"
+                : "var(--color-secundario)",
+            color:
+              filtro === "todos"
+                ? "var(--color-secundario)"
+                : "var(--color-primario)",
+            borderColor: "var(--color-primario)",
+          }}
           onClick={() => setFiltro("todos")}
         >
           Todos
         </Button>
+
         <Button
-          variant={filtro === "pendientes" ? "warning" : "outline-warning"}
+          className="btn-dinamico"
+          style={{
+            backgroundColor:
+              filtro === "pendientes"
+                ? "var(--color-terciario)"
+                : "var(--color-secundario)",
+            color: "var(--color-primario)",
+            borderColor: "var(--color-terciario)",
+          }}
           onClick={() => setFiltro("pendientes")}
         >
           Pendientes
         </Button>
+
         <Button
-          variant={filtro === "comprados" ? "success" : "outline-success"}
+          className="btn-dinamico"
+          style={{
+            backgroundColor:
+              filtro === "comprados"
+                ? "#28a745"
+                : "var(--color-secundario)",
+            color: "var(--color-primario)",
+            borderColor: "#28a745",
+          }}
           onClick={() => setFiltro("comprados")}
         >
           Comprados
@@ -175,6 +233,7 @@ export default function ShoppingListPage() {
 
       {error && <Alert variant="danger">{error}</Alert>}
 
+      {/* LISTA */}
       {listaFiltrada.length === 0 ? (
         <p className="text-muted fs-5">No hay ingredientes en esta lista.</p>
       ) : (
@@ -193,11 +252,12 @@ export default function ShoppingListPage() {
                         className={`fw-semibold mb-1 nombre-ingrediente ${
                           item.comprado ? "text-decoration-line-through" : ""
                         }`}
+                        style={{ color: "var(--color-primario)" }}
                       >
                         {item.nombre_ingrediente}
                       </h5>
 
-                      <div className="text-muted small">
+                      <div className="small" style={{ color: "gray" }}>
                         {item.cantidad} {item.unidad_medida}
                       </div>
 
@@ -225,35 +285,37 @@ export default function ShoppingListPage() {
       {/* MODAL EXITO */}
       <Modal show={modalExito} onHide={() => setModalExito(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Lista Generada</Modal.Title>
+          <Modal.Title style={{ color: "var(--color-primario)" }}>
+            Lista Generada
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p className="mb-0">{mensajeExito}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => setModalExito(false)}>
+          <Button
+            style={{
+              backgroundColor: "var(--color-primario)",
+              borderColor: "var(--color-primario)",
+              color: "var(--color-secundario)",
+            }}
+            onClick={() => setModalExito(false)}
+          >
             Entendido
           </Button>
         </Modal.Footer>
       </Modal>
 
-      {/* Estilos premium */}
+      {/* ESTILOS */}
       <style>{`
         .shopping-wrapper {
           max-width: 900px;
         }
 
-        .titulo-principal {
-          font-size: 2.2rem;
-          background: linear-gradient(90deg, #0ea5e9, #3b82f6);
-          -webkit-background-clip: text;
-          color: transparent;
-        }
-
         .item-card {
           border-radius: 18px;
           transition: transform 0.15s ease, box-shadow 0.15s ease;
-          background: linear-gradient(135deg, #ffffff, #f8fafc);
+          background-color: var(--color-quinary);
         }
 
         .item-card:hover {
@@ -262,12 +324,7 @@ export default function ShoppingListPage() {
         }
 
         .item-comprado {
-          opacity: 0.7;
-          filter: grayscale(0.4);
-        }
-
-        .nombre-ingrediente {
-          font-size: 1.15rem;
+          opacity: 0.6;
         }
 
         .toggle-check input {

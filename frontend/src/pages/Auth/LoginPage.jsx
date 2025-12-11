@@ -9,11 +9,35 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mostrar, setMostrar] = useState(false);
-  const [error, setError] = useState("");
+
+  // Modal de error elegante
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+
+  const closeModal = () => {
+    setShowErrorModal(false);
+    setModalMessage("");
+  };
+
+
+// Cerrar modal con tecla ESC
+React.useEffect(() => {
+  const handleEsc = (e) => {
+    if (e.key === "Escape" && showErrorModal) {
+      closeModal();
+    }
+  };
+
+  window.addEventListener("keydown", handleEsc);
+
+  return () => {
+    window.removeEventListener("keydown", handleEsc);
+  };
+}, [showErrorModal]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
 
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", {
@@ -25,7 +49,13 @@ export default function LoginPage() {
       navigate("/");
     } catch (err) {
       console.error(err);
-      setError("Credenciales incorrectas.");
+
+      const msg =
+        err.response?.data?.mensaje || "Credenciales incorrectas.";
+
+      // Activar modal elegante
+      setModalMessage(msg);
+      setShowErrorModal(true);
     }
   };
 
@@ -36,6 +66,73 @@ export default function LoginPage() {
         backgroundColor: "var(--color-secundario)",
       }}
     >
+      {/* MODAL ELEGANTE DE ERROR */}
+      {showErrorModal && (
+        <div
+          className="modal-backdrop-custom"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+          onClick={closeModal}
+        >
+          <div
+            className="modal-contenido"
+            style={{
+              backgroundColor: "var(--color-quinary)",
+              borderRadius: "15px",
+              padding: "25px",
+              width: "90%",
+              maxWidth: "420px",
+              border: "3px solid var(--color-primario)",
+              boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
+              animation: "fadeIn 0.2s ease-in-out",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4
+              className="fw-bold text-center mb-3"
+              style={{ color: "var(--color-primario)" }}
+            >
+              Atención
+            </h4>
+
+            <p
+              className="text-center"
+              style={{ color: "var(--color-texto)", fontSize: "1.1rem" }}
+            >
+              {modalMessage}
+            </p>
+
+            <div className="d-flex justify-content-center mt-4">
+              <button
+                onClick={closeModal}
+                style={{
+                  backgroundColor: "var(--color-primario)",
+                  color: "var(--color-quinary)",
+                  border: "none",
+                  padding: "10px 25px",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CARD LOGIN */}
       <div
         className="shadow-lg p-4"
         style={{
@@ -67,8 +164,6 @@ export default function LoginPage() {
             Bienvenido de nuevo, inicia sesión
           </p>
         </div>
-
-        {error && <div className="alert alert-danger">{error}</div>}
 
         {/* FORM */}
         <form onSubmit={handleSubmit}>

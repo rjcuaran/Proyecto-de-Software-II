@@ -7,17 +7,12 @@ export default function IngredienteForm({
   ingredientes, // por compatibilidad con versiones anteriores
   onChange,
 }) {
-  // Lista de unidades "bonita"
-  const unidadesMedida = [
-    "Unidades",
-    "Gramos",
-    "Mililitros",
-    "Pizcas",
-    "Cucharadas",
-    "Cucharaditas",
-    "Tazas",
-    "Onzas",
-  ];
+
+
+
+    // Unidades dinámicas desde el backend
+  const [unidadesMedida, setUnidadesMedida] = useState([]);
+
 
   // Decide de dónde tomar los iniciales
   const iniciales =
@@ -54,6 +49,34 @@ export default function IngredienteForm({
 
     setInitialized(true);
   }, [iniciales, initialized]);
+
+
+
+
+
+// =========================
+//   Cargar unidades de medida desde backend
+// =========================
+useEffect(() => {
+  const cargarUnidades = async () => {
+    try {
+const res = await fetch("/api/admin/unidades");
+      const data = await res.json();
+
+      if (data.success && Array.isArray(data.data)) {
+        setUnidadesMedida(data.data);
+      } else {
+        console.error("Error cargando unidades de medida:", data);
+      }
+    } catch (error) {
+      console.error("Error en fetch de unidades:", error);
+    }
+  };
+
+  cargarUnidades();
+}, []);
+
+
 
   // Notificar cambios al padre
   const notifyParent = (nuevaLista) => {
@@ -215,7 +238,7 @@ export default function IngredienteForm({
 
             {/* Unidad */}
             <Col md={3}>
-              <Form.Label>Unidad</Form.Label>
+              <Form.Label>Unidad de medida</Form.Label>
               <Form.Select
                 value={ing.unidad_medida}
                 onChange={(e) =>
@@ -223,11 +246,20 @@ export default function IngredienteForm({
                 }
               >
                 <option value="">Selecciona unidad</option>
-                {unidadesMedida.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
+                
+                
+                
+{unidadesMedida.map((u) => (
+  <option key={u.id} value={u.nombre}>
+    {u.nombre}
+  </option>
+))}
+
+
+
+
+
+
               </Form.Select>
             </Col>
 

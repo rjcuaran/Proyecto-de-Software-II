@@ -2,16 +2,27 @@ const express = require('express');
 const router = express.Router();
 const AdminUnidad = require('../models/AdminUnidad');
 
+
+
+
 // Obtener todas las unidades
 router.get('/', (req, res) => {
   AdminUnidad.obtenerTodas((err, resultados) => {
     if (err) {
       console.error('Error al obtener unidades:', err);
-      return res.status(500).json({ mensaje: 'Error al obtener unidades' });
+      return res.status(500).json({ 
+        success: false,
+        mensaje: 'Error al obtener unidades' 
+      });
     }
-    res.json(resultados); // ✅ RESPUESTA JSON CORRECTA
+
+    res.json({
+      success: true,
+      data: resultados
+    });
   });
 });
+
 
 // Crear unidad
 router.post('/', (req, res) => {
