@@ -1,4 +1,3 @@
-// backend/routes/shoppingListRoutes.js
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -9,7 +8,12 @@ const {
   agregarIngredientesReceta,
   generarListaCompra,
   agregarMultiple,
+  limpiarLista,
+  exportarExcel // 👈 ESTA LÍNEA DEBE EXISTIR
 } = require("../controllers/shoppingListController");
+
+
+
 
 // Obtener lista
 router.get("/", authMiddleware, obtenerListaCompra);
@@ -25,5 +29,15 @@ router.post("/agregar-multiple", authMiddleware, agregarMultiple);
 
 // Toggle comprado
 router.patch("/:id/toggle", authMiddleware, toggleItemComprado);
+
+// Limpiar lista de compras
+router.delete("/limpiar", authMiddleware, limpiarLista);
+
+
+// Exportar lista de compras a Excel
+router.get("/exportar-excel", authMiddleware, exportarExcel);
+
+
+
 
 module.exports = router;

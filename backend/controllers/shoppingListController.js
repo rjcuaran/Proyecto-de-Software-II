@@ -451,3 +451,114 @@ exports.agregarMultiple = (req, res) => {
     });
   });
 };
+
+
+
+
+
+
+// =======================================================
+// 6) LIMPIAR LISTA COMPLETA (VACIA LA LISTA DEL USUARIO)
+// =======================================================
+exports.limpiarLista = (req, res) => {
+  const id_usuario = req.user?.id;
+
+  if (!id_usuario) {
+    return res.status(401).json({
+      success: false,
+      message: "Usuario no autenticado.",
+    });
+  }
+
+  const sqlDelete = `DELETE FROM shopping_list WHERE id_usuario = ?`;
+
+  db.query(sqlDelete, [id_usuario], (err) => {
+    if (err) {
+      console.error("❌ Error limpiando lista de compras:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Error al limpiar la lista de compras.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Lista de compras limpiada correctamente.",
+    });
+  });
+};
+
+
+
+
+
+
+
+
+
+
+
+
+const ExcelJS = require("exceljs");
+
+// =======================================================
+// EXPORTAR LISTA DE COMPRAS A EXCEL
+// =======================================================
+exports.exportarExcel = (req, res) => {
+  const id_usuario = req.user?.id;
+  const { filtro } = req.query;
+
+  if (!id_usuario) {
+    return res.status(401).json({ message: "No autorizado" });
+  }
+
+  let condicion = "";
+  if (filtro === "pendientes") condicion = "AND comprado = 0";
+  if (filtro === "comprados") condicion = "AND comprado = 1";
+
+  const sql = `
+    SELECT nombre_ingrediente, cantidad, unidad_medida, comprado
+    FROM shopping_list
+    WHERE id_usuario = ?
+    ${condicion}
+    ORDER BY comprado ASC
+  `;
+
+  db.query(sql, [id_usuario], async (err, rows) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Error generando Excel" });
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Lista de Compras");
+
+    sheet.columns = [
+      { header: "Ingrediente", key: "nombre_ingrediente", width: 30 },
+      { header: "Cantidad", key: "cantidad", width: 15 },
+{ header: "Unidad de medida", key: "unidad", width: 20 },
+      { header: "Estado", key: "estado", width: 15 },
+    ];
+
+    rows.forEach((item) => {
+      sheet.addRow({
+        nombre_ingrediente: item.nombre_ingrediente,
+        cantidad: item.cantidad,
+        unidad_medida: item.unidad_medida,
+        estado: item.comprado ? "Comprado" : "Pendiente",
+      });
+    });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=lista_compras_${filtro || "todos"}.xlsx`
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  });
+};

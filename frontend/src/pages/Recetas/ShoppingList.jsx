@@ -31,6 +31,45 @@ export default function ShoppingListPage() {
   const [mensajeExito, setMensajeExito] = useState("");
   const [modalExito, setModalExito] = useState(false);
 
+
+
+const exportarExcel = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await axios.get(
+      `http://localhost:5000/api/shopping-list/exportar-excel?filtro=${filtro}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob", // 👈 MUY IMPORTANTE
+      }
+    );
+
+    // Crear archivo descargable
+    const url = window.URL.createObjectURL(
+      new Blob([response.data])
+    );
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "lista_de_compras.xlsx");
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("❌ Error exportando Excel:", error);
+    setError("No se pudo exportar la lista a Excel.");
+  }
+};
+
+
+
+
+
   // =============================
   // CARGAR LISTA O GENERAR MULTIPLE
   // =============================
@@ -121,11 +160,25 @@ export default function ShoppingListPage() {
   // =============================
   // FILTRO
   // =============================
-  const listaFiltrada = lista.filter((item) => {
+  
+  
+  
+const listaFiltrada = lista
+  .filter((item) => {
     if (filtro === "pendientes") return !item.comprado;
     if (filtro === "comprados") return item.comprado;
     return true;
+  })
+  // ORDEN AUTOMÁTICO CUANDO "TODOS" ESTÁ ACTIVO:
+  .sort((a, b) => {
+    if (filtro !== "todos") return 0; // no ordenar si hay otro filtro
+    return a.comprado - b.comprado;   // pendientes primero, comprados después
   });
+
+
+
+
+
 
   // =============================
   // IMPRIMIR LISTA
@@ -133,6 +186,31 @@ export default function ShoppingListPage() {
   const imprimirLista = () => {
     window.print();
   };
+
+
+
+
+
+// =============================
+// LIMPIAR LISTA COMPLETA
+// =============================
+const limpiarLista = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    await axios.delete("http://localhost:5000/api/shopping-list/limpiar", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setLista([]); // vaciar frontend
+  } catch (err) {
+    console.error("❌ Error limpiando lista:", err);
+    setError("No se pudo limpiar la lista de compras.");
+  }
+};
+
+
+
 
   // =============================
   // LOADING
@@ -179,6 +257,37 @@ export default function ShoppingListPage() {
           Imprimir
         </Button>
       </div>
+
+
+
+<Button
+  className="ms-2"
+  style={{
+    backgroundColor: "var(--color-terciario)",
+    borderColor: "var(--color-terciario)",
+    color: "var(--color-primario)",
+  }}
+  onClick={limpiarLista}
+>
+  Limpiar Lista
+</Button>
+
+
+
+
+<Button
+  className="ms-2"
+  style={{
+    backgroundColor: "var(--color-cuaternario)",
+    borderColor: "var(--color-cuaternario)",
+    color: "var(--color-primario)",
+  }}
+  onClick={exportarExcel}
+>
+  Exportar Excel
+</Button>
+
+
 
       {/* FILTROS */}
       <div className="d-flex gap-2 mb-4 flex-wrap">
