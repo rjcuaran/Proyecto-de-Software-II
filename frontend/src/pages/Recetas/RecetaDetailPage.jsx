@@ -417,7 +417,6 @@ const handleConfirmPrint = () => {
             }}
           >
             <div className="hero-overlay"></div>
-            <h1 className="hero-title">{receta.nombre}</h1>
           </div>
 
           {/* ACCIONES STICKY */}
@@ -487,12 +486,24 @@ const handleConfirmPrint = () => {
 
           <Container className="mt-4 mb-5">
             <Row>
-              <Col lg={7}>
+
+<Col lg={7}>
+  <h2 className="fw-bold mb-3">
+    {receta.nombre}
+  </h2>
+
                 {/* Descripción */}
                 <Card className="shadow-sm border-0 mb-4">
                   <Card.Body>
                     <h4 className="fw-bold mb-3">Descripción</h4>
-                    <p className="text-muted mb-0">
+
+
+
+<p
+  className="text-muted mb-0"
+  style={{ textAlign: "justify" }}
+>
+
                       {receta.descripcion || "Sin descripción."}
                     </p>
                   </Card.Body>
@@ -511,9 +522,22 @@ const handleConfirmPrint = () => {
                       <ul className="lista-ingredientes">
                         {receta.ingredientes.map((ing, index) => (
                           <li key={index}>
-                            <Badge bg="primary" className="me-2">
-                              {ing.cantidad} {ing.unidad_medida}
-                            </Badge>
+                            
+                            
+<span
+  className="btn btn-admin"
+  style={{
+    backgroundColor: "var(--color-primario)",
+    color: "var(--color-quinary)",
+    pointerEvents: "none",
+  }}
+>
+  {ing.cantidad} {ing.unidad_medida}
+</span>
+
+
+
+
                             {ing.nombre}
                           </li>
                         ))}
@@ -526,7 +550,13 @@ const handleConfirmPrint = () => {
                 <Card className="shadow-sm border-0">
                   <Card.Body>
                     <h4 className="fw-bold mb-3">Preparación</h4>
-                    <p>{receta.preparacion}</p>
+                    
+                    
+                    <p style={{ textAlign: "justify" }}>
+  {receta.preparacion}
+</p>
+
+
                   </Card.Body>
                 </Card>
               </Col>
@@ -802,10 +832,29 @@ color: "var(--color-texto)",
               justify-content: space-between;
             }
 
-            .lista-ingredientes li {
-              margin-bottom: 8px;
-              font-size: 1.05rem;
-            }
+.lista-ingredientes {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 👈 DOS COLUMNAS */
+  column-gap: 24px;
+  row-gap: 12px;
+}
+
+.lista-ingredientes li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+}
+
+
+
+
+
+
           `}</style>
         </div>
       )}
