@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/uploadRecetaImage"); // <-- Multer
+const { generarRecetaPdf } = require("../controllers/recetaPdfController");
+
 
 // Controladores
 const {
@@ -17,6 +19,9 @@ const {
 // RUTAS DE RECETAS
 // ========================
 
+router.get("/:id/pdf", authMiddleware, generarRecetaPdf);
+
+
 // Obtener todas las recetas del usuario
 router.get("/", authMiddleware, obtenerRecetas);
 
@@ -30,6 +35,10 @@ router.post(
   upload.single("imagen"),   // <-- aquí recibimos la imagen
   crearReceta
 );
+
+// 📄 Descargar receta en PDF (AUTOMÁTICO)
+router.get("/:id/pdf", authMiddleware, generarRecetaPdf);
+
 
 // Obtener receta por ID
 router.get("/:id", authMiddleware, obtenerRecetaPorId);

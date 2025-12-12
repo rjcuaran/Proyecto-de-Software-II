@@ -235,6 +235,50 @@ const handleDownloadPdf = () => {
 
 
 
+const handleDownloadPdfBackend = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Sesión no válida. Inicia sesión nuevamente.");
+      return;
+    }
+
+    const response = await fetch(
+      `http://localhost:5000/api/recetas/${id}/pdf`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Error al generar el PDF");
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${receta?.nombre || "receta"}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("❌ Error descargando PDF:", error);
+    alert("No se pudo descargar el PDF.");
+  }
+};
+
+
+
+
+
+
 
 
   const toggleFavorito = async () => {
@@ -430,13 +474,10 @@ const handleConfirmPrint = () => {
 
 
 
-<Button
-  variant="secondary"
-  size="sm"
-  onClick={handleDownloadPdf}
->
+<Button onClick={handleDownloadPdfBackend}>
   📄 Descargar PDF
 </Button>
+
 
 
 
