@@ -16,6 +16,12 @@ import {
   Modal,
 } from "react-bootstrap";
 
+import { useSiteConfig } from "../../context/SiteConfigContext";
+
+import ConfirmModal from "../../components/common/ConfirmModal";
+
+
+
 /* =====================================================
    🔧 Normalizador de imágenes (MISMA FUNCIÓN DEL EDITOR)
    ===================================================== */
@@ -67,6 +73,10 @@ const formatCategoria = (categoria) => {
 };
 
 export default function RecetaDetailPage() {
+
+const { colors } = useSiteConfig();
+
+
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -88,6 +98,31 @@ export default function RecetaDetailPage() {
   const [shoppingLoading, setShoppingLoading] = useState(false);
   const [shoppingMessage, setShoppingMessage] = useState(null);
   const [shoppingError, setShoppingError] = useState(null);
+
+  const [showPrintHelp, setShowPrintHelp] = useState(false);
+
+
+
+
+
+
+
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.key === "Escape") {
+      setShowPrintHelp(false);
+    }
+  };
+
+  window.addEventListener("keydown", handleKeyDown);
+  return () => window.removeEventListener("keydown", handleKeyDown);
+}, []);
+
+
+
+
+
+
 
   /* =====================================================
      📌 Cargar receta
@@ -270,6 +305,15 @@ export default function RecetaDetailPage() {
     }
   };
 
+
+
+const handleConfirmPrint = () => {
+  setShowPrintHelp(false);
+  setTimeout(() => window.print(), 300);
+};
+
+
+
   /* =====================================================
      🟦 UI – Render principal
      ===================================================== */
@@ -344,9 +388,14 @@ export default function RecetaDetailPage() {
                 🛒 Lista de compras
               </Button>
 
-              <Button variant="dark" size="sm" onClick={handlePrint}>
-                🖨️ Imprimir
-              </Button>
+<Button
+  variant="dark"
+  size="sm"
+  onClick={() => setShowPrintHelp(true)}
+>
+  🖨️ Imprimir
+</Button>
+
             </div>
           </div>
 
@@ -518,6 +567,50 @@ export default function RecetaDetailPage() {
             </Modal.Footer>
           </Modal>
 
+
+
+
+
+{/* MODAL AYUDA DE IMPRESIÓN */}
+
+<ConfirmModal
+  visible={showPrintHelp}
+  title="Consejos para imprimir"
+  message={
+    <>
+      <p>Para obtener una impresión correcta de la receta:</p>
+
+      <ul>
+        <li>✔ Activar <strong>Gráficos de fondo</strong></li>
+        <li>✖ Desactivar <strong>Encabezado y pie de página</strong></li>
+        <li>📄 Usar orientación vertical</li>
+      </ul>
+
+<div
+  className="mt-3"
+  style={{
+    backgroundColor: "var(--color-secundario)",
+    color: "var(--color-text)",
+    borderLeft: "4px solid var(--color-primary)",
+    padding: "12px",
+    borderRadius: "6px",
+    fontSize: "0.9rem",
+  }}
+>
+  Estas opciones se configuran en el cuadro de impresión del navegador.
+</div>
+
+    </>
+  }
+  onCancel={() => setShowPrintHelp(false)}
+  onConfirm={handleConfirmPrint}
+  confirmLabel="Imprimir ahora"
+/>
+
+
+
+
+
           {/* ESTILOS */}
           <style>{`
             .receta-hero {
@@ -533,11 +626,9 @@ export default function RecetaDetailPage() {
               overflow: hidden;
             }
 
-            .hero-overlay {
-              position: absolute;
-              inset: 0;
-              background: rgba(0,0,0,0.35);
-            }
+.hero-overlay {
+  background: var(--color-overlay);
+}
 
             .hero-title {
               position: relative;
