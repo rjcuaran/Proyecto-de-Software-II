@@ -598,56 +598,91 @@ export default function ProfilePage() {
                   <div className="row g-3">
                     {/* Última receta creada */}
                     <div className="col-md-6">
-                      <div className="activity-card">
-                        <p className="text-muted small mb-1">
-                          Última receta creada
-                        </p>
-                        {misRecetas.length > 0 ? (
-                          <>
-                            <p className="fw-semibold mb-1">
-                              {misRecetas[misRecetas.length - 1].nombre}
-                            </p>
-                            <Link
-                              to={`/recetas/${
-                                misRecetas[misRecetas.length - 1].id_receta
-                              }`}
-                              className="btn btn-sm btn-dorado rounded-pill"
-                            >
-                              Ver receta
-                            </Link>
-                          </>
-                        ) : (
-                          <p className="text-muted small">
-                            No tienes recetas.
-                          </p>
-                        )}
-                      </div>
+                      
+                      
+                      
+<div className="activity-card d-flex gap-3 align-items-center">
+  {/* Imagen */}
+  <div className="activity-img">
+    <img
+      src={`${apiBaseUrl}/uploads/recetas/${
+        misRecetas[misRecetas.length - 1].imagen
+      }`}
+      alt={misRecetas[misRecetas.length - 1].nombre}
+    />
+  </div>
+
+  {/* Texto */}
+  <div className="flex-grow-1">
+    <p className="text-muted small mb-1">
+      Última receta creada
+    </p>
+
+    <p className="fw-semibold mb-1">
+      {misRecetas[misRecetas.length - 1].nombre}
+    </p>
+
+    <Link
+      to={`/recetas/${misRecetas[misRecetas.length - 1].id_receta}`}
+      className="btn btn-sm btn-dorado rounded-pill"
+    >
+      Ver receta
+    </Link>
+  </div>
+</div>
+
+
+
+
+
+
+
                     </div>
 
                     {/* Último favorito */}
                     <div className="col-md-6">
-                      <div className="activity-card">
-                        <p className="text-muted small mb-1">
-                          Último favorito agregado
-                        </p>
-                        {favoritos.length > 0 ? (
-                          <>
-                            <p className="fw-semibold mb-1">
-                              {favoritos[0].nombre}
-                            </p>
-                            <Link
-                              to={`/recetas/${favoritos[0].id_receta}`}
-                              className="btn btn-sm btn-outline-warning rounded-pill"
-                            >
-                              Ver receta ⭐
-                            </Link>
-                          </>
-                        ) : (
-                          <p className="text-muted small">
-                            No has agregado favoritos.
-                          </p>
-                        )}
-                      </div>
+                      
+                      
+                      
+                      
+
+
+<div className="activity-card d-flex gap-3 align-items-center">
+  {/* Imagen */}
+  <div className="activity-img">
+    <img
+      src={`${apiBaseUrl}/uploads/recetas/${favoritos[0].imagen}`}
+      alt={favoritos[0].nombre}
+    />
+  </div>
+
+  {/* Texto */}
+  <div className="flex-grow-1">
+    <p className="text-muted small mb-1">
+      Último favorito agregado
+    </p>
+
+    <p className="fw-semibold mb-1">
+      {favoritos[0].nombre}
+    </p>
+
+    <Link
+      to={`/recetas/${favoritos[0].id_receta}`}
+      className="btn btn-sm btn-outline-warning rounded-pill"
+    >
+      Ver receta ⭐
+    </Link>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
                     </div>
                   </div>
                 )}
@@ -744,16 +779,28 @@ export default function ProfilePage() {
         <style>
           {`
   .profile-page-wrapper {
-    background-color: #F9ECDB;
-    min-height: 100vh;
+
+background-color: var(--color-cuaternario);
+
+
+  min-height: 100vh;
     padding-top: 20px;
   }
 
-  .profile-hero {
-    border-radius: 20px;
-    background: linear-gradient(135deg, #FCEED9, #F9E4C6);
-    border: 1px solid rgba(101, 42, 28, 0.15);
-  }
+
+
+.profile-hero {
+  border-radius: 20px;
+  background: linear-gradient(
+    135deg,
+    var(--color-quinary),
+    var(--color-terciario)
+  );
+  border: 1px solid var(--color-terciario);
+}
+
+
+
 
   .profile-hero-content {
     padding: 24px 32px;
@@ -763,14 +810,24 @@ export default function ProfilePage() {
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    background: #FCEED9;
-    border: 3px solid #FFC000;
+
+
+background: var(--color-quinary);
+
+
+border: 3px solid var(--color-secundario);
+
+
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
     font-size: 1.6rem;
-    color: #652A1C;
+    
+    
+color: var(--color-primario);
+
+
     overflow: hidden;
   }
 
@@ -780,79 +837,109 @@ export default function ProfilePage() {
     object-fit: cover;
   }
 
-  .text-chocolate {
-    color: #652A1C;
-  }
+.text-chocolate {
+  color: var(--color-primario);
+}
 
-  .text-muted-cream {
-    color: #8a624b;
-  }
+.text-muted-cream {
+  color: var(--color-primario);
+  opacity: 0.75; /* ✅ “muted” sin usar un hex fijo */
+}
+
 
   .bg-cream-soft {
     background-color: #FCEED9;
   }
 
-  .activity-card {
-    background: #FCEED9;
-    border: 1px solid rgba(101, 42, 28, 0.1);
-    padding: 12px;
-    border-radius: 12px;
-  }
+.activity-card {
+  background: var(--color-quinary);
+  border: 1px solid var(--color-terciario);
+border-left: 6px solid var(--color-primario);
+  padding: 12px;
+  border-radius: 12px;
+}
 
-  .recipe-card {
-    background: #FCEED9;
-    border: 1px solid rgba(101, 42, 28, 0.1);
-    overflow: hidden;
-    display: flex;
-  }
+.recipe-card {
+  background: var(--color-quinary);
+  border: 1px solid var(--color-terciario);
+  border-left: 6px solid var(--color-primario);
+  overflow: hidden;
+  display: flex;
+  align-items: center; /* ✅ CENTRA verticalmente la imagen */
+}
 
-  .recipe-img img {
-    width: 90px;
-    height: 90px;
-    object-fit: cover;
-    border-right: 1px solid rgba(101, 42, 28, 0.1);
-  }
+
+
+.recipe-img {
+  width: 160px;          /* ⬅ más ancho para ver la imagen completa */
+  height: 90px;          /* ⬅ misma altura que ya tenías */
+  flex: 0 0 160px;
+  background: var(--color-terciario);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--color-terciario);
+}
+
+.recipe-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;   /* ✅ ya NO recorta; muestra la imagen completa */
+  display: block;
+}
+
+
+
 
   .recipe-content {
     padding: 10px;
     flex: 1;
   }
 
+
+
+
+
   .btn-gourmet {
-    background-color: #652A1C;
-    color: #F9ECDB;
-    border-radius: 999px;
-    border: none;
-  }
+  background-color: var(--color-primario);
+  color: var(--color-quinary);
+  border-radius: 999px;
+  border: none;
+}
 
-  .btn-gourmet:hover {
-    background-color: #4a2016;
-    color: #F9ECDB;
-  }
+.btn-gourmet:hover {
+  filter: brightness(0.92);
+  color: var(--color-quinary);
+}
 
-  .btn-gourmet-outline {
-    background-color: transparent;
-    color: #652A1C;
-    border-radius: 999px;
-    border: 1px solid #652A1C;
-  }
+.btn-gourmet-outline {
+  background-color: transparent;
+  color: var(--color-primario);
+  border-radius: 999px;
+  border: 1px solid var(--color-primario);
+}
 
-  .btn-gourmet-outline:hover {
-    background-color: #652A1C;
-    color: #F9ECDB;
-  }
+.btn-gourmet-outline:hover {
+  background-color: var(--color-primario);
+  color: var(--color-quinary);
+}
 
-  .btn-dorado {
-    background-color: #FFC000;
-    color: #652A1C;
-    border-radius: 999px;
-    border: none;
-  }
+.btn-dorado {
+  background-color: var(--color-secundario);
+  color: var(--color-primario);
+  border-radius: 999px;
+  border: none;
+}
 
-  .btn-dorado:hover {
-    background-color: #e6ab00;
-    color: #652A1C;
-  }
+.btn-dorado:hover {
+  filter: brightness(0.95);
+  color: var(--color-primario);
+}
+
+
+
+
+
 
   /* Modal de recorte */
   .crop-modal-backdrop {
@@ -888,6 +975,37 @@ export default function ProfilePage() {
     border-radius: 16px;
     overflow: hidden;
   }
+
+
+
+
+
+
+.activity-img {
+  width: 160px;          /* ⬅ mismo ancho que recipe-img */
+  height: 90px;          /* ⬅ mismo alto que recipe-img */
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-terciario);
+  border: 1px solid var(--color-terciario);
+}
+
+
+
+
+
+.activity-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;   /* ✅ igual que Mis Recetas */
+  display: block;
+}
+
+
+
+
+
 `}
         </style>
       </div>
