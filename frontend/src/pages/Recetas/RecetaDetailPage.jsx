@@ -20,6 +20,9 @@ import { useSiteConfig } from "../../context/SiteConfigContext";
 
 import ConfirmModal from "../../components/common/ConfirmModal";
 
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+
 
 
 /* =====================================================
@@ -75,6 +78,10 @@ const formatCategoria = (categoria) => {
 export default function RecetaDetailPage() {
 
 const { colors } = useSiteConfig();
+
+
+const [renderPdf, setRenderPdf] = useState(false);
+
 
 
   const { id } = useParams();
@@ -204,6 +211,31 @@ useEffect(() => {
   }, []);
 
   const handlePrint = () => window.print();
+
+
+
+
+
+const handleDownloadPdf = () => {
+  /**
+   * Este método reutiliza EXACTAMENTE
+   * el mismo diseño que el botón Imprimir.
+   * La diferencia es que el usuario guarda como PDF.
+   */
+  setShowPrintHelp(false);
+
+  // Pequeño delay para asegurar render limpio
+  setTimeout(() => {
+    window.print();
+  }, 300);
+};
+
+
+
+
+
+
+
 
   const toggleFavorito = async () => {
     setFavError(null);
@@ -396,6 +428,19 @@ const handleConfirmPrint = () => {
   🖨️ Imprimir
 </Button>
 
+
+
+<Button
+  variant="secondary"
+  size="sm"
+  onClick={handleDownloadPdf}
+>
+  📄 Descargar PDF
+</Button>
+
+
+
+
             </div>
           </div>
 
@@ -575,22 +620,26 @@ const handleConfirmPrint = () => {
 
 <ConfirmModal
   visible={showPrintHelp}
-  title="Consejos para imprimir"
+title="Consejos para imprimir o descargar en PDF" 
+
   message={
     <>
       <p>Para obtener una impresión correcta de la receta:</p>
 
-      <ul>
-        <li>✔ Activar <strong>Gráficos de fondo</strong></li>
-        <li>✖ Desactivar <strong>Encabezado y pie de página</strong></li>
-        <li>📄 Usar orientación vertical</li>
-      </ul>
+
+<ul>
+  <li>✔ Activar <strong>Gráficos de fondo</strong></li>
+  <li>✖ Desactivar <strong>Encabezado y pie de página</strong></li>
+  <li>📄 Usar orientación vertical</li>
+  <li>📄 Para <strong>Descargar PDF</strong>, elija “Guardar como PDF”</li>
+</ul>
+
 
 <div
   className="mt-3"
   style={{
     backgroundColor: "var(--color-secundario)",
-    color: "var(--color-text)",
+color: "var(--color-texto)",
     borderLeft: "4px solid var(--color-primary)",
     padding: "12px",
     borderRadius: "6px",
@@ -600,12 +649,74 @@ const handleConfirmPrint = () => {
   Estas opciones se configuran en el cuadro de impresión del navegador.
 </div>
 
+
+
+
+
+
+
+
+
     </>
   }
   onCancel={() => setShowPrintHelp(false)}
   onConfirm={handleConfirmPrint}
   confirmLabel="Imprimir ahora"
 />
+
+
+
+{renderPdf && (
+  <div
+    id="receta-pdf-content"
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "var(--color-quinary)",
+      color: "var(--color-texto)",
+      padding: "20mm",
+      zIndex: 9999,
+      overflow: "auto",
+    }}
+  >
+    <div
+      style={{
+        background: "var(--color-primario)",
+        color: "var(--color-quinary)",
+        padding: "12px",
+        borderRadius: "10px",
+        marginBottom: "12px",
+      }}
+    >
+      <h2 style={{ margin: 0 }}>{receta?.nombre}</h2>
+      <div style={{ marginTop: "6px", fontSize: "0.95rem" }}>
+        <strong>Categoría:</strong> {formatCategoria(receta?.categoria)} {" | "}
+        <strong>Creada el:</strong> {fechaFormateada}
+      </div>
+    </div>
+
+    <section style={{ marginBottom: "12px" }}>
+      <h4 style={{ color: "var(--color-primario)" }}>Descripción</h4>
+      <p>{receta?.descripcion || "Sin descripción."}</p>
+    </section>
+
+    <section style={{ marginBottom: "12px" }}>
+      <h4 style={{ color: "var(--color-primario)" }}>Ingredientes</h4>
+      <ul>
+        {receta?.ingredientes?.map((ing, i) => (
+          <li key={i}>
+            <strong>{ing.cantidad} {ing.unidad_medida}</strong> — {ing.nombre}
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section>
+      <h4 style={{ color: "var(--color-primario)" }}>Preparación</h4>
+      <p style={{ whiteSpace: "pre-wrap" }}>{receta?.preparacion}</p>
+    </section>
+  </div>
+)}
 
 
 

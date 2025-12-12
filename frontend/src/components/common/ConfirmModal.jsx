@@ -35,11 +35,11 @@ export default function ConfirmModal({
       <div className="modal-dialog modal-dialog-centered">
         <div
           className="modal-content"
-          style={{ backgroundColor: "#F5DFBE", borderRadius: "10px" }}
+style={{ backgroundColor: "var(--color-cuaternario)", borderRadius: "10px" }}
         >
           <div
             className="modal-header"
-            style={{ backgroundColor: "#652A1C" }}
+style={{ backgroundColor: "var(--color-primario)" }}
           >
             <h5 className="modal-title text-white">{title}</h5>
           </div>
@@ -51,7 +51,7 @@ export default function ConfirmModal({
 
           <div
             className="modal-footer"
-            style={{ borderTop: "2px solid #652A1C" }}
+style={{ borderTop: "2px solid var(--color-primario)" }}
           >
             <button className="btn btn-secondary" onClick={onCancel}>
               Cancelar
@@ -59,7 +59,7 @@ export default function ConfirmModal({
 
             <button
               className="btn"
-              style={{ backgroundColor: "#652A1C", color: "white" }}
+style={{ backgroundColor: "var(--color-primario)", color: "var(--color-quinary)" }}
               onClick={onConfirm}
             >
               {confirmLabel}
