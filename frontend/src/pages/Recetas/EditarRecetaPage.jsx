@@ -37,23 +37,7 @@ export default function EditarRecetaPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Lista oficial de categorías
-  const categoriasOficiales = [
-    "Panadería",
-    "Repostería",
-    "Postres",
-    "Desayunos",
-    "Entradas",
-    "Platos principales",
-    "Sopas y cremas",
-    "Acompañamientos",
-    "Bebidas",
-    "Comida saludable",
-    "Vegano / Vegetariano",
-    "Internacional",
-    "Salsas",
-    "Especiales",
-  ];
+
 
   const [receta, setReceta] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -64,6 +48,30 @@ export default function EditarRecetaPage() {
 
   const [imagenPreview, setImagenPreview] = useState(null);
   const [nuevaImagen, setNuevaImagen] = useState(null);
+
+  const [categorias, setCategorias] = useState([]);
+
+
+
+// ===============================
+// Cargar categorías dinámicas
+// ===============================
+useEffect(() => {
+  const fetchCategorias = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/categorias");
+      setCategorias(res.data.categorias || []);
+    } catch (err) {
+      console.error("❌ Error cargando categorías:", err);
+      setCategorias([]);
+    }
+  };
+
+  fetchCategorias();
+}, []);
+
+
+
 
   const imagenPersistida = useMemo(
     () => (receta?.imagen ? buildImagenUrl(receta.imagen) : null),
@@ -417,20 +425,29 @@ export default function EditarRecetaPage() {
                   <Form.Label className="editar-receta-label">Categorías</Form.Label>
 
                   <div className="d-flex flex-wrap gap-2">
-                    {categoriasOficiales.map((cat) => {
-                      const activa = (receta.categoria || []).includes(cat);
-                      return (
-                        <button
-                          type="button"
-                          key={cat}
-                          onClick={() => toggleCategoria(cat)}
-                          className={`categoria-btn ${activa ? "activa" : ""}`}
-                          aria-pressed={activa}
-                        >
-                          {cat}
-                        </button>
-                      );
-                    })}
+                    
+                    
+{categorias.map((cat) => {
+  const activa = (receta.categoria || []).includes(cat.nombre);
+
+  return (
+    <button
+      type="button"
+      key={cat.id}
+      onClick={() => toggleCategoria(cat.nombre)}
+      className={`categoria-btn ${activa ? "activa" : ""}`}
+      aria-pressed={activa}
+    >
+      {cat.nombre}
+    </button>
+  );
+})}
+
+
+
+
+
+
                   </div>
 
                   <div className="hint-box">
