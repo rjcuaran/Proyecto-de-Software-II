@@ -112,20 +112,7 @@ const logoUrl = config?.logo
               </NavLink>
             </li>
 
-            <li className="nav-item">
-              <NavLink
-                className="nav-link"
-                to="/ingredientes"
-                style={({ isActive }) => ({
-                  color: isActive
-                    ? "var(--color-terciario)"
-                    : "var(--color-secundario)",
-                })}
-              >
-                <i className="bi bi-bag-check me-2"></i>
-                Ingredientes
-              </NavLink>
-            </li>
+ 
 
             <li className="nav-item">
               <NavLink

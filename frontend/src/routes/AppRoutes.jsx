@@ -14,7 +14,7 @@ import EditarRecetaPage from "../pages/Recetas/EditarRecetaPage";
 import RecetaDetailPage from "../pages/Recetas/RecetaDetailPage";
 
 // Ingredientes
-import IngredientesListPage from "../pages/Recetas/IngredientesListPage";
+
 import EditarIngredientePage from "../pages/Recetas/EditarIngredientePage";
 
 // Favoritos
@@ -93,15 +93,6 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Ingredientes */}
-      <Route
-        path="/ingredientes"
-        element={
-          <PrivateRoute>
-            <IngredientesListPage />
-          </PrivateRoute>
-        }
-      />
       <Route
         path="/ingredientes/:id/editar"
         element={

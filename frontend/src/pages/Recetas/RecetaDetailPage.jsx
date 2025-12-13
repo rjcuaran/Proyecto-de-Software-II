@@ -547,18 +547,30 @@ const handleConfirmPrint = () => {
                 </Card>
 
                 {/* Preparación */}
-                <Card className="shadow-sm border-0">
-                  <Card.Body>
-                    <h4 className="fw-bold mb-3">Preparación</h4>
-                    
-                    
-                    <p style={{ textAlign: "justify" }}>
-  {receta.preparacion}
-</p>
+                
+                
+                
+<Card className="shadow-sm border-0">
+  <Card.Body>
+    <h4 className="fw-bold mb-3">Preparación</h4>
+
+    <p
+      style={{
+        textAlign: "justify",
+        whiteSpace: "pre-wrap",
+      }}
+    >
+      {receta.preparacion}
+    </p>
+
+  </Card.Body>
+</Card>
 
 
-                  </Card.Body>
-                </Card>
+
+
+
+
               </Col>
 
               <Col lg={5}>
