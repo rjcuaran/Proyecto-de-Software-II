@@ -24,12 +24,18 @@ const userRoutes = require("./routes/userRoutes");
 const recetaRoutes = require("./routes/recetaRoutes");
 const favoritosRoutes = require("./routes/favoritosRoutes");
 const shoppingListRoutes = require("./routes/shoppingListRoutes");
+const categoriaRoutes = require("./routes/categoriaRoutes");
+
+
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/usuarios", userRoutes);
 app.use("/api/recetas", recetaRoutes);
 app.use("/api/favoritos", favoritosRoutes);
 app.use("/api/shopping-list", shoppingListRoutes);
+app.use("/api/categorias", categoriaRoutes);
+
 
 // ==========================
 //   RUTAS ADMIN

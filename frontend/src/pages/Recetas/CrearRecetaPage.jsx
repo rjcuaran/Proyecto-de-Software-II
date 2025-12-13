@@ -8,23 +8,9 @@ import { Card, Button, Form, Alert } from "react-bootstrap";
 export default function CrearRecetaPage() {
   const navigate = useNavigate();
 
-  // LISTA OFICIAL DE CATEGORÍAS
-  const categoriasOficiales = [
-    "Panadería",
-    "Repostería",
-    "Postres",
-    "Desayunos",
-    "Entradas",
-    "Platos principales",
-    "Sopas y cremas",
-    "Acompañamientos",
-    "Bebidas",
-    "Comida saludable",
-    "Vegano / Vegetariano",
-    "Internacional",
-    "Salsas",
-    "Especiales",
-  ];
+  const [categorias, setCategorias] = useState([]);
+
+
 
   const [receta, setReceta] = useState({
     nombre: "",
@@ -37,6 +23,38 @@ export default function CrearRecetaPage() {
   const [imagen, setImagen] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+
+
+
+React.useEffect(() => {
+  const cargarCategorias = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(
+        "http://localhost:5000/api/categorias",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+setCategorias(res.data.categorias);
+
+    } catch (error) {
+      console.error("Error cargando categorías:", error);
+    }
+  };
+
+  cargarCategorias();
+}, []);
+
+
+
+
+
 
   const handleChange = (e) => {
     setReceta({
@@ -141,12 +159,12 @@ export default function CrearRecetaPage() {
                 value={receta.categoria}
                 onChange={handleCategoriasChange}
                 required
-              >
-                {categoriasOficiales.map((cat, idx) => (
-                  <option key={idx} value={cat}>
-                    {cat}
-                  </option>
-                ))}
+              >              
+{categorias.map((cat) => (
+  <option key={cat.id} value={cat.nombre}>
+    {cat.nombre}
+  </option>
+))}
               </Form.Select>
               <Form.Text className="text-muted">
                 Mantén presionada la tecla CTRL (o CMD en Mac) para seleccionar varias categorías.
