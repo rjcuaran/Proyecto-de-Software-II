@@ -194,6 +194,63 @@ useEffect(() => {
     setImagenPreview(URL.createObjectURL(file));
   };
 
+
+
+
+const validarReceta = ({ receta, nuevaImagen }) => {
+  const errores = [];
+
+  // Imagen (en editar: sirve la actual o una nueva)
+  if (!receta?.imagen && !nuevaImagen) {
+    errores.push("Debes agregar una imagen de la receta.");
+  }
+
+  // Campos obligatorios
+  if (!receta?.nombre?.trim()) {
+    errores.push("El nombre de la receta es obligatorio.");
+  }
+
+  if (!Array.isArray(receta?.categoria) || receta.categoria.length === 0) {
+    errores.push("Debes seleccionar al menos una categoría.");
+  }
+
+  if (!receta?.descripcion?.trim()) {
+    errores.push("La descripción es obligatoria.");
+  }
+
+  if (!receta?.preparacion?.trim()) {
+    errores.push("La preparación es obligatoria.");
+  }
+
+  // Ingredientes: mínimo 1 y completos
+  if (!Array.isArray(receta?.ingredientes) || receta.ingredientes.length === 0) {
+    errores.push("Debes agregar al menos un ingrediente.");
+  } else {
+    receta.ingredientes.forEach((ing, idx) => {
+      const n = idx + 1;
+
+      const nombreOk = String(ing?.nombre || "").trim().length > 0;
+      const cantidadOk =
+        ing?.cantidad !== null &&
+        ing?.cantidad !== undefined &&
+        String(ing.cantidad).trim() !== "";
+      const unidadOk = String(ing?.unidad_medida || "").trim().length > 0;
+
+      if (!nombreOk || !cantidadOk || !unidadOk) {
+        errores.push(
+          `Ingrediente #${n} incompleto: completa nombre, cantidad y unidad de medida.`
+        );
+      }
+    });
+  }
+
+  return errores;
+};
+
+
+
+
+
   // ===============================
   // Guardar cambios
   // ===============================
@@ -203,6 +260,19 @@ useEffect(() => {
     setSaving(true);
     setError(null);
     setSuccess(null);
+
+
+
+const erroresValidacion = validarReceta({ receta, nuevaImagen });
+
+if (erroresValidacion.length > 0) {
+  setError(erroresValidacion);
+  setSaving(false);
+  return;
+}
+
+
+
 
     try {
       const token = localStorage.getItem("token");
@@ -403,7 +473,23 @@ useEffect(() => {
             )}
           </div>
 
-          {error && <Alert variant="danger">{error}</Alert>}
+          {error && (
+  <Alert variant="danger" style={{ whiteSpace: "pre-line" }}>
+    {Array.isArray(error) ? (
+      <ul className="mb-0">
+        {error.map((msg, i) => (
+          <li key={i}>{msg}</li>
+        ))}
+      </ul>
+    ) : (
+      error
+    )}
+  </Alert>
+)}
+
+
+
+
           {success && <Alert variant="success">{success}</Alert>}
 
           <Form onSubmit={handleSubmit} encType="multipart/form-data">

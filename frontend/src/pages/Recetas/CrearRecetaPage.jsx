@@ -107,10 +107,40 @@ const toggleCategoria = (cat) => {
     });
   };
 
-  const handleSubmit = async (e) => {
+
+
+const validarReceta = ({ receta, imagen }) => {
+  if (!imagen) return "Debes agregar una imagen de la receta.";
+  if (!receta.nombre.trim()) return "El nombre de la receta es obligatorio.";
+  if (!receta.categoria.length)
+    return "Debes seleccionar al menos una categoría.";
+  if (!receta.descripcion.trim())
+    return "La descripción es obligatoria.";
+  if (!receta.preparacion.trim())
+    return "La preparación es obligatoria.";
+  if (!receta.ingredientes.length)
+    return "Debes agregar al menos un ingrediente.";
+
+  return null;
+};
+
+
+  
+
+
+
+const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+
+
+  const errorValidacion = validarReceta({ receta, imagen });
+  if (errorValidacion) {
+    setError(errorValidacion);
+    return;
+  }
+
 
     try {
       const token = localStorage.getItem("token");
