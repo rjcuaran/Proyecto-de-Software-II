@@ -170,27 +170,51 @@ const toggleCategoria = (cat) => {
     border-color: var(--color-primario);
   }
 
-  .hint-box{
-    margin-top: 8px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    border-left: 4px solid var(--color-terciario);
-    background: rgba(255, 255, 255, 0.75);
-    color: rgba(0,0,0,0.7);
-    font-size: 0.9rem;
-  }
+.hint-box{
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border-left: 4px solid var(--color-terciario);
+  background: var(--color-quinary);
+  color: var(--color-primario);
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
 
 .image-requirements{
   margin-top: 8px;
   padding: 12px 14px;
   border-radius: 12px;
   border-left: 4px solid var(--color-terciario);
-  background: rgba(255, 255, 255, 0.75);
-  color: rgba(0,0,0,0.7);
+  background: var(--color-quinary);
+  color: var(--color-primario);
   font-size: 0.9rem;
+  opacity: 0.9;
 }
+
 .image-requirements b{
   color: var(--color-primario);
+  font-weight: 700;
+}
+
+
+.form-section-title{
+  color: var(--color-primario);
+  font-weight: 700;
+}
+
+
+
+.crear-receta-card{
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid var(--color-terciario);
+  background: linear-gradient(
+    180deg,
+    var(--color-quinary),
+    var(--color-secundario)
+  );
 }
 
 
@@ -201,9 +225,18 @@ const toggleCategoria = (cat) => {
 
 
 
-      <Card className="shadow-lg border-0">
+      <Card className="shadow-lg border-0 crear-receta-card">
+
+
         <Card.Body>
-          <h3 className="fw-bold text-primary">➕ Crear nueva receta</h3>
+          
+          <h3
+  className="fw-bold"
+  style={{ color: "var(--color-primario)" }}
+>
+  ➕ Crear nueva receta
+</h3>
+
 
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
@@ -214,7 +247,13 @@ const toggleCategoria = (cat) => {
 
             {/* FOTO DE LA RECETA */}
             <Form.Group className="mb-3">
-              <Form.Label>Imagen de la receta</Form.Label>
+              
+              
+              <Form.Label className="form-section-title">
+  Imagen de la receta
+</Form.Label>
+
+
               <Form.Control
                 type="file"
                 accept="image/*"
@@ -242,7 +281,11 @@ const toggleCategoria = (cat) => {
 
             {/* NOMBRE */}
             <Form.Group className="mb-3">
-              <Form.Label>Nombre de la receta</Form.Label>
+              
+              <Form.Label className="form-section-title">
+  Nombre de la receta
+</Form.Label>
+
               <Form.Control
                 type="text"
                 name="nombre"
@@ -255,7 +298,11 @@ const toggleCategoria = (cat) => {
             {/* CATEGORÍAS MULTIPLES */}
             
 <Form.Group className="mb-3">
-  <Form.Label>Categorías de la receta</Form.Label>
+  
+  <Form.Label className="form-section-title">
+  Categorías de la receta
+</Form.Label>
+
 
   <div className="d-flex flex-wrap gap-2">
     {categorias.map((cat) => {
@@ -291,7 +338,12 @@ const toggleCategoria = (cat) => {
 
             {/* DESCRIPCIÓN */}
             <Form.Group className="mb-3">
-              <Form.Label>Descripción</Form.Label>
+              
+              <Form.Label className="form-section-title">
+  Descripción
+</Form.Label>
+
+
               <Form.Control
                 as="textarea"
                 name="descripcion"
@@ -304,7 +356,12 @@ const toggleCategoria = (cat) => {
 
             {/* PREPARACIÓN */}
             <Form.Group className="mb-3">
-              <Form.Label>Preparación</Form.Label>
+              
+              <Form.Label className="form-section-title">
+  Preparación
+</Form.Label>
+
+
               <Form.Control
                 as="textarea"
                 name="preparacion"
@@ -316,22 +373,52 @@ const toggleCategoria = (cat) => {
             </Form.Group>
 
             {/* INGREDIENTES */}
-            <h5 className="mt-4">🧂 Ingredientes</h5>
+            
+            <h5 className="mt-4 form-section-title">
+  🧂 Ingredientes
+</h5>
+
+
             <IngredienteForm
               ingredientes={receta.ingredientes}
               onChange={handleIngredientesChange}
             />
 
             {/* BOTONES */}
-            <div className="mt-4 d-flex justify-content-between">
-              <Button variant="secondary" onClick={() => navigate(-1)}>
-                ← Cancelar
-              </Button>
 
-              <Button variant="primary" type="submit">
-                Guardar receta
-              </Button>
-            </div>
+
+<div className="mt-4 d-flex justify-content-between">
+  <button
+    type="button"
+    onClick={() => navigate(-1)}
+    style={{
+      background: "var(--color-cuaternario)",
+      color: "var(--color-primario)",
+      border: "2px solid var(--color-terciario)",
+      borderRadius: "999px",
+      padding: "10px 18px",
+      fontWeight: 700,
+    }}
+  >
+    ← Cancelar
+  </button>
+
+  <button
+    type="submit"
+    style={{
+      background: "var(--color-primario)",
+      color: "var(--color-quinary)",
+      border: "2px solid var(--color-primario)",
+      borderRadius: "999px",
+      padding: "10px 18px",
+      fontWeight: 700,
+    }}
+  >
+    Guardar receta
+  </button>
+</div>
+
+
 
           </Form>
         </Card.Body>
