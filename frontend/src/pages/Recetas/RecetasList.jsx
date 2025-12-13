@@ -350,11 +350,37 @@ export default function RecetasList() {
                       </Card.Title>
 
                       {/* Mostrar categoría de forma limpia */}
-                      <Badge bg="info" className="mb-2">
-                        {Array.isArray(receta.categoria)
-                          ? receta.categoria.join(", ")
-                          : receta.categoria}
-                      </Badge>
+                      
+                      
+<Badge bg="info" className="mb-2">
+  {(() => {
+    if (!receta.categoria) return "Sin categoría";
+
+    // Si viene como string JSON: '["Navideñas","Intermedias"]'
+    if (typeof receta.categoria === "string" && receta.categoria.startsWith("[")) {
+      try {
+        const categorias = JSON.parse(receta.categoria);
+        return Array.isArray(categorias)
+          ? categorias.join(", ")
+          : receta.categoria;
+      } catch (e) {
+        return receta.categoria;
+      }
+    }
+
+    // Si ya es array real
+    if (Array.isArray(receta.categoria)) {
+      return receta.categoria.join(", ");
+    }
+
+    // Caso normal (string simple)
+    return receta.categoria;
+  })()}
+</Badge>
+
+
+
+
 
                       <Card.Text className="text-muted small">
                         {receta.descripcion?.substring(0, 80) ||
